@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/* Bundled locally — no CDN, the app must render identically offline. */
+@import "@fontsource-variable/inter/index.css";
+
+/*
+ * Walnut is the default theme, so its values live in @theme and become the
+ * `:root` custom properties every utility resolves against (ADR-0004).
+ */
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  --color-surface: #2a211b;
+  --color-surface-raised: #362b23;
+  --color-ink: #ede4d6;
+  --color-ink-muted: #a49482;
+  --color-border: #4a3b30;
+  --color-accent: #c8a87c;
+  --color-danger: #c2705a;
+}
+
+/*
+ * Only the non-default themes need a block: `data-theme="walnut"` matches
+ * nothing and falls through to the @theme values above, so Walnut's colours
+ * have exactly one home.
+ */
+[data-theme="sand"] {
+  --color-surface: #f5efe6;
+  --color-surface-raised: #fffbf4;
+  --color-ink: #2a211b;
+  --color-ink-muted: #6f6157;
+  --color-border: #ded3c4;
+  --color-accent: #8c6a43;
+  --color-danger: #a85440;
+}
+
+[data-theme="high-contrast"] {
+  --color-surface: #000000;
+  --color-surface-raised: #101010;
+  --color-ink: #ffffff;
+  --color-ink-muted: #d4d4d4;
+  --color-border: #ffffff;
+  --color-accent: #ffd400;
+  --color-danger: #ff6b4a;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  /* The custom titlebar owns dragging; stray text selection reads as a bug. */
+  user-select: none;
+}

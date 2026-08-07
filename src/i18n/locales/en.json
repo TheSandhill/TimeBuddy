@@ -1,0 +1,13 @@
+{
+  "app": {
+    "name": "TimeBuddy",
+    "tagline": "Track your hours, calmly."
+  },
+  "home": {
+    "empty": "No hours logged yet."
+  },
+  "titlebar": {
+    "minimize": "Minimize",
+    "close": "Close"
+  }
+}

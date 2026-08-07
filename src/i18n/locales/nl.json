@@ -1,0 +1,13 @@
+{
+  "app": {
+    "name": "TimeBuddy",
+    "tagline": "Rustig je uren bijhouden."
+  },
+  "home": {
+    "empty": "Nog geen uren geregistreerd."
+  },
+  "titlebar": {
+    "minimize": "Minimaliseren",
+    "close": "Sluiten"
+  }
+}
