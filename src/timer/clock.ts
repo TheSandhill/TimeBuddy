@@ -8,7 +8,8 @@
 
 import type { Day, Instant } from "../data/types";
 
-const MS_PER_MINUTE = 60_000;
+export const MS_PER_SECOND = 1000;
+export const SECONDS_PER_MINUTE = 60;
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
@@ -17,10 +18,15 @@ export function currentInstant(): Instant {
   return new Date().toISOString();
 }
 
+/** RFC 3339 in UTC, without the milliseconds the Rust side never stores. */
+export function instantAt(milliseconds: number): Instant {
+  return new Date(milliseconds).toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
 export function plusMinutes(instant: Instant, minutes: number): Instant {
-  return new Date(Date.parse(instant) + minutes * MS_PER_MINUTE)
-    .toISOString()
-    .replace(/\.\d{3}Z$/, "Z");
+  return instantAt(
+    Date.parse(instant) + minutes * SECONDS_PER_MINUTE * MS_PER_SECOND,
+  );
 }
 
 /**

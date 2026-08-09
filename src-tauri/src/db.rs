@@ -55,10 +55,11 @@ pub async fn test_pool() -> SqlitePool {
     // Every shipped migration, in order — so a table added in migration 2 is
     // as real to the tests as one added in migration 1.
     for migration in migrations() {
+        let version = migration.version;
         sqlx::raw_sql(migration.sql)
             .execute(&pool)
             .await
-            .unwrap_or_else(|error| panic!("migration {} applies: {error}", migration.version));
+            .unwrap_or_else(|error| panic!("migration {version} applies: {error}"));
     }
 
     pool

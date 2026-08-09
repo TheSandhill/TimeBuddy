@@ -10,7 +10,7 @@
 //! the elapsed time. Silently discarding loses real work; silently logging
 //! invents it.
 
-use chrono::{DateTime, Local, NaiveDate, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, SqlitePool};
 use tauri::State;
@@ -30,7 +30,8 @@ pub struct RunningTimer {
     pub planned_minutes: i64,
 }
 
-const SELECT: &str = "SELECT project_id, start_at, planned_minutes FROM running_timer WHERE id = 1";
+const SELECT: &str = "SELECT project_id, start_at, planned_minutes \
+                      FROM running_timer WHERE id = 1";
 
 /// What the caller decided a stopped block is worth.
 ///
@@ -142,11 +143,6 @@ pub async fn discard(pool: &SqlitePool) -> Result<()> {
 
 // -- Command layer ----------------------------------------------------------
 
-/// Today in the user's own timezone, matching `time_entries`.
-fn today() -> NaiveDate {
-    Local::now().date_naive()
-}
-
 #[tauri::command]
 pub async fn get_running_timer(db: State<'_, Db>) -> Result<Option<RunningTimer>> {
     get(&db.0).await
@@ -163,7 +159,7 @@ pub async fn start_running_timer(
 
 #[tauri::command]
 pub async fn stop_running_timer(db: State<'_, Db>, stop: StopTimer) -> Result<TimeEntry> {
-    self::stop(&db.0, stop, today(), Utc::now()).await
+    self::stop(&db.0, stop, time_entries::today(), Utc::now()).await
 }
 
 #[tauri::command]

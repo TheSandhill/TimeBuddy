@@ -6,6 +6,7 @@ import {
   isComplete,
   outcomeAt,
   remainingSeconds,
+  secondsUntil,
 } from "./block";
 
 const block: RunningTimer = {
@@ -49,19 +50,24 @@ describe("a Pomodoro Block stopped early", () => {
     });
   });
 
-  it("rounds to the nearest minute", () => {
+  it("drops the part-finished minute rather than rounding it up", () => {
+    // Entries are stored as truth. Rounding 24m40s up would log exactly the
+    // nominal length an early stop is never allowed to claim.
     expect(outcomeAt(block, "2026-08-05T09:10:20Z")).toMatchObject({
       durationMinutes: 10,
     });
-    expect(outcomeAt(block, "2026-08-05T09:10:40Z")).toMatchObject({
-      durationMinutes: 11,
+    expect(outcomeAt(block, "2026-08-05T09:10:59Z")).toMatchObject({
+      durationMinutes: 10,
+    });
+    expect(outcomeAt(block, "2026-08-05T09:24:40Z")).toMatchObject({
+      durationMinutes: 24,
     });
   });
 
   it("logs nothing at all when it barely ran", () => {
-    // Under half a minute rounds to zero, and a zero-length entry would be
-    // inventing a record of work that did not happen.
-    expect(outcomeAt(block, "2026-08-05T09:00:20Z")).toEqual({
+    // Not yet a whole minute, and a zero-length entry would be inventing a
+    // record of work that did not happen.
+    expect(outcomeAt(block, "2026-08-05T09:00:59Z")).toEqual({
       kind: "tooShort",
     });
   });
@@ -113,5 +119,14 @@ describe("countdown formatting", () => {
 
   it("keeps counting in minutes past an hour rather than adding a field", () => {
     expect(formatCountdown(3600)).toBe("60:00");
+  });
+
+  it("counts down to a deadline and stops at zero", () => {
+    // What the Break banner shows. A Break is never stored, so this is the
+    // only place its length exists at all.
+    expect(secondsUntil("2026-08-05T09:05:00Z", "2026-08-05T09:00:00Z")).toBe(
+      300,
+    );
+    expect(secondsUntil("2026-08-05T09:05:00Z", "2026-08-05T09:06:00Z")).toBe(0);
   });
 });

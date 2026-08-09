@@ -9,6 +9,7 @@
  */
 
 import type { Instant, RunningTimer } from "../data/types";
+import { instantAt, MS_PER_SECOND, SECONDS_PER_MINUTE } from "./clock";
 
 /** The longest a single TimeEntry may be, mirroring the schema's CHECK. */
 export const MAX_BLOCK_MINUTES = 1440;
@@ -19,18 +20,10 @@ export type BlockOutcome =
   | { kind: "completed"; durationMinutes: number; endAt: Instant }
   /** Ended by hand: logs the actual elapsed time, never the nominal length. */
   | { kind: "stoppedEarly"; durationMinutes: number; endAt: Instant }
-  /** Under half a minute — a misclick, not work. Nothing is written. */
+  /** Not yet a whole minute — a misclick, not work. Nothing is written. */
   | { kind: "tooShort" }
   /** Longer than a day, which no TimeEntry may hold. */
   | { kind: "tooLong"; durationMinutes: number };
-
-const MS_PER_SECOND = 1000;
-const SECONDS_PER_MINUTE = 60;
-
-/** RFC 3339 in UTC, without the milliseconds the Rust side never stores. */
-function instantAt(milliseconds: number): Instant {
-  return new Date(milliseconds).toISOString().replace(/\.\d{3}Z$/, "Z");
-}
 
 /**
  * How long the block has been running.
@@ -60,12 +53,16 @@ export function isComplete(block: RunningTimer, now: Instant): boolean {
  * A completed block ends at the instant it ran out, not at the instant we
  * noticed. That single choice is what makes a crash three days later offer 25
  * minutes back instead of three days.
+ *
+ * A part-finished minute is dropped rather than rounded up: entries are stored
+ * as truth (`CONTEXT.md`), and rounding 24m40s up would log exactly the
+ * nominal length an early stop is never allowed to claim.
  */
 export function outcomeAt(block: RunningTimer, now: Instant): BlockOutcome {
   const completed = isComplete(block, now);
   const durationMinutes = completed
     ? block.plannedMinutes
-    : Math.round(elapsedSeconds(block, now) / SECONDS_PER_MINUTE);
+    : Math.floor(elapsedSeconds(block, now) / SECONDS_PER_MINUTE);
 
   if (durationMinutes > MAX_BLOCK_MINUTES) {
     return { kind: "tooLong", durationMinutes };
@@ -93,4 +90,12 @@ export function formatCountdown(seconds: number): string {
   const minutes = Math.floor(whole / SECONDS_PER_MINUTE);
   const rest = whole % SECONDS_PER_MINUTE;
   return `${String(minutes).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
+}
+
+/** Whole seconds from `now` until `deadline`, floored at zero. */
+export function secondsUntil(deadline: Instant, now: Instant): number {
+  return Math.max(
+    0,
+    Math.floor((Date.parse(deadline) - Date.parse(now)) / MS_PER_SECOND),
+  );
 }

@@ -11,19 +11,11 @@ const NOTE_SECONDS = 0.45;
 /** Quiet on purpose. This is a nudge, not an alarm. */
 const PEAK_GAIN = 0.06;
 
-type AudioContextConstructor = typeof AudioContext;
-
-function audioContext(): AudioContext | null {
-  const ctor: AudioContextConstructor | undefined =
-    typeof AudioContext === "undefined" ? undefined : AudioContext;
-  return ctor ? new ctor() : null;
-}
-
 export function playChime(): void {
-  const context = audioContext();
-  if (!context) {
+  if (typeof AudioContext === "undefined") {
     return;
   }
+  const context = new AudioContext();
 
   NOTES.forEach((frequency, index) => {
     const start = context.currentTime + index * NOTE_SECONDS;

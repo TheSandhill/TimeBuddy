@@ -250,7 +250,7 @@ pub async fn delete(pool: &SqlitePool, id: i64) -> Result<()> {
 
 /// Today in the user's own timezone. "Not in the future" is a statement about
 /// the calendar on her wall, not about UTC.
-fn today() -> NaiveDate {
+pub(crate) fn today() -> NaiveDate {
     Local::now().date_naive()
 }
 

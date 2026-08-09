@@ -25,18 +25,22 @@ import {
   startRunningTimer,
   stopRunningTimer,
 } from "../data/commands";
-import type { RunningTimer, StopTimer } from "../data/types";
+import type { Instant, RunningTimer, StopTimer } from "../data/types";
 import {
   formatCountdown,
   outcomeAt,
   remainingSeconds,
+  secondsUntil,
   type BlockOutcome,
 } from "../timer/block";
 import { playChime } from "../timer/chime";
-import { currentInstant, localDay, plusMinutes } from "../timer/clock";
+import {
+  currentInstant,
+  localDay,
+  plusMinutes,
+  SECONDS_PER_MINUTE,
+} from "../timer/clock";
 import { useNow } from "../timer/use-now";
-
-const SECONDS_PER_MINUTE = 60;
 
 export function Timer() {
   const { t } = useTranslation();
@@ -60,7 +64,7 @@ export function Timer() {
 
   const [projectId, setProjectId] = useState<number | null>(null);
   /** The Break's end instant. State, never a row — a Break is not hours. */
-  const [breakEndsAt, setBreakEndsAt] = useState<string | null>(null);
+  const [breakEndsAt, setBreakEndsAt] = useState<Instant | null>(null);
   const [failed, setFailed] = useState(false);
 
   /**
@@ -76,6 +80,21 @@ export function Timer() {
   const recovering = block !== null && !startedHere.current;
 
   const now = useNow(block !== null || breakEndsAt !== null);
+
+  /**
+   * The instant the orphaned block was found, frozen.
+   *
+   * The question must not answer itself while it waits: a block that had not
+   * run out would otherwise offer more minutes the longer the prompt sat on
+   * screen, and keeping it would log the time spent reading the prompt.
+   */
+  const foundAt = useRef<Instant | null>(null);
+  if (recovering && foundAt.current === null) {
+    foundAt.current = currentInstant();
+  } else if (!recovering && foundAt.current !== null) {
+    foundAt.current = null;
+  }
+  const discoveredAt = foundAt.current ?? now;
 
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ["runningTimer"] });
@@ -94,13 +113,21 @@ export function Timer() {
     onError: () => setFailed(true),
   });
 
+  // A failed write leaves the block in flight on purpose. Clearing the guard
+  // lets the next tick — or the next click — try again, rather than stranding
+  // a block nothing will ever offer back.
+  const writeFailed = () => {
+    finishing.current = false;
+    setFailed(true);
+  };
+
   const stopBlock = useMutation({
-    mutationFn: (stop: StopTimer) => stopRunningTimer(stop),
+    mutationFn: (ending: StopTimer) => stopRunningTimer(ending),
     onSuccess: () => {
       setFailed(false);
       return refresh();
     },
-    onError: () => setFailed(true),
+    onError: writeFailed,
   });
 
   const discardBlock = useMutation({
@@ -109,7 +136,7 @@ export function Timer() {
       setFailed(false);
       return refresh();
     },
-    onError: () => setFailed(true),
+    onError: writeFailed,
   });
 
   /** Turns an outcome into either a logged entry or nothing at all. */
@@ -187,18 +214,16 @@ export function Timer() {
 
       {recovering && block ? (
         <RecoveryPrompt
-          outcome={outcomeAt(block, now)}
+          outcome={outcomeAt(block, discoveredAt)}
           busy={busy}
-          onKeep={() => settle(block, outcomeAt(block, currentInstant()))}
+          onKeep={() => settle(block, outcomeAt(block, discoveredAt))}
           onDiscard={() => discardBlock.mutate()}
         />
       ) : (
         <>
           {breakEndsAt ? (
             <BreakBanner
-              countdown={formatCountdown(
-                (Date.parse(breakEndsAt) - Date.parse(now)) / 1000,
-              )}
+              countdown={formatCountdown(secondsUntil(breakEndsAt, now))}
               onSkip={() => setBreakEndsAt(null)}
             />
           ) : null}

@@ -1,5 +1,5 @@
-﻿import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
@@ -198,6 +198,28 @@ describe("a block found in flight on launch", () => {
     );
   });
 
+  it("freezes what it offers instead of counting on while it waits", async () => {
+    // The question must not answer itself. Two minutes spent reading the
+    // prompt are two minutes the app was not being worked in.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      commands.getRunningTimer.mockResolvedValue(inFlight(10));
+      renderTimer();
+      const keep = await screen.findByRole("button", { name: "Bewaren" });
+
+      await act(() => vi.advanceTimersByTimeAsync(120_000));
+      fireEvent.click(keep);
+
+      await waitFor(() =>
+        expect(commands.stopRunningTimer).toHaveBeenCalledWith(
+          expect.objectContaining({ durationMinutes: 10 }),
+        ),
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("writes nothing at all when the answer is discard", async () => {
     commands.getRunningTimer.mockResolvedValue(inFlight(10));
     renderTimer();
@@ -270,5 +292,3 @@ describe("a block this session started", () => {
     );
   });
 });
-
-

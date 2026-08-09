@@ -1,9 +1,9 @@
 {
   "app": {
-    "name": "TimeBuddy",
-    "tagline": "Rustig je uren bijhouden."
+    "name": "TimeBuddy"
   },
   "timer": {
+    "unknownProject": "Onbekend project",
     "start": "Start",
     "stop": "Stop",
     "project": "Project",
