@@ -2,6 +2,10 @@
   "app": {
     "name": "TimeBuddy"
   },
+  "nav": {
+    "timer": "Timer",
+    "entries": "Hours"
+  },
   "timer": {
     "unknownProject": "Unknown project",
     "start": "Start",
@@ -19,6 +23,43 @@
     "recoveryKeep": "Keep",
     "recoveryDiscard": "Discard",
     "failed": "That didn't work. Please try again."
+  },
+  "entries": {
+    "from": "From",
+    "to": "Up to and including",
+    "total": "Total",
+    "empty": "No hours in this range.",
+    "add": "Add hours",
+    "newTitle": "New entry",
+    "editTitle": "Edit entry",
+    "project": "Project",
+    "date": "Date",
+    "duration": "Duration",
+    "durationHint": "For example 1:30, 1.5 or 90m",
+    "note": "Note",
+    "notePlaceholder": "What was it about?",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "editEntry": "Edit {{project}}",
+    "deleteEntry": "Delete {{project}}",
+    "deleted": "Entry deleted",
+    "undo": "Undo",
+    "noProjects": "Create a project first.",
+    "unknownProject": "Unknown project"
+  },
+  "error": {
+    "nameRequired": "Please enter a name.",
+    "durationUnreadable": "Can't read that duration. Try 1:30, 1.5 or 90m.",
+    "durationNotPositive": "Enter a duration greater than zero.",
+    "durationExceedsDay": "An entry cannot be longer than 24 hours.",
+    "dateInFuture": "That date is in the future.",
+    "rangeEndsBeforeStart": "The end date is before the start date.",
+    "durationSettingNotPositive": "Enter a duration greater than zero.",
+    "timerAlreadyRunning": "A block is already running.",
+    "notFound": "That no longer exists.",
+    "unknown": "That didn't work. Please try again."
   },
   "titlebar": {
     "minimize": "Minimize",

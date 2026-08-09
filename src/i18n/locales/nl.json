@@ -2,6 +2,10 @@
   "app": {
     "name": "TimeBuddy"
   },
+  "nav": {
+    "timer": "Timer",
+    "entries": "Uren"
+  },
   "timer": {
     "unknownProject": "Onbekend project",
     "start": "Start",
@@ -19,6 +23,43 @@
     "recoveryKeep": "Bewaren",
     "recoveryDiscard": "Weggooien",
     "failed": "Dat lukte niet. Probeer het opnieuw."
+  },
+  "entries": {
+    "from": "Van",
+    "to": "Tot en met",
+    "total": "Totaal",
+    "empty": "Geen uren in deze periode.",
+    "add": "Uur toevoegen",
+    "newTitle": "Nieuwe registratie",
+    "editTitle": "Registratie aanpassen",
+    "project": "Project",
+    "date": "Datum",
+    "duration": "Duur",
+    "durationHint": "Bijvoorbeeld 1:30, 1,5 of 90m",
+    "note": "Notitie",
+    "notePlaceholder": "Waar ging het over?",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "edit": "Aanpassen",
+    "delete": "Verwijderen",
+    "editEntry": "{{project}} aanpassen",
+    "deleteEntry": "{{project}} verwijderen",
+    "deleted": "Registratie verwijderd",
+    "undo": "Ongedaan maken",
+    "noProjects": "Maak eerst een project aan.",
+    "unknownProject": "Onbekend project"
+  },
+  "error": {
+    "nameRequired": "Vul een naam in.",
+    "durationUnreadable": "Onleesbare duur. Probeer 1:30, 1,5 of 90m.",
+    "durationNotPositive": "Vul een duur groter dan nul in.",
+    "durationExceedsDay": "Een registratie kan niet langer dan 24 uur duren.",
+    "dateInFuture": "Die datum ligt in de toekomst.",
+    "rangeEndsBeforeStart": "De einddatum ligt voor de begindatum.",
+    "durationSettingNotPositive": "Vul een duur groter dan nul in.",
+    "timerAlreadyRunning": "Er loopt al een blok.",
+    "notFound": "Dat bestaat niet meer.",
+    "unknown": "Dat lukte niet. Probeer het opnieuw."
   },
   "titlebar": {
     "minimize": "Minimaliseren",
