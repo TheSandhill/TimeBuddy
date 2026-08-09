@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { projectName } from "../data/project-name";
 import type { Project, TimeEntry } from "../data/types";
 import { formatClock } from "../timer/clock";
 
@@ -15,11 +16,8 @@ interface TodayEntriesProps {
  */
 export function TodayEntries({ entries, projects }: TodayEntriesProps) {
   const { t } = useTranslation();
-  // An archived project is out of the picker but still owns yesterday's hours,
-  // so a name can genuinely be missing from the list this component was given.
   const nameOf = (projectId: number) =>
-    projects.find((project) => project.id === projectId)?.name ??
-    t("timer.unknownProject");
+    projectName(projects, projectId, t("timer.unknownProject"));
 
   return (
     <section className="flex flex-col gap-3">
