@@ -22,6 +22,9 @@ pub enum ValidationCode {
     RangeEndsBeforeStart,
     /// A pomodoro or break length was zero or negative.
     DurationSettingNotPositive,
+    /// A Pomodoro Block was started while one was already in flight. There is
+    /// at most one Running Timer, and silently replacing it would drop work.
+    TimerAlreadyRunning,
 }
 
 /// Anything a command can fail with.

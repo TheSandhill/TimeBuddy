@@ -81,6 +81,36 @@ export interface TimeEntryEdit {
   note?: string | null;
 }
 
+/**
+ * The at-most-one in-flight Pomodoro Block. Only its start instant is stored —
+ * elapsed time is derived from the wall clock, so laptop sleep is a non-event.
+ */
+export interface RunningTimer {
+  projectId: number;
+  startAt: Instant;
+  /**
+   * The block's nominal length, frozen when it started. Changing the default
+   * in Settings mid-block must not move the finish line of a block already
+   * under way.
+   */
+  plannedMinutes: number;
+}
+
+/**
+ * What ending a block is worth. The project and the start instant are absent
+ * on purpose — Rust already holds those, and re-sending them would let the UI
+ * log a block against a project it never ran on.
+ */
+export interface StopTimer {
+  /** The day the work belongs to, in the user's own timezone. */
+  date: Day;
+  /** Full length for a completed block, actual elapsed for one stopped early. */
+  durationMinutes: number;
+  /** When the block ended — for a completed one, when it ran out. */
+  endAt: Instant;
+  note?: string | null;
+}
+
 export interface EntryFilter {
   /** Inclusive. `null` means unbounded. */
   from?: Day | null;
@@ -134,7 +164,8 @@ export type ValidationCode =
   | "durationExceedsDay"
   | "dateInFuture"
   | "rangeEndsBeforeStart"
-  | "durationSettingNotPositive";
+  | "durationSettingNotPositive"
+  | "timerAlreadyRunning";
 
 /** What a rejected command rejects with. */
 export type CommandError =

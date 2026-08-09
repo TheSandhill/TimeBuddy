@@ -5,7 +5,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { AppShell } from "./components/app-shell";
-import { Home } from "./routes/home";
+import { Timer } from "./routes/timer";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -15,14 +15,15 @@ const rootRoute = createRootRoute({
   ),
 });
 
-const homeRoute = createRoute({
+/** The Timer is the app's front door — it is the reason the app exists. */
+const timerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: Home,
+  component: Timer,
 });
 
 export const router = createRouter({
-  routeTree: rootRoute.addChildren([homeRoute]),
+  routeTree: rootRoute.addChildren([timerRoute]),
   defaultPreload: "intent",
 });
 

@@ -95,7 +95,7 @@ pub struct EntryFilter {
 ///
 /// `today` is passed in rather than read from the clock so the future-date rule
 /// is testable rather than a race with midnight.
-fn validate(duration_minutes: i64, date: NaiveDate, today: NaiveDate) -> Result<()> {
+pub(crate) fn validate(duration_minutes: i64, date: NaiveDate, today: NaiveDate) -> Result<()> {
     if duration_minutes <= 0 {
         return Err(Error::validation(ValidationCode::DurationNotPositive));
     }
@@ -152,17 +152,22 @@ pub async fn get(pool: &SqlitePool, id: i64) -> Result<TimeEntry> {
         .ok_or_else(|| Error::not_found("timeEntry", id))
 }
 
-pub async fn create(
-    pool: &SqlitePool,
-    entry: NewTimeEntry,
-    today: NaiveDate,
+/// Writes the row and returns its id, without validating.
+///
+/// Generic over the executor so a caller that must do more in the same
+/// transaction — stopping the Running Timer writes an entry and clears the
+/// in-flight row together — can hand in the transaction instead of the pool.
+pub(crate) async fn insert<'e, E>(
+    executor: E,
+    entry: &NewTimeEntry,
     now: DateTime<Utc>,
-) -> Result<TimeEntry> {
-    validate(entry.duration_minutes, entry.date, today)?;
-    projects::get(pool, entry.project_id).await?;
+) -> Result<i64>
+where
+    E: sqlx::Executor<'e, Database = sqlx::Sqlite>,
+{
+    let (start_at, end_at) = times_for(entry);
 
-    let (start_at, end_at) = times_for(&entry);
-    let id: i64 = sqlx::query_scalar(
+    Ok(sqlx::query_scalar(
         "INSERT INTO time_entries
            (project_id, date, duration_minutes, start_at, end_at, note, source, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
@@ -176,8 +181,20 @@ pub async fn create(
     .bind(entry.source)
     .bind(now)
     .bind(now)
-    .fetch_one(pool)
-    .await?;
+    .fetch_one(executor)
+    .await?)
+}
+
+pub async fn create(
+    pool: &SqlitePool,
+    entry: NewTimeEntry,
+    today: NaiveDate,
+    now: DateTime<Utc>,
+) -> Result<TimeEntry> {
+    validate(entry.duration_minutes, entry.date, today)?;
+    projects::get(pool, entry.project_id).await?;
+
+    let id = insert(pool, &entry, now).await?;
 
     get(pool, id).await
 }
@@ -233,7 +250,7 @@ pub async fn delete(pool: &SqlitePool, id: i64) -> Result<()> {
 
 /// Today in the user's own timezone. "Not in the future" is a statement about
 /// the calendar on her wall, not about UTC.
-fn today() -> NaiveDate {
+pub(crate) fn today() -> NaiveDate {
     Local::now().date_naive()
 }
 

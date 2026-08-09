@@ -1,10 +1,24 @@
 {
   "app": {
-    "name": "TimeBuddy",
-    "tagline": "Track your hours, calmly."
+    "name": "TimeBuddy"
   },
-  "home": {
-    "empty": "No hours logged yet."
+  "timer": {
+    "unknownProject": "Unknown project",
+    "start": "Start",
+    "stop": "Stop",
+    "project": "Project",
+    "noProjects": "Create a project first.",
+    "today": "Today",
+    "noEntries": "No hours logged yet.",
+    "minutes": "{{minutes}} min",
+    "breakTitle": "Break",
+    "skipBreak": "Skip break",
+    "recoveryTitle": "A block was still running",
+    "recoveryBody": "TimeBuddy closed while a block was running. Keep {{minutes}} min?",
+    "recoveryNothing": "Too little time had passed to be worth keeping.",
+    "recoveryKeep": "Keep",
+    "recoveryDiscard": "Discard",
+    "failed": "That didn't work. Please try again."
   },
   "titlebar": {
     "minimize": "Minimize",

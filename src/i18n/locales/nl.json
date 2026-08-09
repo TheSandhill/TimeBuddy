@@ -1,10 +1,24 @@
 {
   "app": {
-    "name": "TimeBuddy",
-    "tagline": "Rustig je uren bijhouden."
+    "name": "TimeBuddy"
   },
-  "home": {
-    "empty": "Nog geen uren geregistreerd."
+  "timer": {
+    "unknownProject": "Onbekend project",
+    "start": "Start",
+    "stop": "Stop",
+    "project": "Project",
+    "noProjects": "Maak eerst een project aan.",
+    "today": "Vandaag",
+    "noEntries": "Nog geen uren geregistreerd.",
+    "minutes": "{{minutes}} min",
+    "breakTitle": "Pauze",
+    "skipBreak": "Pauze overslaan",
+    "recoveryTitle": "Er liep nog een blok",
+    "recoveryBody": "TimeBuddy sloot af terwijl een blok liep. {{minutes}} min bewaren?",
+    "recoveryNothing": "Er was te weinig tijd verstreken om te bewaren.",
+    "recoveryKeep": "Bewaren",
+    "recoveryDiscard": "Weggooien",
+    "failed": "Dat lukte niet. Probeer het opnieuw."
   },
   "titlebar": {
     "minimize": "Minimaliseren",

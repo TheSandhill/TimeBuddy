@@ -62,14 +62,39 @@ INSERT INTO settings (id, theme, follow_system, language, pomodoro_minutes, brea
 VALUES (1, 'walnut', 0, 'nl', 25, 5, '1970-01-01T00:00:00Z');
 "#;
 
+/// Migration 2 — the Running Timer.
+///
+/// `CHECK (id = 1)` makes "at most one in-flight Pomodoro Block" a fact the
+/// database enforces rather than a rule the UI is trusted to remember.
+///
+/// Only the start instant is stored. Elapsed time is derived from the wall
+/// clock, so there is nothing here to keep up to date while a block runs — and
+/// nothing to be stale after a crash.
+pub const V2_RUNNING_TIMER: &str = r#"
+CREATE TABLE running_timer (
+    id              INTEGER PRIMARY KEY CHECK (id = 1),
+    project_id      INTEGER NOT NULL REFERENCES projects(id),
+    start_at        TEXT NOT NULL,
+    planned_minutes INTEGER NOT NULL CHECK (planned_minutes > 0)
+);
+"#;
+
 /// Every migration, in application order.
 pub fn migrations() -> Vec<Migration> {
-    vec![Migration {
-        version: 1,
-        description: "initial schema",
-        sql: V1_INITIAL_SCHEMA,
-        kind: MigrationKind::Up,
-    }]
+    vec![
+        Migration {
+            version: 1,
+            description: "initial schema",
+            sql: V1_INITIAL_SCHEMA,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 2,
+            description: "running timer",
+            sql: V2_RUNNING_TIMER,
+            kind: MigrationKind::Up,
+        },
+    ]
 }
 
 #[cfg(test)]
