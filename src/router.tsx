@@ -5,6 +5,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { AppShell } from "./components/app-shell";
+import { Clients } from "./routes/clients";
 import { Entries } from "./routes/entries";
 import { Timer } from "./routes/timer";
 
@@ -30,8 +31,15 @@ const entriesRoute = createRoute({
   component: Entries,
 });
 
+/** Where the work itself is named: clients on the left, their projects right. */
+const clientsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/clients",
+  component: Clients,
+});
+
 export const router = createRouter({
-  routeTree: rootRoute.addChildren([timerRoute, entriesRoute]),
+  routeTree: rootRoute.addChildren([timerRoute, entriesRoute, clientsRoute]),
   defaultPreload: "intent",
 });
 

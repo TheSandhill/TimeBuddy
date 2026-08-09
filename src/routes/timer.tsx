@@ -47,9 +47,15 @@ export function Timer() {
   const queryClient = useQueryClient();
 
   const settings = useQuery({ queryKey: ["settings"], queryFn: getSettings });
+  // What can be started and what today's hours are called are two different
+  // lists: an archived project is off the picker but still names its hours.
   const projects = useQuery({
-    queryKey: ["projects"],
+    queryKey: ["projects", "offerable"],
     queryFn: () => listProjects({ includeArchived: false }),
+  });
+  const named = useQuery({
+    queryKey: ["projects", "all"],
+    queryFn: () => listProjects({ includeArchived: true }),
   });
   const running = useQuery({
     queryKey: ["runningTimer"],
@@ -249,10 +255,7 @@ export function Timer() {
         </>
       )}
 
-      <TodayEntries
-        entries={entries.data ?? []}
-        projects={projects.data ?? []}
-      />
+      <TodayEntries entries={entries.data ?? []} projects={named.data ?? []} />
     </section>
   );
 }

@@ -120,6 +120,20 @@ describe("reading hours back", () => {
     expect(await screen.findByText("2:15")).toBeInTheDocument();
   });
 
+  it("still names hours whose project has since been archived", async () => {
+    // Archiving is not deleting: the hours stay, and so must their names.
+    commands.listProjects.mockImplementation(
+      ({ includeArchived }: { includeArchived: boolean }) =>
+        Promise.resolve(includeArchived ? [website, app] : [website]),
+    );
+    commands.listTimeEntries.mockResolvedValue([
+      entry({ id: 1, projectId: app.id }),
+    ]);
+    renderEntries();
+
+    expect(await screen.findByRole("listitem")).toHaveTextContent("App");
+  });
+
   it("says so when the range holds nothing", async () => {
     renderEntries();
 

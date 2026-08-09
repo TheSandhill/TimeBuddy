@@ -4,7 +4,8 @@
   },
   "nav": {
     "timer": "Timer",
-    "entries": "Hours"
+    "entries": "Hours",
+    "clients": "Clients"
   },
   "timer": {
     "unknownProject": "Unknown project",
@@ -48,6 +49,30 @@
     "undo": "Undo",
     "noProjects": "Create a project first.",
     "unknownProject": "Unknown project"
+  },
+  "clients": {
+    "title": "Clients",
+    "projects": "Projects",
+    "showArchived": "Show archived",
+    "archived": "Archived",
+    "clientArchived": "Client archived",
+    "name": "Name",
+    "save": "Save",
+    "cancel": "Cancel",
+    "rename": "Rename",
+    "archive": "Archive",
+    "restore": "Restore",
+    "renameNamed": "Rename {{name}}",
+    "archiveNamed": "Archive {{name}}",
+    "restoreNamed": "Restore {{name}}",
+    "addClient": "Add client",
+    "newClient": "New client",
+    "renameClient": "Rename client",
+    "noClients": "No clients yet.",
+    "addProject": "Add project",
+    "newProject": "New project",
+    "renameProject": "Rename project",
+    "noProjects": "No projects for this client yet."
   },
   "error": {
     "nameRequired": "Please enter a name.",
