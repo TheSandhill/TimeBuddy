@@ -37,7 +37,7 @@ pub async fn connect(path: &Path) -> Result<SqlitePool, sqlx::Error> {
 /// disabled for the same reason — a closed connection is a dropped schema.
 #[cfg(test)]
 pub async fn test_pool() -> SqlitePool {
-    use crate::schema::V1_INITIAL_SCHEMA;
+    use crate::schema::migrations;
     use std::str::FromStr;
 
     let pool = SqlitePoolOptions::new()
@@ -52,10 +52,14 @@ pub async fn test_pool() -> SqlitePool {
         .await
         .expect("in-memory sqlite");
 
-    sqlx::raw_sql(V1_INITIAL_SCHEMA)
-        .execute(&pool)
-        .await
-        .expect("migration 1 applies");
+    // Every shipped migration, in order — so a table added in migration 2 is
+    // as real to the tests as one added in migration 1.
+    for migration in migrations() {
+        sqlx::raw_sql(migration.sql)
+            .execute(&pool)
+            .await
+            .unwrap_or_else(|error| panic!("migration {} applies: {error}", migration.version));
+    }
 
     pool
 }
@@ -79,6 +83,7 @@ mod tests {
         assert!(names.contains(&"projects"));
         assert!(names.contains(&"time_entries"));
         assert!(names.contains(&"settings"));
+        assert!(names.contains(&"running_timer"));
     }
 
     #[tokio::test]

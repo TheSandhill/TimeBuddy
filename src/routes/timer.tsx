@@ -1,0 +1,233 @@
+/**
+ * The Timer screen — the primary screen and the reason the app exists.
+ *
+ * It owns the state a Pomodoro Block moves through, but not the arithmetic:
+ * every duration comes from `timer/block`, which is pure and takes the current
+ * instant as an argument. The interval in `useNow` only causes re-renders. If
+ * it stops — the machine sleeps, the window is hidden, the tab is throttled —
+ * the countdown catches up on the next tick and the logged length is unchanged.
+ */
+
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { BreakBanner } from "../components/break-banner";
+import { PomodoroDial } from "../components/pomodoro-dial";
+import { ProjectPicker } from "../components/project-picker";
+import { RecoveryPrompt } from "../components/recovery-prompt";
+import { TodayEntries } from "../components/today-entries";
+import {
+  discardRunningTimer,
+  getRunningTimer,
+  getSettings,
+  listProjects,
+  listTimeEntries,
+  startRunningTimer,
+  stopRunningTimer,
+} from "../data/commands";
+import type { RunningTimer, StopTimer } from "../data/types";
+import {
+  formatCountdown,
+  outcomeAt,
+  remainingSeconds,
+  type BlockOutcome,
+} from "../timer/block";
+import { playChime } from "../timer/chime";
+import { currentInstant, localDay, plusMinutes } from "../timer/clock";
+import { useNow } from "../timer/use-now";
+
+const SECONDS_PER_MINUTE = 60;
+
+export function Timer() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const settings = useQuery({ queryKey: ["settings"], queryFn: getSettings });
+  const projects = useQuery({
+    queryKey: ["projects"],
+    queryFn: () => listProjects({ includeArchived: false }),
+  });
+  const running = useQuery({
+    queryKey: ["runningTimer"],
+    queryFn: getRunningTimer,
+  });
+
+  const today = localDay(currentInstant());
+  const entries = useQuery({
+    queryKey: ["timeEntries", today],
+    queryFn: () => listTimeEntries({ from: today, to: today }),
+  });
+
+  const [projectId, setProjectId] = useState<number | null>(null);
+  /** The Break's end instant. State, never a row — a Break is not hours. */
+  const [breakEndsAt, setBreakEndsAt] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  /**
+   * Whether the in-flight block is one this session started. A block found on
+   * launch is one the app died on, and that is the only case worth asking
+   * about — asking again about a block the user just started would be noise.
+   */
+  const startedHere = useRef(false);
+  /** Stops the completion effect firing twice while the write is in flight. */
+  const finishing = useRef(false);
+
+  const block = running.data ?? null;
+  const recovering = block !== null && !startedHere.current;
+
+  const now = useNow(block !== null || breakEndsAt !== null);
+
+  const refresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["runningTimer"] });
+    await queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
+  };
+
+  const startBlock = useMutation({
+    mutationFn: (id: number) =>
+      startRunningTimer(id, settings.data?.pomodoroMinutes ?? 0),
+    onSuccess: () => {
+      startedHere.current = true;
+      setBreakEndsAt(null);
+      setFailed(false);
+      return refresh();
+    },
+    onError: () => setFailed(true),
+  });
+
+  const stopBlock = useMutation({
+    mutationFn: (stop: StopTimer) => stopRunningTimer(stop),
+    onSuccess: () => {
+      setFailed(false);
+      return refresh();
+    },
+    onError: () => setFailed(true),
+  });
+
+  const discardBlock = useMutation({
+    mutationFn: discardRunningTimer,
+    onSuccess: () => {
+      setFailed(false);
+      return refresh();
+    },
+    onError: () => setFailed(true),
+  });
+
+  /** Turns an outcome into either a logged entry or nothing at all. */
+  const settle = (source: RunningTimer, outcome: BlockOutcome) => {
+    if (outcome.kind === "tooShort" || outcome.kind === "tooLong") {
+      discardBlock.mutate();
+      return;
+    }
+    stopBlock.mutate({
+      date: localDay(source.startAt),
+      durationMinutes: outcome.durationMinutes,
+      endAt: outcome.endAt,
+      note: null,
+    });
+  };
+
+  // The first project is a better default than an empty picker; anything else
+  // the user picks sticks, because `projectId` stops being null.
+  useEffect(() => {
+    if (projectId === null && projects.data?.length) {
+      setProjectId(projects.data[0].id);
+    }
+  }, [projectId, projects.data]);
+
+  // Auto-stop at zero: a block can never be left running overnight.
+  useEffect(() => {
+    if (!block || recovering || finishing.current) {
+      return;
+    }
+    const outcome = outcomeAt(block, now);
+    if (outcome.kind !== "completed") {
+      return;
+    }
+
+    finishing.current = true;
+    playChime();
+    setBreakEndsAt(plusMinutes(now, settings.data?.breakMinutes ?? 0));
+    settle(block, outcome);
+  }, [block, recovering, now, settings.data]);
+
+  // Once nothing is in flight, the next block found on launch is a crash
+  // again — and a failed stop deliberately leaves the block, and the prompt.
+  useEffect(() => {
+    if (!block) {
+      finishing.current = false;
+      startedHere.current = false;
+    }
+  }, [block]);
+
+  // The Break ends the same way it started: a chime and nothing written.
+  useEffect(() => {
+    if (breakEndsAt && Date.parse(now) >= Date.parse(breakEndsAt)) {
+      setBreakEndsAt(null);
+      playChime();
+    }
+  }, [breakEndsAt, now]);
+
+  const plannedMinutes = settings.data?.pomodoroMinutes ?? 0;
+  const countdown = formatCountdown(
+    block && !recovering
+      ? remainingSeconds(block, now)
+      : plannedMinutes * SECONDS_PER_MINUTE,
+  );
+
+  const busy =
+    startBlock.isPending || stopBlock.isPending || discardBlock.isPending;
+
+  return (
+    <section className="flex flex-col gap-10">
+      {failed ? (
+        <p role="alert" className="text-sm text-danger">
+          {t("timer.failed")}
+        </p>
+      ) : null}
+
+      {recovering && block ? (
+        <RecoveryPrompt
+          outcome={outcomeAt(block, now)}
+          busy={busy}
+          onKeep={() => settle(block, outcomeAt(block, currentInstant()))}
+          onDiscard={() => discardBlock.mutate()}
+        />
+      ) : (
+        <>
+          {breakEndsAt ? (
+            <BreakBanner
+              countdown={formatCountdown(
+                (Date.parse(breakEndsAt) - Date.parse(now)) / 1000,
+              )}
+              onSkip={() => setBreakEndsAt(null)}
+            />
+          ) : null}
+
+          <div className="flex flex-col items-center gap-8 py-6">
+            <PomodoroDial
+              countdown={countdown}
+              running={block !== null}
+              canStart={projectId !== null && plannedMinutes > 0 && !busy}
+              onStart={() => projectId !== null && startBlock.mutate(projectId)}
+              onStop={() =>
+                block && settle(block, outcomeAt(block, currentInstant()))
+              }
+            />
+
+            <ProjectPicker
+              projects={projects.data ?? []}
+              value={block ? block.projectId : projectId}
+              onChange={setProjectId}
+              disabled={block !== null}
+            />
+          </div>
+        </>
+      )}
+
+      <TodayEntries
+        entries={entries.data ?? []}
+        projects={projects.data ?? []}
+      />
+    </section>
+  );
+}

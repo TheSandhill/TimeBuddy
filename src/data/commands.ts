@@ -18,7 +18,9 @@ import type {
   ProjectFilter,
   ProjectTotal,
   Report,
+  RunningTimer,
   Settings,
+  StopTimer,
   TimeEntry,
   TimeEntryEdit,
 } from "./types";
@@ -46,6 +48,10 @@ export const commandNames = [
   "create_time_entry",
   "update_time_entry",
   "delete_time_entry",
+  "get_running_timer",
+  "start_running_timer",
+  "stop_running_timer",
+  "discard_running_timer",
   "report_by_client",
   "report_by_project",
   "iso_week_of",
@@ -157,6 +163,30 @@ export function updateTimeEntry(
 /** Hard delete. The undo window that makes this safe lives in the UI. */
 export function deleteTimeEntry(id: number): Promise<void> {
   return call("delete_time_entry", { id });
+}
+
+// -- Running timer ----------------------------------------------------------
+
+/** The in-flight Pomodoro Block, or `null`. On launch, this is the question. */
+export function getRunningTimer(): Promise<RunningTimer | null> {
+  return call("get_running_timer");
+}
+
+export function startRunningTimer(
+  projectId: number,
+  plannedMinutes: number,
+): Promise<RunningTimer> {
+  return call("start_running_timer", { projectId, plannedMinutes });
+}
+
+/** Logs the block and clears it, in one transaction on the Rust side. */
+export function stopRunningTimer(stop: StopTimer): Promise<TimeEntry> {
+  return call("stop_running_timer", { stop });
+}
+
+/** Throws the block away. Nothing is written — the answer to "discard". */
+export function discardRunningTimer(): Promise<void> {
+  return call("discard_running_timer");
 }
 
 // -- Reports ----------------------------------------------------------------

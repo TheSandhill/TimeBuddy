@@ -4,6 +4,7 @@ mod db;
 mod error;
 mod projects;
 mod reports;
+mod running_timer;
 mod schema;
 mod settings;
 mod text;
@@ -57,6 +58,10 @@ pub fn run() {
             time_entries::create_time_entry,
             time_entries::update_time_entry,
             time_entries::delete_time_entry,
+            running_timer::get_running_timer,
+            running_timer::start_running_timer,
+            running_timer::stop_running_timer,
+            running_timer::discard_running_timer,
             reports::report_by_client,
             reports::report_by_project,
             reports::iso_week_of,
