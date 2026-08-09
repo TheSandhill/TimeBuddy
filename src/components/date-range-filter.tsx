@@ -17,7 +17,7 @@ export function DateRangeFilter({ range, onChange }: DateRangeFilterProps) {
   return (
     <div className="flex flex-wrap items-end gap-4">
       <label className={labelClass}>
-        {t("entries.from")}
+        {t("range.from")}
         <input
           className={fieldClass}
           type="date"
@@ -27,7 +27,7 @@ export function DateRangeFilter({ range, onChange }: DateRangeFilterProps) {
       </label>
 
       <label className={labelClass}>
-        {t("entries.to")}
+        {t("range.to")}
         <input
           className={fieldClass}
           type="date"

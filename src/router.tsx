@@ -7,6 +7,7 @@ import {
 import { AppShell } from "./components/app-shell";
 import { Clients } from "./routes/clients";
 import { Entries } from "./routes/entries";
+import { Reports } from "./routes/reports";
 import { Timer } from "./routes/timer";
 
 const rootRoute = createRootRoute({
@@ -38,8 +39,20 @@ const clientsRoute = createRoute({
   component: Clients,
 });
 
+/** What the hours add up to, and the door the xlsx export leaves by. */
+const reportsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/reports",
+  component: Reports,
+});
+
 export const router = createRouter({
-  routeTree: rootRoute.addChildren([timerRoute, entriesRoute, clientsRoute]),
+  routeTree: rootRoute.addChildren([
+    timerRoute,
+    entriesRoute,
+    clientsRoute,
+    reportsRoute,
+  ]),
   defaultPreload: "intent",
 });
 

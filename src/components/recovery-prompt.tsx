@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { BlockOutcome } from "../timer/block";
+import { primaryButtonClass } from "./button";
 
 interface RecoveryPromptProps {
   outcome: BlockOutcome;
@@ -40,7 +41,7 @@ export function RecoveryPrompt({
             type="button"
             disabled={busy}
             onClick={onKeep}
-            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-40"
+            className={primaryButtonClass}
           >
             {t("timer.recoveryKeep")}
           </button>

@@ -124,6 +124,27 @@ export interface DateRange {
   to: Day;
 }
 
+/** The presets a report offers, plus the range someone picks by hand. */
+export type PresetName = "thisWeek" | "lastWeek" | "thisMonth" | "lastMonth";
+
+/**
+ * Which stretch of days a report is about.
+ *
+ * A preset is a name, not a range: Rust resolves it against today, so "last
+ * week" means the same Monday-to-Sunday here as it does in the export, and no
+ * ISO rule is re-implemented in JavaScript.
+ */
+export type Period = { preset: PresetName } | ({ preset: "custom" } & DateRange);
+
+/**
+ * An ISO week number and the ISO year it belongs to — not always the calendar
+ * year: the week of 28 December 2026 runs into January and is still 2026/53.
+ */
+export interface IsoWeek {
+  year: number;
+  week: number;
+}
+
 export interface ClientTotal {
   clientId: number;
   clientName: string;
@@ -140,8 +161,26 @@ export interface ProjectTotal {
 
 export interface Report<Row> {
   range: DateRange;
+  /** The week the range is, when it is a whole one. `null` for a month. */
+  isoWeek: IsoWeek | null;
   totalMinutes: number;
   rows: Row[];
+}
+
+/**
+ * The column headings the exported sheet is written with.
+ *
+ * They travel from here into Rust because UI copy lives in the catalogues — a
+ * heading spelled in Rust would be a hardcoded string the lint cannot see.
+ */
+export interface SheetLabels {
+  sheetName: string;
+  date: string;
+  client: string;
+  project: string;
+  note: string;
+  hours: string;
+  total: string;
 }
 
 export interface Settings {
@@ -171,7 +210,9 @@ export type ValidationCode =
 export type CommandError =
   | { kind: "validation"; code: ValidationCode }
   | { kind: "notFound"; entity: string; id: number }
-  | { kind: "database"; message: string };
+  | { kind: "database"; message: string }
+  /** The file could not be written. The hours are safe; the file is not there. */
+  | { kind: "export"; message: string };
 
 /**
  * Narrows an unknown rejection to a `CommandError`. Anything else — a dropped
@@ -182,5 +223,10 @@ export function isCommandError(error: unknown): error is CommandError {
     return false;
   }
   const { kind } = error as { kind: unknown };
-  return kind === "validation" || kind === "notFound" || kind === "database";
+  return (
+    kind === "validation" ||
+    kind === "notFound" ||
+    kind === "database" ||
+    kind === "export"
+  );
 }

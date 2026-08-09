@@ -2,6 +2,7 @@ mod archive;
 mod clients;
 mod db;
 mod error;
+mod export;
 mod projects;
 mod reports;
 mod running_timer;
@@ -33,6 +34,9 @@ const DB_URL: &str = "sqlite:timebuddy.db";
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // Only for the native save dialog the export runs through. Writing the
+        // file itself stays in Rust, so the frontend never holds a file handle.
+        .plugin(tauri_plugin_dialog::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations(DB_URL, schema::migrations())
@@ -78,7 +82,7 @@ pub fn run() {
             running_timer::discard_running_timer,
             reports::report_by_client,
             reports::report_by_project,
-            reports::iso_week_of,
+            export::export_report,
             settings::get_settings,
             settings::update_settings,
         ])

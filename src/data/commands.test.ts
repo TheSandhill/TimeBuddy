@@ -79,13 +79,33 @@ describe("command wrappers", () => {
     });
   });
 
-  it("passes a report range as the two bounds the command takes", async () => {
-    await commands.reportByProject({ from: "2026-08-03", to: "2026-08-09" });
+  it("sends a report's period by name, for Rust to resolve", async () => {
+    await commands.reportByProject({ preset: "lastWeek" });
 
     expect(invoke).toHaveBeenCalledWith("report_by_project", {
-      from: "2026-08-03",
-      to: "2026-08-09",
+      period: { preset: "lastWeek" },
     });
+  });
+
+  it("sends an export as the days it covers, not the preset behind them", async () => {
+    await commands.exportReport(
+      "C:\\uren.xlsx",
+      { from: "2026-08-03", to: "2026-08-09" },
+      {
+        sheetName: "Uren",
+        date: "Datum",
+        client: "Klant",
+        project: "Project",
+        note: "Notitie",
+        hours: "Uren",
+        total: "Totaal",
+      },
+    );
+
+    expect(invoke).toHaveBeenCalledWith(
+      "export_report",
+      expect.objectContaining({ from: "2026-08-03", to: "2026-08-09" }),
+    );
   });
 
   it("sends a new entry as a single payload", async () => {

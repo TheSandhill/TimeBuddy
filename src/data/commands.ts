@@ -11,15 +11,16 @@ import type {
   Client,
   ClientTotal,
   DateRange,
-  Day,
   EntryFilter,
   NewTimeEntry,
+  Period,
   Project,
   ProjectFilter,
   ProjectTotal,
   Report,
   RunningTimer,
   Settings,
+  SheetLabels,
   StopTimer,
   TimeEntry,
   TimeEntryEdit,
@@ -54,7 +55,7 @@ export const commandNames = [
   "discard_running_timer",
   "report_by_client",
   "report_by_project",
-  "iso_week_of",
+  "export_report",
   "get_settings",
   "update_settings",
 ] as const;
@@ -191,21 +192,30 @@ export function discardRunningTimer(): Promise<void> {
 
 // -- Reports ----------------------------------------------------------------
 
-export function reportByClient(
-  range: DateRange,
-): Promise<Report<ClientTotal>> {
-  return call("report_by_client", { from: range.from, to: range.to });
+export function reportByClient(period: Period): Promise<Report<ClientTotal>> {
+  return call("report_by_client", { period });
 }
 
-export function reportByProject(
-  range: DateRange,
-): Promise<Report<ProjectTotal>> {
-  return call("report_by_project", { from: range.from, to: range.to });
+export function reportByProject(period: Period): Promise<Report<ProjectTotal>> {
+  return call("report_by_project", { period });
 }
 
-/** The Monday-to-Sunday week a date falls in, decided by Rust, not by JS. */
-export function isoWeekOf(date: Day): Promise<DateRange> {
-  return call("iso_week_of", { date });
+/**
+ * Writes the entries over `range` to `path` as an `.xlsx`.
+ *
+ * The path comes from the native save dialog, so the user has already said
+ * where — and agreed to overwrite, if it was theirs to overwrite.
+ *
+ * The range travels as days, not as the period that produced it: the report on
+ * screen resolved "this week" once already, and asking Rust again after the
+ * dialog has been open a while could answer with a different week.
+ */
+export function exportReport(
+  path: string,
+  range: DateRange,
+  labels: SheetLabels,
+): Promise<void> {
+  return call("export_report", { path, from: range.from, to: range.to, labels });
 }
 
 // -- Settings ---------------------------------------------------------------

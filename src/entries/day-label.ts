@@ -8,7 +8,7 @@
 
 import type { Day } from "../data/types";
 
-function dayAsDate(day: Day): Date {
+export function dayAsDate(day: Day): Date {
   const [year, month, date] = day.split("-").map(Number);
   return new Date(year, month - 1, date);
 }

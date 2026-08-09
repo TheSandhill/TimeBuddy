@@ -5,7 +5,12 @@
   "nav": {
     "timer": "Timer",
     "entries": "Hours",
-    "clients": "Clients"
+    "clients": "Clients",
+    "reports": "Report"
+  },
+  "range": {
+    "from": "From",
+    "to": "Up to and including"
   },
   "timer": {
     "unknownProject": "Unknown project",
@@ -26,8 +31,6 @@
     "failed": "That didn't work. Please try again."
   },
   "entries": {
-    "from": "From",
-    "to": "Up to and including",
     "total": "Total",
     "empty": "No hours in this range.",
     "add": "Add hours",
@@ -74,6 +77,28 @@
     "renameProject": "Rename project",
     "noProjects": "No projects for this client yet."
   },
+  "reports": {
+    "thisWeek": "This week",
+    "lastWeek": "Last week",
+    "thisMonth": "This month",
+    "lastMonth": "Last month",
+    "custom": "Custom",
+    "week": "Week {{week}}, {{year}}",
+    "byClient": "By client",
+    "byProject": "By project",
+    "total": "Total",
+    "empty": "No hours in this period.",
+    "export": "Export to Excel",
+    "exporting": "Exporting…",
+    "excelFile": "Excel workbook",
+    "fileName": "TimeBuddy {{from}} to {{to}}.xlsx",
+    "sheetName": "Hours",
+    "columnDate": "Date",
+    "columnClient": "Client",
+    "columnProject": "Project",
+    "columnNote": "Note",
+    "columnHours": "Hours"
+  },
   "error": {
     "nameRequired": "Please enter a name.",
     "durationUnreadable": "Can't read that duration. Try 1:30, 1.5 or 90m.",
@@ -84,6 +109,7 @@
     "durationSettingNotPositive": "Enter a duration greater than zero.",
     "timerAlreadyRunning": "A block is already running.",
     "notFound": "That no longer exists.",
+    "exportFailed": "The file could not be saved.",
     "unknown": "That didn't work. Please try again."
   },
   "titlebar": {

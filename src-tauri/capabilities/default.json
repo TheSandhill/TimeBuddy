@@ -3,6 +3,11 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": ["main"],
-  "comment": "No sql: permissions — all SQL lives in Rust behind typed commands (ADR-0002). The plugin is present only for its migration runner.",
-  "permissions": ["core:default", "core:window:allow-minimize", "core:window:allow-close"]
+  "comment": "No sql: permissions — all SQL lives in Rust behind typed commands (ADR-0002). The plugin is present only for its migration runner. dialog:allow-save opens the native Save as… box for the xlsx export; it returns a path, not a file handle — Rust writes the bytes.",
+  "permissions": [
+    "core:default",
+    "core:window:allow-minimize",
+    "core:window:allow-close",
+    "dialog:allow-save"
+  ]
 }

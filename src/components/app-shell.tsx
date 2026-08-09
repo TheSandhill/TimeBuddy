@@ -32,6 +32,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           {t("nav.clients")}
         </Link>
+        <Link
+          to="/reports"
+          className={linkClass}
+          activeProps={{ className: activeClass }}
+        >
+          {t("nav.reports")}
+        </Link>
       </nav>
 
       <main className="min-h-0 flex-1 overflow-y-auto p-6">{children}</main>

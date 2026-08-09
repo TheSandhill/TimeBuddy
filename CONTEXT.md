@@ -69,6 +69,24 @@ time. Silently discarding loses real work; silently logging invents it.
 An aggregation of TimeEntries over a date range, grouped by Client or Project. Weeks start
 **Monday** (ISO). Durations are stored as truth and rounded only at presentation, never on write.
 
+Archived Clients and Projects still appear: archiving hides something from the pickers, not from
+history.
+
+### Period
+
+Which stretch of days a Report is about: **this week**, **last week**, **this month**,
+**last month**, or a custom range. A preset is a name, not a range — it is resolved against today
+in Rust, so "last week" is the same Monday-to-Sunday on screen and in the export, including over a
+year boundary.
+
+A range that is exactly one Monday-to-Sunday week carries its **ISO week number**, and the ISO year
+with it: the week of 28 December 2026 runs into January and is still 2026 week 53.
+
+### Export
+
+A Report's TimeEntries written out as an `.xlsx` — one sheet, one row per entry, scoped to the
+range on screen, saved wherever the native dialog says. **No CSV.** See ADR-0006.
+
 ### Theme
 
 A named set of design tokens (`--color-surface`, `--color-ink`, `--color-accent`, …). Components
