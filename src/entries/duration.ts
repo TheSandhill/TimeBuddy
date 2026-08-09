@@ -110,6 +110,19 @@ export function parseDuration(input: string): ParsedDuration {
 }
 
 /**
+ * The message for a problem, as an i18n key.
+ *
+ * It lives here rather than with the command errors so the vocabulary and the
+ * key that translates it stay in one file — `data/` has no business knowing
+ * what this parser can fail at.
+ */
+export function durationErrorKey(
+  problem: DurationProblem,
+): `error.${DurationProblem}` {
+  return `error.${problem}`;
+}
+
+/**
  * `H:MM` — the form the field parses back, so an entry can be edited by
  * changing what it already shows.
  */

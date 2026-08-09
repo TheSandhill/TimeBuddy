@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Day, Project, TimeEntry } from "../data/types";
-import { durationErrorKey } from "../data/error-message";
-import { formatDuration, parseDuration } from "../entries/duration";
+import type { Day, Project, TimeEntry, TimeEntryEdit } from "../data/types";
+import {
+  durationErrorKey,
+  formatDuration,
+  parseDuration,
+} from "../entries/duration";
 
-/** What the form is worth once it reads. Times are absent on purpose. */
-export interface EntryFormValues {
-  projectId: number;
-  date: Day;
-  durationMinutes: number;
-  note: string | null;
-}
+/**
+ * What the form is worth once it reads. It is exactly `TimeEntryEdit` — the
+ * fields an entry can be corrected in are the fields it can be created with,
+ * and `source`, `startAt` and `endAt` are absent from both on purpose.
+ */
+export type EntryFormValues = TimeEntryEdit;
 
 interface EntryFormProps {
   projects: Project[];

@@ -22,7 +22,7 @@ import {
   updateTimeEntry,
 } from "../data/commands";
 import { errorKey } from "../data/error-message";
-import type { DateRange, TimeEntry } from "../data/types";
+import type { DateRange, Day, TimeEntry } from "../data/types";
 import { formatDuration } from "../entries/duration";
 import { groupByDay, sumMinutes } from "../entries/grouping";
 import { useUndoableDelete } from "../entries/use-undoable-delete";
@@ -32,7 +32,7 @@ import { currentInstant, localDay } from "../timer/clock";
 type Editing = { entry: TimeEntry | null } | null;
 
 /** The month so far — the range someone filling in a timesheet is looking at. */
-function monthToDate(today: string): DateRange {
+function monthToDate(today: Day): DateRange {
   return { from: `${today.slice(0, 7)}-01`, to: today };
 }
 
@@ -43,7 +43,9 @@ export function Entries() {
   const today = localDay(currentInstant());
   const [range, setRange] = useState<DateRange>(() => monthToDate(today));
   const [editing, setEditing] = useState<Editing>(null);
-  const [failure, setFailure] = useState<string | null>(null);
+  /** A rejected write, kept apart: a failed delete is not the form's problem. */
+  const [formError, setFormError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const backwards = range.from > range.to;
 
@@ -63,7 +65,7 @@ export function Entries() {
   const remove = useMutation({
     mutationFn: (entry: TimeEntry) => deleteTimeEntry(entry.id),
     onSuccess: () => refresh(),
-    onError: (error) => setFailure(t(errorKey(error))),
+    onError: (error) => setDeleteError(t(errorKey(error))),
   });
 
   // The delete is deferred, not undone: until the window runs out the row is
@@ -83,10 +85,10 @@ export function Entries() {
         : createTimeEntry({ ...values, source: "manual" }),
     onSuccess: async () => {
       setEditing(null);
-      setFailure(null);
+      setFormError(null);
       await refresh();
     },
-    onError: (error) => setFailure(t(errorKey(error))),
+    onError: (error) => setFormError(t(errorKey(error))),
   });
 
   const visible = (entries.data ?? []).filter(
@@ -109,7 +111,7 @@ export function Entries() {
           <button
             type="button"
             onClick={() => {
-              setFailure(null);
+              setFormError(null);
               setEditing({ entry: null });
             }}
             className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-surface transition-opacity hover:opacity-90"
@@ -125,6 +127,12 @@ export function Entries() {
         </p>
       ) : null}
 
+      {deleteError ? (
+        <p role="alert" className="text-sm text-danger">
+          {deleteError}
+        </p>
+      ) : null}
+
       {editing ? (
         <EntryForm
           // A fresh form per entry: the fields are initial state, not props.
@@ -133,29 +141,26 @@ export function Entries() {
           entry={editing.entry}
           today={today}
           busy={save.isPending}
-          error={failure}
+          error={formError}
           onSubmit={(values) => save.mutate({ entry: editing.entry, values })}
           onCancel={() => {
             setEditing(null);
-            setFailure(null);
+            setFormError(null);
           }}
         />
-      ) : failure ? (
-        <p role="alert" className="text-sm text-danger">
-          {failure}
-        </p>
       ) : null}
 
       <EntryList
         days={groupByDay(visible)}
         projects={projects.data ?? []}
         onEdit={(entry) => {
-          setFailure(null);
+          setFormError(null);
           setEditing({ entry });
         }}
         onDelete={(entry) => {
           // Editing a row that is on its way out would be a dead end.
           setEditing(null);
+          setDeleteError(null);
           deletion.request(entry);
         }}
       />

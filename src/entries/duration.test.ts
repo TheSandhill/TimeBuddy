@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { formatDuration, parseDuration } from "./duration";
 
@@ -87,6 +90,28 @@ describe("parsing what a person types into a duration field", () => {
     expect(minutesOf("24:00")).toBe(1440);
     expect(problemOf("24:01")).toBe("durationExceedsDay");
     expect(problemOf("25h")).toBe("durationExceedsDay");
+  });
+});
+
+describe("the bounds this field turns away before the database does", () => {
+  it("uses the same ceiling Rust does", () => {
+    // The rule has one home (`time_entries::validate`); saying it early here
+    // is a courtesy, and this test is what stops the two drifting apart.
+    const repoRoot = path.resolve(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "..",
+      "..",
+    );
+    const timeEntriesRs = readFileSync(
+      path.join(repoRoot, "src-tauri", "src", "time_entries.rs"),
+      "utf8",
+    );
+    const [, ceiling] =
+      timeEntriesRs.match(/MAX_DURATION_MINUTES: i64 = (\d+)/) ?? [];
+
+    expect(ceiling, "no MAX_DURATION_MINUTES in time_entries.rs").toBeDefined();
+    expect(minutesOf(`${ceiling}m`)).toBe(Number(ceiling));
+    expect(problemOf(`${Number(ceiling) + 1}m`)).toBe("durationExceedsDay");
   });
 });
 

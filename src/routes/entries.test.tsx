@@ -177,6 +177,24 @@ describe("reading hours back", () => {
     expect(manual).toHaveTextContent("Overleg");
     expect(manual).toHaveTextContent("2:00");
   });
+
+  it("stops showing a window the duration has been corrected past", async () => {
+    // 09:00–09:25 next to "1:30" would be two answers to the same question.
+    commands.listTimeEntries.mockResolvedValue([
+      entry({
+        id: 1,
+        durationMinutes: 90,
+        source: "timer",
+        startAt: new Date(2026, 7, 5, 9, 0).toISOString(),
+        endAt: new Date(2026, 7, 5, 9, 25).toISOString(),
+      }),
+    ]);
+    renderEntries();
+
+    const row = await screen.findByRole("listitem");
+    expect(row).toHaveTextContent("1:30");
+    expect(row).not.toHaveTextContent("09:00");
+  });
 });
 
 describe("adding hours by hand", () => {

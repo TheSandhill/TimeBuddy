@@ -1,8 +1,10 @@
 import { useTranslation } from "react-i18next";
+import { projectName } from "../data/project-name";
 import type { Project, TimeEntry } from "../data/types";
 import { dayLabel } from "../entries/day-label";
 import { formatDuration } from "../entries/duration";
 import type { EntryDay } from "../entries/grouping";
+import { windowOf } from "../entries/window";
 import { formatClock } from "../timer/clock";
 
 interface EntryListProps {
@@ -21,10 +23,8 @@ interface EntryListProps {
 export function EntryList({ days, projects, onEdit, onDelete }: EntryListProps) {
   const { t, i18n } = useTranslation();
 
-  // Archived projects are out of the pickers but still own their hours.
   const nameOf = (projectId: number) =>
-    projects.find((project) => project.id === projectId)?.name ??
-    t("entries.unknownProject");
+    projectName(projects, projectId, t("entries.unknownProject"));
 
   if (days.length === 0) {
     return <p className="text-sm text-ink-muted">{t("entries.empty")}</p>;
@@ -46,6 +46,7 @@ export function EntryList({ days, projects, onEdit, onDelete }: EntryListProps) 
           <ul className="flex flex-col divide-y divide-border">
             {day.entries.map((entry) => {
               const project = nameOf(entry.projectId);
+              const ran = windowOf(entry);
               return (
                 <li
                   key={entry.id}
@@ -61,9 +62,9 @@ export function EntryList({ days, projects, onEdit, onDelete }: EntryListProps) 
                   </span>
 
                   <span className="flex shrink-0 items-baseline gap-3 text-sm text-ink-muted">
-                    {entry.startAt && entry.endAt ? (
+                    {ran ? (
                       <span className="tabular-nums text-xs">
-                        {`${formatClock(entry.startAt)}–${formatClock(entry.endAt)}`}
+                        {`${formatClock(ran.startAt)}–${formatClock(ran.endAt)}`}
                       </span>
                     ) : null}
                     <span className="tabular-nums text-ink">
