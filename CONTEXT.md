@@ -17,7 +17,9 @@ deleting it would silently rewrite history. Archiving hides it from pickers and 
 A named piece of work belonging to exactly one Client. Carries an optional `hourly_rate` that
 nothing reads yet — it exists so billing can be added without a migration.
 
-Like Client, a Project is **archived, never deleted**.
+Like Client, a Project is **archived, never deleted**. Archiving a Client also takes its Projects
+out of the pickers without touching their own `archived_at` — the work is unofferable because the
+Client is gone, so restoring the Client is what brings them back. See ADR-0005.
 
 ### TimeEntry
 

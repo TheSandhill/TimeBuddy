@@ -125,6 +125,32 @@ describe("the idle Timer screen", () => {
     expect(screen.getByRole("button", { name: "Start" })).toBeDisabled();
   });
 
+  it("still names today's hours on a project that has since been archived", async () => {
+    commands.listProjects.mockImplementation(
+      ({ includeArchived }: { includeArchived: boolean }) =>
+        Promise.resolve(includeArchived ? [website] : []),
+    );
+    commands.listTimeEntries.mockResolvedValue([
+      {
+        id: 1,
+        projectId: website.id,
+        date: "2026-08-05",
+        durationMinutes: 25,
+        startAt: null,
+        endAt: null,
+        note: null,
+        source: "manual",
+        createdAt: "2026-08-05T09:25:00Z",
+        updatedAt: "2026-08-05T09:25:00Z",
+      },
+    ]);
+    renderTimer();
+
+    // No longer startable, still named.
+    expect(await screen.findByText("Maak eerst een project aan.")).toBeVisible();
+    expect(await screen.findByRole("listitem")).toHaveTextContent(website.name);
+  });
+
   it("lists today's entries with the window they ran in", async () => {
     commands.listTimeEntries.mockResolvedValue([
       {

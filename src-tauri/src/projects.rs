@@ -29,6 +29,12 @@ pub struct Project {
 const SELECT: &str = "SELECT id, client_id, name, hourly_rate, archived_at, created_at, updated_at \
                       FROM projects";
 
+/// A project of an archived client is not offerable work, whatever its own
+/// `archived_at` says: archiving the client is what took it out of the pickers,
+/// so restoring the client is what brings it back. Written as a subquery rather
+/// than a join so `SELECT` stays column-for-column what `Project` expects.
+const CLIENT_IS_LIVE: &str = " AND (SELECT archived_at FROM clients WHERE clients.id = projects.client_id) IS NULL";
+
 /// Which projects a caller wants back. Both axes are always answered
 /// explicitly, so no call site accidentally depends on a default.
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
@@ -36,6 +42,7 @@ const SELECT: &str = "SELECT id, client_id, name, hourly_rate, archived_at, crea
 pub struct ProjectFilter {
     /// Restrict to one client. `None` means every client.
     pub client_id: Option<i64>,
+    /// Include projects that are archived *or* whose client is.
     pub include_archived: bool,
 }
 
@@ -43,6 +50,7 @@ pub async fn list(pool: &SqlitePool, filter: ProjectFilter) -> Result<Vec<Projec
     let mut sql = format!("{SELECT} WHERE 1 = 1");
     if !filter.include_archived {
         sql.push_str(" AND archived_at IS NULL");
+        sql.push_str(CLIENT_IS_LIVE);
     }
     if filter.client_id.is_some() {
         sql.push_str(" AND client_id = ?");
@@ -243,6 +251,45 @@ mod tests {
                 id: 404
             }
         ));
+    }
+
+    #[tokio::test]
+    async fn archiving_a_client_takes_its_projects_out_of_the_pickers() {
+        let pool = test_pool().await;
+        let acme = a_client(&pool, "Acme").await;
+        let other = a_client(&pool, "Other").await;
+        create(&pool, acme, "Website", None, now()).await.unwrap();
+        create(&pool, other, "Elsewhere", None, now()).await.unwrap();
+
+        clients::archive(&pool, acme, now()).await.unwrap();
+
+        // A live project of an archived client is not offerable work: the
+        // client it would be billed to is gone from every picker.
+        let offerable: Vec<String> = list(&pool, ProjectFilter::default())
+            .await
+            .unwrap()
+            .into_iter()
+            .map(|p| p.name)
+            .collect();
+        assert_eq!(offerable, ["Elsewhere"]);
+        assert!(list(&pool, for_client(acme)).await.unwrap().is_empty());
+
+        // Asked for outright — as the Clients screen does — they are still there.
+        let shown = list(
+            &pool,
+            ProjectFilter {
+                client_id: Some(acme),
+                include_archived: true,
+            },
+        )
+        .await
+        .unwrap();
+        assert_eq!(shown.len(), 1);
+        assert_eq!(shown[0].archived_at, None, "the project itself is not archived");
+
+        // And restoring the client is enough to bring them back.
+        clients::restore(&pool, acme, now()).await.unwrap();
+        assert_eq!(list(&pool, for_client(acme)).await.unwrap().len(), 1);
     }
 
     #[tokio::test]

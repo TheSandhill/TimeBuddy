@@ -49,8 +49,15 @@ export function Entries() {
 
   const backwards = range.from > range.to;
 
+  // Naming an hour and offering work are different questions. An archived
+  // project — or one whose client was archived — still names the hours already
+  // booked to it; it is only no longer on offer.
   const projects = useQuery({
-    queryKey: ["projects"],
+    queryKey: ["projects", "all"],
+    queryFn: () => listProjects({ includeArchived: true }),
+  });
+  const offerable = useQuery({
+    queryKey: ["projects", "offerable"],
     queryFn: () => listProjects({ includeArchived: false }),
   });
   const entries = useQuery({
@@ -137,7 +144,7 @@ export function Entries() {
         <EntryForm
           // A fresh form per entry: the fields are initial state, not props.
           key={editing.entry?.id ?? "new"}
-          projects={projects.data ?? []}
+          projects={offerable.data ?? []}
           entry={editing.entry}
           today={today}
           busy={save.isPending}

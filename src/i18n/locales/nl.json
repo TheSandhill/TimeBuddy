@@ -4,7 +4,8 @@
   },
   "nav": {
     "timer": "Timer",
-    "entries": "Uren"
+    "entries": "Uren",
+    "clients": "Klanten"
   },
   "timer": {
     "unknownProject": "Onbekend project",
@@ -48,6 +49,30 @@
     "undo": "Ongedaan maken",
     "noProjects": "Maak eerst een project aan.",
     "unknownProject": "Onbekend project"
+  },
+  "clients": {
+    "title": "Klanten",
+    "projects": "Projecten",
+    "showArchived": "Toon gearchiveerde",
+    "archived": "Gearchiveerd",
+    "clientArchived": "Klant gearchiveerd",
+    "name": "Naam",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "rename": "Hernoemen",
+    "archive": "Archiveren",
+    "restore": "Terugzetten",
+    "renameNamed": "{{name}} hernoemen",
+    "archiveNamed": "{{name}} archiveren",
+    "restoreNamed": "{{name}} terugzetten",
+    "addClient": "Klant toevoegen",
+    "newClient": "Nieuwe klant",
+    "renameClient": "Klant hernoemen",
+    "noClients": "Nog geen klanten.",
+    "addProject": "Project toevoegen",
+    "newProject": "Nieuw project",
+    "renameProject": "Project hernoemen",
+    "noProjects": "Nog geen projecten voor deze klant."
   },
   "error": {
     "nameRequired": "Vul een naam in.",

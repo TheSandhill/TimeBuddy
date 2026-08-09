@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Day, Project, TimeEntry, TimeEntryEdit } from "../data/types";
+import { fieldClass, labelClass } from "./field";
 import {
   durationErrorKey,
   formatDuration,
@@ -25,9 +26,6 @@ interface EntryFormProps {
   onSubmit: (values: EntryFormValues) => void;
   onCancel: () => void;
 }
-
-const field = "rounded-md border border-border bg-surface px-3 py-2 text-sm text-ink";
-const label = "flex flex-col gap-1 text-xs uppercase tracking-widest text-ink-muted";
 
 /**
  * Adding or correcting hours by hand — the primary input path, because people
@@ -103,10 +101,10 @@ export function EntryForm({
       </h2>
 
       <div className="grid grid-cols-2 gap-4">
-        <label className={label}>
+        <label className={labelClass}>
           {t("entries.project")}
           <select
-            className={field}
+            className={fieldClass}
             value={projectId ?? ""}
             onChange={(event) => setProjectId(Number(event.target.value))}
           >
@@ -118,10 +116,10 @@ export function EntryForm({
           </select>
         </label>
 
-        <label className={label}>
+        <label className={labelClass}>
           {t("entries.date")}
           <input
-            className={field}
+            className={fieldClass}
             type="date"
             value={date}
             max={today}
@@ -129,10 +127,10 @@ export function EntryForm({
           />
         </label>
 
-        <label className={label}>
+        <label className={labelClass}>
           {t("entries.duration")}
           <input
-            className={field}
+            className={fieldClass}
             value={duration}
             inputMode="text"
             placeholder={t("entries.durationHint")}
@@ -140,10 +138,10 @@ export function EntryForm({
           />
         </label>
 
-        <label className={label}>
+        <label className={labelClass}>
           {t("entries.note")}
           <input
-            className={field}
+            className={fieldClass}
             value={note}
             placeholder={t("entries.notePlaceholder")}
             onChange={(event) => setNote(event.target.value)}
