@@ -25,7 +25,12 @@ serde_json = "1"
 sqlx = { version = "0.8", default-features = false, features = ["sqlite", "runtime-tokio", "chrono", "macros"] }
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2"
+rust_xlsxwriter = { version = "0.97.1", default-features = false, features = ["chrono"] }
+tauri-plugin-dialog = "2.7.2"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+# An .xlsx is a zip of XML. The export tests open one and read the cells, so
+# "the numbers are numbers" is checked rather than hoped for.
+zip = { version = "8", default-features = false, features = ["deflate"] }
 

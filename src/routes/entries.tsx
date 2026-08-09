@@ -10,6 +10,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { primaryButtonClass } from "../components/button";
 import { DateRangeFilter } from "../components/date-range-filter";
 import { EntryForm, type EntryFormValues } from "../components/entry-form";
 import { EntryList } from "../components/entry-list";
@@ -121,7 +122,7 @@ export function Entries() {
               setFormError(null);
               setEditing({ entry: null });
             }}
-            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-surface transition-opacity hover:opacity-90"
+            className={primaryButtonClass}
           >
             {t("entries.add")}
           </button>

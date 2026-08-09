@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Day, Project, TimeEntry, TimeEntryEdit } from "../data/types";
+import { primaryButtonClass } from "./button";
 import { fieldClass, labelClass } from "./field";
 import {
   durationErrorKey,
@@ -159,7 +160,7 @@ export function EntryForm({
         <button
           type="submit"
           disabled={busy}
-          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-40"
+          className={primaryButtonClass}
         >
           {t("entries.save")}
         </button>

@@ -11,7 +11,8 @@ import { isCommandError, type ValidationCode } from "./types";
  * An i18n key under `error.`. Spelled as a template type so a code that has no
  * translation is a compile error rather than a key shown to the user.
  */
-export type ErrorKey = `error.${ValidationCode | "notFound" | "unknown"}`;
+export type ErrorKey =
+  `error.${ValidationCode | "notFound" | "exportFailed" | "unknown"}`;
 
 export function errorKey(error: unknown): ErrorKey {
   if (isCommandError(error)) {
@@ -20,6 +21,10 @@ export function errorKey(error: unknown): ErrorKey {
         return `error.${error.code}`;
       case "notFound":
         return "error.notFound";
+      // A failed export is worth saying out loud: the file the user just named
+      // is not there, even though their hours are untouched.
+      case "export":
+        return "error.exportFailed";
       // A database message is for a log, not for a person.
       case "database":
         return "error.unknown";

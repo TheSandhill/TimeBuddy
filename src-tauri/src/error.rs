@@ -41,6 +41,14 @@ pub enum Error {
     /// for the log rather than a code for translation.
     #[error("database error: {message}")]
     Database { message: String },
+
+    /// The export file could not be built or written — a full disk, a path in
+    /// a folder that has since gone, a workbook Excel would refuse.
+    ///
+    /// Separate from `Database` because the two say different things to the
+    /// person watching: their hours are safe, the file is not there.
+    #[error("export failed: {message}")]
+    Export { message: String },
 }
 
 impl Error {
@@ -51,6 +59,15 @@ impl Error {
     pub fn not_found(entity: &'static str, id: i64) -> Self {
         Error::NotFound { entity, id }
     }
+
+    /// Written out at the point of failure rather than through a blanket
+    /// `From<io::Error>`, so an unrelated I/O fault can never claim to be a
+    /// failed export.
+    pub fn export(cause: impl std::fmt::Display) -> Self {
+        Error::Export {
+            message: cause.to_string(),
+        }
+    }
 }
 
 impl From<sqlx::Error> for Error {
@@ -60,5 +77,14 @@ impl From<sqlx::Error> for Error {
         }
     }
 }
+
+impl From<rust_xlsxwriter::XlsxError> for Error {
+    fn from(error: rust_xlsxwriter::XlsxError) -> Self {
+        Error::Export {
+            message: error.to_string(),
+        }
+    }
+}
+
 
 pub type Result<T> = std::result::Result<T, Error>;
