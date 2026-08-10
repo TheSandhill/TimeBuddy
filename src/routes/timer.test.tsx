@@ -19,10 +19,13 @@ vi.mock("../data/commands", () => commands);
 const chime = vi.hoisted(() => ({ playChime: vi.fn() }));
 vi.mock("../timer/chime", () => chime);
 
-const notify = vi.hoisted(() => ({ notifyBlockEnded: vi.fn() }));
+const notify = vi.hoisted(() => ({ notify: vi.fn() }));
 vi.mock("../timer/notify", () => notify);
 
 const { Timer } = await import("./timer");
+const { clearTimerToggle, requestTimerToggle } = await import(
+  "../tray/toggle-request"
+);
 
 const settings: Settings = {
   theme: "walnut",
@@ -79,6 +82,7 @@ async function clickStart() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  clearTimerToggle();
   commands.getSettings.mockResolvedValue(settings);
   commands.listProjects.mockResolvedValue([website]);
   commands.listTimeEntries.mockResolvedValue([]);
@@ -86,7 +90,7 @@ beforeEach(() => {
   commands.startRunningTimer.mockResolvedValue(inFlight(0));
   commands.stopRunningTimer.mockResolvedValue({} as TimeEntry);
   commands.discardRunningTimer.mockResolvedValue(undefined);
-  notify.notifyBlockEnded.mockResolvedValue(undefined);
+  notify.notify.mockResolvedValue(undefined);
 });
 
 describe("the idle Timer screen", () => {
@@ -328,6 +332,63 @@ describe("a block this session started", () => {
   });
 });
 
+describe("Start/Stop pressed in the tray menu", () => {
+  /** The menu item, which reaches this screen through the latch. */
+  const clickMenuItem = () => act(() => requestTimerToggle());
+
+  it("starts a block on the picked project, as the button would", async () => {
+    renderTimer();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Start" })).toBeEnabled(),
+    );
+
+    clickMenuItem();
+
+    await waitFor(() =>
+      expect(commands.startRunningTimer).toHaveBeenCalledWith(7, 25),
+    );
+  });
+
+  it("stops a running block, logging what actually elapsed", async () => {
+    appearsAfterStart(inFlight(10));
+    renderTimer();
+    await clickStart();
+    await screen.findByRole("button", { name: "Stop" });
+
+    clickMenuItem();
+
+    await waitFor(() =>
+      expect(commands.stopRunningTimer).toHaveBeenCalledWith(
+        expect.objectContaining({ durationMinutes: 10 }),
+      ),
+    );
+  });
+
+  it("leaves a block found on launch to the prompt to decide", async () => {
+    // The recovery prompt is a question. A menu item must not answer it on
+    // the user's behalf, in either direction.
+    commands.getRunningTimer.mockResolvedValue(inFlight(10));
+    renderTimer();
+    await screen.findByText("Er liep nog een blok");
+
+    clickMenuItem();
+
+    expect(commands.stopRunningTimer).not.toHaveBeenCalled();
+    expect(commands.discardRunningTimer).not.toHaveBeenCalled();
+    expect(commands.startRunningTimer).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when there is no project to start on", async () => {
+    commands.listProjects.mockResolvedValue([]);
+    renderTimer();
+    await screen.findByText("Maak eerst een project aan.");
+
+    clickMenuItem();
+
+    expect(commands.startRunningTimer).not.toHaveBeenCalled();
+  });
+});
+
 describe("saying that a block has ended", () => {
   /** Runs a block out with the settings the test asks for. */
   async function finishBlock(preferences: Partial<Settings> = {}) {
@@ -343,7 +404,7 @@ describe("saying that a block has ended", () => {
     await finishBlock();
 
     expect(chime.playChime).toHaveBeenCalled();
-    expect(notify.notifyBlockEnded).toHaveBeenCalledWith(
+    expect(notify.notify).toHaveBeenCalledWith(
       "TimeBuddy",
       expect.stringContaining("25 min"),
     );
@@ -354,13 +415,13 @@ describe("saying that a block has ended", () => {
 
     expect(chime.playChime).not.toHaveBeenCalled();
     // Switching one off says nothing about the other.
-    expect(notify.notifyBlockEnded).toHaveBeenCalled();
+    expect(notify.notify).toHaveBeenCalled();
   });
 
   it("raises no notification when they are switched off", async () => {
     await finishBlock({ notificationsEnabled: false });
 
-    expect(notify.notifyBlockEnded).not.toHaveBeenCalled();
+    expect(notify.notify).not.toHaveBeenCalled();
     expect(chime.playChime).toHaveBeenCalled();
   });
 });

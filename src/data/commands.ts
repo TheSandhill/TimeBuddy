@@ -24,6 +24,7 @@ import type {
   StopTimer,
   TimeEntry,
   TimeEntryEdit,
+  TrayLabels,
 } from "./types";
 
 /**
@@ -58,6 +59,7 @@ export const commandNames = [
   "export_report",
   "get_settings",
   "update_settings",
+  "sync_tray",
 ] as const;
 
 export type CommandName = (typeof commandNames)[number];
@@ -226,4 +228,16 @@ export function getSettings(): Promise<Settings> {
 
 export function updateSettings(settings: Settings): Promise<Settings> {
   return call("update_settings", { settings });
+}
+
+// -- Tray -------------------------------------------------------------------
+
+/**
+ * Creates the tray icon, or renames what is already there.
+ *
+ * Rejects when there is no tray to speak of, which the close button needs to
+ * know: hiding a window behind an icon that is not there would strand it.
+ */
+export function syncTray(labels: TrayLabels): Promise<void> {
+  return call("sync_tray", { labels });
 }

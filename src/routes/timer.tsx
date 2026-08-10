@@ -34,7 +34,7 @@ import {
   type BlockOutcome,
 } from "../timer/block";
 import { playChime } from "../timer/chime";
-import { notifyBlockEnded } from "../timer/notify";
+import { notify } from "../timer/notify";
 import {
   currentInstant,
   localDay,
@@ -42,6 +42,7 @@ import {
   SECONDS_PER_MINUTE,
 } from "../timer/clock";
 import { useNow } from "../timer/use-now";
+import { useTimerToggle } from "../tray/toggle-request";
 
 export function Timer() {
   const { t } = useTranslation();
@@ -116,7 +117,7 @@ export function Timer() {
       playChime();
     }
     if (settings.data?.notificationsEnabled ?? true) {
-      void notifyBlockEnded(t("app.name"), message);
+      void notify(t("app.name"), message);
     }
   };
 
@@ -227,6 +228,21 @@ export function Timer() {
 
   const busy =
     startBlock.isPending || stopBlock.isPending || discardBlock.isPending;
+
+  // Start/Stop from the tray lands here, because this is the one place that
+  // knows what a stopped block is worth. A block found on launch is left
+  // alone: the recovery prompt is a question, and a menu item must not answer
+  // it on the user's behalf.
+  useTimerToggle(() => {
+    if (recovering || busy) {
+      return;
+    }
+    if (block) {
+      settle(block, outcomeAt(block, currentInstant()));
+    } else if (projectId !== null && plannedMinutes > 0) {
+      startBlock.mutate(projectId);
+    }
+  });
 
   return (
     <section className="flex flex-col gap-10">

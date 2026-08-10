@@ -10,6 +10,7 @@ mod schema;
 mod settings;
 mod text;
 mod time_entries;
+mod tray;
 
 #[cfg(test)]
 mod test_support;
@@ -81,7 +82,20 @@ pub fn run() {
             }
 
             app.manage(Db(pool));
+            app.manage(tray::TrayMenu::default());
             Ok(())
+        })
+        // Close means hide, not quit: a block keeps running after the window
+        // goes away, and quitting lives in the tray menu (ADR-0004). Handled
+        // here rather than only in the titlebar's button so that Alt+F4 does
+        // the same thing — otherwise the app would have two closes that meant
+        // different things.
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if tray::hide_to_tray(window) {
+                    api.prevent_close();
+                }
+            }
         })
         .invoke_handler(tauri::generate_handler![
             clients::list_clients,
@@ -110,6 +124,7 @@ pub fn run() {
             export::export_report,
             settings::get_settings,
             settings::update_settings,
+            tray::sync_tray,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -142,5 +157,24 @@ mod tests {
             preload.iter().any(|db| db == DB_URL),
             "plugins.sql.preload must contain {DB_URL}, got {preload:?}"
         );
+    }
+
+    /// ADR-0004 gives up Snap Layouts by not offering maximize at all, and
+    /// keeps the window usable with a floor rather than a fixed size. All
+    /// three are settings, so all three can be undone by an edit that meant
+    /// nothing by it.
+    #[test]
+    fn the_window_cannot_be_maximised_and_has_a_floor_to_resize_to() {
+        let config: serde_json::Value =
+            serde_json::from_str(include_str!("../tauri.conf.json"))
+                .expect("tauri.conf.json is valid JSON");
+
+        let window = &config["app"]["windows"][0];
+
+        assert_eq!(window["decorations"], serde_json::json!(false));
+        assert_eq!(window["maximizable"], serde_json::json!(false));
+        assert_eq!(window["resizable"], serde_json::json!(true));
+        assert!(window["minWidth"].as_i64().unwrap_or(0) > 0);
+        assert!(window["minHeight"].as_i64().unwrap_or(0) > 0);
     }
 }

@@ -143,10 +143,19 @@
     "notFound": "Dat bestaat niet meer.",
     "exportFailed": "Het bestand kon niet worden opgeslagen.",
     "autostartFailed": "Windows stond automatisch starten niet toe. Er is niets opgeslagen.",
+    "trayFailed": "Er kon geen systeemvakpictogram worden gemaakt. Sluiten sluit nu echt af.",
     "unknown": "Dat lukte niet. Probeer het opnieuw."
   },
   "titlebar": {
     "minimize": "Minimaliseren",
     "close": "Sluiten"
+  },
+  "tray": {
+    "show": "TimeBuddy tonen",
+    "start": "Timer starten",
+    "stop": "Timer stoppen",
+    "quit": "Afsluiten",
+    "remaining": "Nog {{minutes}} min",
+    "hiddenNotice": "TimeBuddy draait door in het systeemvak. Afsluiten kan via het pictogram."
   }
 }

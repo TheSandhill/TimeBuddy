@@ -57,6 +57,14 @@ pub enum Error {
     /// than quietly showing a preference nothing acts on.
     #[error("autostart failed: {message}")]
     Autostart { message: String },
+
+    /// The tray icon or its menu could not be built or renamed.
+    ///
+    /// Its own variant because the close button hides the window behind the
+    /// tray: whether there is a tray is the difference between a window that
+    /// can be brought back and one that cannot.
+    #[error("tray failed: {message}")]
+    Tray { message: String },
 }
 
 impl Error {
@@ -79,6 +87,12 @@ impl Error {
 
     pub fn autostart(cause: impl std::fmt::Display) -> Self {
         Error::Autostart {
+            message: cause.to_string(),
+        }
+    }
+
+    pub fn tray(cause: impl std::fmt::Display) -> Self {
+        Error::Tray {
             message: cause.to_string(),
         }
     }

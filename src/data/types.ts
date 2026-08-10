@@ -183,6 +183,22 @@ export interface SheetLabels {
   total: string;
 }
 
+/**
+ * What the tray icon shows, in the language the app is currently in.
+ *
+ * Like `SheetLabels`, the words travel into Rust rather than living there: UI
+ * copy belongs in the catalogues, and a menu item spelled in Rust would be a
+ * hardcoded string the lint cannot see.
+ */
+export interface TrayLabels {
+  show: string;
+  /** "Start timer" or "Stop timer" — only the UI knows which applies. */
+  toggle: string;
+  quit: string;
+  /** What hovering says, which while a block runs is the time left in it. */
+  tooltip: string;
+}
+
 export interface Settings {
   theme: ThemeName;
   /** When set, the OS light/dark preference wins over `theme`. */
@@ -223,7 +239,9 @@ export type CommandError =
   | { kind: "export"; message: string }
   /** Windows refused the startup entry. The one setting that lives outside
    * the database, so it is the one that can fail on its own. */
-  | { kind: "autostart"; message: string };
+  | { kind: "autostart"; message: string }
+  /** No tray icon could be made. Close then has nowhere to hide the window. */
+  | { kind: "tray"; message: string };
 
 /**
  * Narrows an unknown rejection to a `CommandError`. Anything else — a dropped
@@ -239,6 +257,7 @@ export function isCommandError(error: unknown): error is CommandError {
     kind === "notFound" ||
     kind === "database" ||
     kind === "export" ||
-    kind === "autostart"
+    kind === "autostart" ||
+    kind === "tray"
   );
 }

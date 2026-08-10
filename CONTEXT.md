@@ -123,6 +123,28 @@ refusal means nothing was saved anywhere — and the row is re-asserted onto Win
 A change made from Task Manager therefore lasts until TimeBuddy next starts. That direction is the
 choice: one of the two has to be authoritative, and it is the one the checkbox reads.
 
+### Tray
+
+The icon TimeBuddy leaves in the notification area. Its tooltip is the running block's
+remaining time, in whole minutes.
+
+**Close minimises here and the block keeps running**, so the tray menu is the only place the app
+can be quit from: Show, Start/Stop timer, Quit. See ADR-0004.
+
+Whether a close hides or closes is decided in **one place, in Rust** — every close arrives there,
+the titlebar button and Alt+F4 alike, or the two would mean different things. The first hide
+explains itself with a Windows notification, for the same reason: a window that vanishes in
+silence reads as a crash.
+
+If no tray icon can be created, close closes. A window hidden with nothing left behind is lost,
+not minimised.
+
+Its words come from the catalogues like every other string, so the frontend hands them to Rust
+rather than Rust spelling them. Start/Stop is answered by the Timer screen, for the same reason
+the Timer screen owns the arithmetic: what a stopped block is worth is decided once. It does not
+pull the window back up — acting without the window is the point, and the menu's own label and
+the tooltip are the answer.
+
 ## Deliberate non-goals (v1)
 
 - **No invoicing.** Rates are stored, never used.
