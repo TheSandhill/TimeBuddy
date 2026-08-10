@@ -103,6 +103,48 @@ While "follow system" is on it is the **only** thing choosing, so the picker is 
 than left showing a choice nothing acts on. The chosen theme is kept in the row regardless, so
 turning "follow system" back off restores it.
 
+### Account
+
+The single local account. One password, hashed with Argon2; no `user_id` anywhere. See ADR-0003.
+
+It is **a door, not a vault**: the database is deliberately unencrypted, and anyone with file
+access can read it. What the door buys is that the app does not open straight into someone's
+billing data on a laptop other people use.
+
+Nothing is stored that can be read back. The password and the **recovery phrase** are both Argon2
+hashes, and the phrase is normalised before hashing — case is folded and runs of whitespace are
+collapsed, so a phrase written down one way still opens the door when typed back another. What
+the words *are* is not forgiven. A password is never normalised; every character of one is
+deliberate, spaces included.
+
+The phrase is shown while it is being chosen — it has to be, to be written down — and masked
+wherever it is typed back in.
+
+The row's **absence** is what "never set up" means, which is what raises the first-run wizard.
+There is no seeded row: a row with an empty hash would be an account with no password.
+
+"Remember me for 30 days" is a random token, kept by the webview and stored here only as a hash,
+with the deadline beside it — so the side holding the token is not the side deciding whether it
+has expired. Unticking the box revokes what was there, and a password reset revokes it too: a
+reset that left yesterday's session open would be one in name only.
+
+### First run
+
+Three steps — password and recovery phrase, backup folder, first Client and Project — and then an
+app that already works. A fresh install must never show five empty screens.
+
+Each step **commits as it is finished**, so a wizard abandoned halfway leaves an install set up as
+far as it got, not one that has to be started over.
+
+Which means the account row cannot be what says setup is *done* — it is written by step one. The
+first **Client** is: Clients are archived and never deleted, so "none at all" can only mean step
+three was never reached. An install with an account and no Clients unlocks and then resumes the
+wizard, rather than landing on empty screens.
+
+Until the door is open, the window frame says nothing about the work — no countdown on the
+titlebar, no minutes in the tray tooltip. A block keeps running behind the lock screen; it just
+does not announce itself to whoever is looking at the laptop.
+
 ### Settings
 
 The single row every preference lives in — theme, "follow system", language, Pomodoro and Break

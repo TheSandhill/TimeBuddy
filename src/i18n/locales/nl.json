@@ -144,7 +144,12 @@
     "exportFailed": "Het bestand kon niet worden opgeslagen.",
     "autostartFailed": "Windows stond automatisch starten niet toe. Er is niets opgeslagen.",
     "trayFailed": "Er kon geen systeemvakpictogram worden gemaakt. Sluiten sluit nu echt af.",
-    "unknown": "Dat lukte niet. Probeer het opnieuw."
+    "unknown": "Dat lukte niet. Probeer het opnieuw.",
+    "passwordTooShort": "Gebruik minstens 8 tekens.",
+    "recoveryPhraseTooShort": "Gebruik een herstelzin van minstens 12 tekens.",
+    "accountAlreadyExists": "Deze installatie heeft al een account.",
+    "wrongPassword": "Dat wachtwoord klopt niet.",
+    "wrongRecoveryPhrase": "Die herstelzin klopt niet."
   },
   "titlebar": {
     "minimize": "Minimaliseren",
@@ -157,5 +162,37 @@
     "quit": "Afsluiten",
     "remaining": "Nog {{minutes}} min",
     "hiddenNotice": "TimeBuddy draait door in het systeemvak. Afsluiten kan via het pictogram."
+  },
+  "unlock": {
+    "title": "TimeBuddy ontgrendelen",
+    "password": "Wachtwoord",
+    "unlock": "Ontgrendelen",
+    "remember": "Onthoud mij 30 dagen",
+    "forgot": "Wachtwoord vergeten?",
+    "recoverTitle": "Nieuw wachtwoord instellen",
+    "recoverHint": "Vul de herstelzin uit de installatie in. Dit gebeurt volledig op deze laptop — er is geen e-mail en geen herstellink.",
+    "recoveryPhrase": "Herstelzin",
+    "newPassword": "Nieuw wachtwoord",
+    "setPassword": "Wachtwoord instellen",
+    "back": "Terug",
+    "passwordChanged": "Je wachtwoord is gewijzigd. Meld je aan met het nieuwe."
+  },
+  "wizard": {
+    "step": "Stap {{step}} van {{total}}",
+    "next": "Volgende",
+    "finish": "Aan de slag",
+    "passwordTitle": "TimeBuddy vergrendelen",
+    "passwordHint": "TimeBuddy vraagt hierom bij het starten, zodat je uren niet meteen open liggen.",
+    "password": "Wachtwoord",
+    "recoveryPhrase": "Herstelzin",
+    "recoveryHint": "Schrijf deze ergens veilig op. Het is de enige weg terug als je je wachtwoord vergeet — je uren raak je nooit kwijt, maar zonder deze zin kan het wachtwoord niet worden gewijzigd.",
+    "backupTitle": "Waar back-ups komen",
+    "backupHint": "Een map die synchroniseert — OneDrive bijvoorbeeld — zorgt dat een kapotte laptop geen verloren jaar is.",
+    "backupDefault": "De eigen datamap van de app",
+    "chooseFolder": "Map kiezen…",
+    "workTitle": "Je eerste werk",
+    "workHint": "Eén klant en één project, zodat de Timer iets heeft om op te starten. Meer kan later.",
+    "client": "Klant",
+    "project": "Project"
   }
 }

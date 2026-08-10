@@ -31,6 +31,9 @@ rust_xlsxwriter = { version = "0.97.1", default-features = false, features = ["c
 tauri-plugin-dialog = "2.7.2"
 tauri-plugin-autostart = "2.5.1"
 tauri-plugin-notification = "2.3.3"
+# The lock screen's one primitive (ADR-0003). `std` brings `OsRng`, which is
+# what salts a hash and what makes a "remember me" token unguessable.
+argon2 = { version = "0.5", features = ["std"] }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

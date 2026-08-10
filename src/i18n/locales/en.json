@@ -144,7 +144,12 @@
     "exportFailed": "The file could not be saved.",
     "autostartFailed": "Windows would not let TimeBuddy start automatically. Nothing was saved.",
     "trayFailed": "No tray icon could be created. Close now really closes.",
-    "unknown": "That didn't work. Please try again."
+    "unknown": "That didn't work. Please try again.",
+    "passwordTooShort": "Use at least 8 characters.",
+    "recoveryPhraseTooShort": "Use a recovery phrase of at least 12 characters.",
+    "accountAlreadyExists": "This install already has an account.",
+    "wrongPassword": "That password is not right.",
+    "wrongRecoveryPhrase": "That recovery phrase is not right."
   },
   "titlebar": {
     "minimize": "Minimize",
@@ -157,5 +162,37 @@
     "quit": "Quit",
     "remaining": "{{minutes}} min left",
     "hiddenNotice": "TimeBuddy is still running in the system tray. Quit from the tray icon."
+  },
+  "unlock": {
+    "title": "Unlock TimeBuddy",
+    "password": "Password",
+    "unlock": "Unlock",
+    "remember": "Remember me for 30 days",
+    "forgot": "Forgotten your password?",
+    "recoverTitle": "Set a new password",
+    "recoverHint": "Enter the recovery phrase from setup. This happens entirely on this laptop — there is no email and no reset link.",
+    "recoveryPhrase": "Recovery phrase",
+    "newPassword": "New password",
+    "setPassword": "Set password",
+    "back": "Back",
+    "passwordChanged": "Your password has been changed. Sign in with the new one."
+  },
+  "wizard": {
+    "step": "Step {{step}} of {{total}}",
+    "next": "Next",
+    "finish": "Get started",
+    "passwordTitle": "Lock TimeBuddy",
+    "passwordHint": "TimeBuddy asks for this at launch, so it does not open straight into your hours.",
+    "password": "Password",
+    "recoveryPhrase": "Recovery phrase",
+    "recoveryHint": "Write this down somewhere safe. It is the only way back in if you forget your password — your hours are never lost, but without it the password cannot be changed.",
+    "backupTitle": "Where backups go",
+    "backupHint": "A folder that syncs — OneDrive, for instance — means a broken laptop is not a lost year.",
+    "backupDefault": "The app's own data folder",
+    "chooseFolder": "Choose a folder…",
+    "workTitle": "Your first work",
+    "workHint": "One client and one project, so the Timer has something to start on. More can be added later.",
+    "client": "Client",
+    "project": "Project"
   }
 }

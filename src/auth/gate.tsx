@@ -1,0 +1,91 @@
+import { useState, type ReactNode } from "react";
+import { WindowFrame } from "../components/window-frame";
+import { Unlock } from "./unlock";
+import { useFirstRun } from "./use-first-run";
+import { useSession } from "./use-session";
+import { Wizard } from "./wizard";
+
+/**
+ * The door the app opens behind (ADR-0003), and the walk through setup behind
+ * that.
+ *
+ * It sits outside the router on purpose: the lock screen and the wizard are
+ * not screens of the app, they are what stands in front of it, and neither
+ * should be reachable by a route. They carry their own window frame, so the
+ * window can still be dragged, hidden and quit before anyone has typed
+ * anything — and that frame says nothing about the work until the door opens.
+ *
+ * While anything is still being asked, nothing is rendered. Each question
+ * lasts one round trip, and a flash of the wrong door is worse than a blank
+ * one.
+ */
+export function Gate({ children }: { children: ReactNode }) {
+  const { state, open } = useSession();
+
+  /**
+   * Whether this run has walked the wizard already. Without it, finishing
+   * setup would race the very query that decides whether setup is needed, and
+   * the wizard could reappear over the app it just filled.
+   */
+  const [walked, setWalked] = useState(false);
+
+  const firstRun = useFirstRun(state === "open" && !walked);
+
+  if (state === "checking") {
+    return <WindowFrame revealsWork={false}>{null}</WindowFrame>;
+  }
+
+  if (state === "setup") {
+    return (
+      <WindowFrame revealsWork={false}>
+        <Setting>
+          {/*
+           * Nothing to remember yet: the password was just chosen, and the
+           * next launch is the first honest chance to offer keeping it.
+           */}
+          <Wizard
+            onDone={() => {
+              setWalked(true);
+              open(null);
+            }}
+          />
+        </Setting>
+      </WindowFrame>
+    );
+  }
+
+  if (state === "locked") {
+    return (
+      <WindowFrame revealsWork={false}>
+        <Setting>
+          <Unlock onOpen={open} />
+        </Setting>
+      </WindowFrame>
+    );
+  }
+
+  // Unlocked, but setup never got past the password. The account exists, so
+  // the walk resumes at the step after it rather than starting over.
+  if (firstRun === "unfinished") {
+    return (
+      <WindowFrame revealsWork={false}>
+        <Setting>
+          <Wizard startAt="backup" onDone={() => setWalked(true)} />
+        </Setting>
+      </WindowFrame>
+    );
+  }
+
+  if (firstRun === "checking") {
+    return <WindowFrame revealsWork={false}>{null}</WindowFrame>;
+  }
+
+  return <>{children}</>;
+}
+
+/** The scrolling body the lock screen and the wizard both sit in. */
+function Setting({ children }: { children: ReactNode }) {
+  return (
+    <main className="min-h-0 flex-1 overflow-y-auto p-6">{children}</main>
+  );
+}

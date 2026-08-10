@@ -228,7 +228,12 @@ export type ValidationCode =
   | "dateInFuture"
   | "rangeEndsBeforeStart"
   | "durationSettingNotPositive"
-  | "timerAlreadyRunning";
+  | "timerAlreadyRunning"
+  | "passwordTooShort"
+  | "recoveryPhraseTooShort"
+  | "accountAlreadyExists"
+  | "wrongPassword"
+  | "wrongRecoveryPhrase";
 
 /** What a rejected command rejects with. */
 export type CommandError =
@@ -241,7 +246,9 @@ export type CommandError =
    * the database, so it is the one that can fail on its own. */
   | { kind: "autostart"; message: string }
   /** No tray icon could be made. Close then has nowhere to hide the window. */
-  | { kind: "tray"; message: string };
+  | { kind: "tray"; message: string }
+  /** Argon2 itself failed. Not a wrong password — a fault. */
+  | { kind: "hashing"; message: string };
 
 /**
  * Narrows an unknown rejection to a `CommandError`. Anything else — a dropped
@@ -258,6 +265,7 @@ export function isCommandError(error: unknown): error is CommandError {
     kind === "database" ||
     kind === "export" ||
     kind === "autostart" ||
-    kind === "tray"
+    kind === "tray" ||
+    kind === "hashing"
   );
 }

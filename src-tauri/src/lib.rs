@@ -1,3 +1,4 @@
+mod account;
 mod archive;
 mod clients;
 mod db;
@@ -98,6 +99,11 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![
+            account::account_exists,
+            account::create_account,
+            account::unlock_account,
+            account::resume_session,
+            account::reset_account_password,
             clients::list_clients,
             clients::get_client,
             clients::create_client,

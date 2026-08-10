@@ -19,12 +19,19 @@ export interface RunningBlock {
   now: Instant;
 }
 
-export function useRunningBlock(): RunningBlock {
+/**
+ * `watching` is false behind the lock screen. A countdown on the titlebar and
+ * a tooltip counting minutes are both statements about someone's working day,
+ * and the door exists so that none of those are made before it is opened
+ * (ADR-0003).
+ */
+export function useRunningBlock(watching: boolean): RunningBlock {
   const running = useQuery({
     queryKey: ["runningTimer"],
     queryFn: getRunningTimer,
+    enabled: watching,
   });
-  const block = running.data ?? null;
+  const block = watching ? running.data ?? null : null;
 
   return { block, now: useNow(block !== null) };
 }

@@ -37,8 +37,10 @@ export function errorKey(error: unknown): ErrorKey {
       // the failure shows up as behaviour before it shows up as a sentence.
       case "tray":
         return "error.trayFailed";
-      // A database message is for a log, not for a person.
+      // A database message is for a log, not for a person, and neither is a
+      // hashing fault — both mean "something broke", not "you typed it wrong".
       case "database":
+      case "hashing":
         return "error.unknown";
     }
   }
