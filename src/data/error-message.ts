@@ -16,6 +16,7 @@ export type ErrorKey = `error.${
   | "notFound"
   | "exportFailed"
   | "autostartFailed"
+  | "trayFailed"
   | "unknown"}`;
 
 export function errorKey(error: unknown): ErrorKey {
@@ -32,6 +33,10 @@ export function errorKey(error: unknown): ErrorKey {
       // Nothing was saved either, so the checkbox on screen is still true.
       case "autostart":
         return "error.autostartFailed";
+      // Rarely read: the close button falls back to a real close instead, so
+      // the failure shows up as behaviour before it shows up as a sentence.
+      case "tray":
+        return "error.trayFailed";
       // A database message is for a log, not for a person.
       case "database":
         return "error.unknown";

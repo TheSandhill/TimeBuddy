@@ -143,10 +143,19 @@
     "notFound": "That no longer exists.",
     "exportFailed": "The file could not be saved.",
     "autostartFailed": "Windows would not let TimeBuddy start automatically. Nothing was saved.",
+    "trayFailed": "No tray icon could be created. Close now really closes.",
     "unknown": "That didn't work. Please try again."
   },
   "titlebar": {
     "minimize": "Minimize",
     "close": "Close"
+  },
+  "tray": {
+    "show": "Show TimeBuddy",
+    "start": "Start timer",
+    "stop": "Stop timer",
+    "quit": "Quit",
+    "remaining": "{{minutes}} min left",
+    "hiddenNotice": "TimeBuddy is still running in the system tray. Quit from the tray icon."
   }
 }
