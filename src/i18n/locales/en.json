@@ -6,7 +6,8 @@
     "timer": "Timer",
     "entries": "Hours",
     "clients": "Clients",
-    "reports": "Report"
+    "reports": "Report",
+    "settings": "Settings"
   },
   "range": {
     "from": "From",
@@ -21,6 +22,8 @@
     "today": "Today",
     "noEntries": "No hours logged yet.",
     "minutes": "{{minutes}} min",
+    "blockEnded": "Block finished — {{minutes}} min logged.",
+    "breakEnded": "Break over.",
     "breakTitle": "Break",
     "skipBreak": "Skip break",
     "recoveryTitle": "A block was still running",
@@ -99,6 +102,35 @@
     "columnNote": "Note",
     "columnHours": "Hours"
   },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeWalnut": "Walnut",
+    "themeSand": "Sand",
+    "themeHighContrast": "High contrast",
+    "followSystem": "Follow the Windows light/dark setting",
+    "followSystemHint": "Off by default. While this is on, Windows chooses between Walnut and Sand.",
+    "language": "Language",
+    "languageNl": "Nederlands",
+    "languageEn": "English",
+    "timer": "Timer",
+    "pomodoroMinutes": "Block length (minutes)",
+    "breakMinutes": "Break length (minutes)",
+    "chime": "Chime at the end of a block",
+    "notifications": "Windows notification at the end of a block",
+    "system": "System",
+    "autostart": "Start TimeBuddy with Windows",
+    "backupFolder": "Backup folder",
+    "backupFolderDefault": "The app's own data folder",
+    "chooseFolder": "Choose…",
+    "useDefaultFolder": "Use the default",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "loading": "Loading settings…",
+    "loadFailed": "Settings could not be loaded."
+  },
   "error": {
     "nameRequired": "Please enter a name.",
     "durationUnreadable": "Can't read that duration. Try 1:30, 1.5 or 90m.",
@@ -110,6 +142,7 @@
     "timerAlreadyRunning": "A block is already running.",
     "notFound": "That no longer exists.",
     "exportFailed": "The file could not be saved.",
+    "autostartFailed": "Windows would not let TimeBuddy start automatically. Nothing was saved.",
     "unknown": "That didn't work. Please try again."
   },
   "titlebar": {

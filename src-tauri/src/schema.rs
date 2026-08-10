@@ -79,6 +79,26 @@ CREATE TABLE running_timer (
 );
 "#;
 
+/// Migration 3 — the rest of what the Settings screen edits.
+///
+/// Added rather than folded into migration 1, which has already shipped
+/// (ADR-0001). Every column carries a default, so the row seeded by migration 1
+/// is complete the moment this runs and `get` still cannot miss.
+///
+/// The defaults are the answers a first-time user would want: the chime and the
+/// notification are the point of a Pomodoro timer, and an app that adds itself
+/// to Windows startup without being asked is a nuisance.
+///
+/// `backup_folder` is nullable, and NULL means "wherever the app keeps its
+/// data" — a default path resolved at runtime, not a string frozen into the
+/// schema on the machine that happened to run the migration.
+pub const V3_SETTINGS_PREFERENCES: &str = r#"
+ALTER TABLE settings ADD COLUMN chime_enabled         INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE settings ADD COLUMN notifications_enabled INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE settings ADD COLUMN autostart             INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE settings ADD COLUMN backup_folder         TEXT;
+"#;
+
 /// Every migration, in application order.
 pub fn migrations() -> Vec<Migration> {
     vec![
@@ -92,6 +112,12 @@ pub fn migrations() -> Vec<Migration> {
             version: 2,
             description: "running timer",
             sql: V2_RUNNING_TIMER,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 3,
+            description: "settings preferences",
+            sql: V3_SETTINGS_PREFERENCES,
             kind: MigrationKind::Up,
         },
     ]

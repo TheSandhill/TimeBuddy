@@ -37,6 +37,16 @@ pub fn run() {
         // Only for the native save dialog the export runs through. Writing the
         // file itself stays in Rust, so the frontend never holds a file handle.
         .plugin(tauri_plugin_dialog::init())
+        // The chime is synthesised in the webview; this is the other half of
+        // "the block has ended" — the one that arrives when TimeBuddy is behind
+        // another window, which is where it usually is.
+        .plugin(tauri_plugin_notification::init())
+        // No launch arguments: TimeBuddy started by Windows should behave
+        // exactly like TimeBuddy started by hand.
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None::<Vec<&str>>,
+        ))
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations(DB_URL, schema::migrations())
@@ -55,6 +65,21 @@ pub fn run() {
 
             let path = dir.join(DB_FILE);
             let pool = tauri::async_runtime::block_on(db::connect(&path))?;
+
+            // Windows keeps its own copy of "start with Windows", and a user
+            // can change it from Task Manager without this app hearing about
+            // it. This row is the authoritative one, so launch re-asserts it
+            // onto Windows rather than reading Windows back — that is what
+            // keeps the checkbox from describing something that is no longer
+            // true.
+            //
+            // A failure here is not worth refusing to start over: the app works
+            // fine, one preference is out of step, and the Settings screen will
+            // say so the next time it is saved.
+            if let Ok(settings) = tauri::async_runtime::block_on(settings::get(&pool)) {
+                let _ = settings::apply_autostart(app, settings.autostart);
+            }
+
             app.manage(Db(pool));
             Ok(())
         })

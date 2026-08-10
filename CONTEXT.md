@@ -96,6 +96,33 @@ rather than a rewrite.
 Shipped: **Walnut** (dark, default), **Sand** (light), **High-contrast**, plus an opt-in
 "follow system".
 
+Every shipped theme passes a WCAG AA contrast check on body text before it ships. A theme that
+fails is not a matter of taste.
+
+While "follow system" is on it is the **only** thing choosing, so the picker is disabled rather
+than left showing a choice nothing acts on. The chosen theme is kept in the row regardless, so
+turning "follow system" back off restores it.
+
+### Settings
+
+The single row every preference lives in — theme, "follow system", language, Pomodoro and Break
+length, the chime and OS-notification toggles, autostart, and the backup folder. Created by the
+migration, never absent, so reading it can never miss.
+
+It is edited on one screen and **saved as a unit**. A partial update would only invite
+half-applied states, so there is one Save and one `UPDATE`.
+
+A blank backup folder is stored as **absent**, not as `""`, and absent means the app's own data
+directory — a path resolved at runtime rather than frozen into a row on whichever machine ran the
+migration.
+
+**Autostart is the one setting that does not live in the database.** Windows keeps its own copy in
+the registry, and a person can change it from Task Manager without this app hearing about it. The
+two are reconciled explicitly, and **this row wins**: Windows is written first on save — so a
+refusal means nothing was saved anywhere — and the row is re-asserted onto Windows at every launch.
+A change made from Task Manager therefore lasts until TimeBuddy next starts. That direction is the
+choice: one of the two has to be authoritative, and it is the one the checkbox reads.
+
 ## Deliberate non-goals (v1)
 
 - **No invoicing.** Rates are stored, never used.

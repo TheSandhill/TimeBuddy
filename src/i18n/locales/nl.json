@@ -6,7 +6,8 @@
     "timer": "Timer",
     "entries": "Uren",
     "clients": "Klanten",
-    "reports": "Rapport"
+    "reports": "Rapport",
+    "settings": "Instellingen"
   },
   "range": {
     "from": "Van",
@@ -21,6 +22,8 @@
     "today": "Vandaag",
     "noEntries": "Nog geen uren geregistreerd.",
     "minutes": "{{minutes}} min",
+    "blockEnded": "Blok klaar — {{minutes}} min geregistreerd.",
+    "breakEnded": "Pauze voorbij.",
     "breakTitle": "Pauze",
     "skipBreak": "Pauze overslaan",
     "recoveryTitle": "Er liep nog een blok",
@@ -99,6 +102,35 @@
     "columnNote": "Notitie",
     "columnHours": "Uren"
   },
+  "settings": {
+    "title": "Instellingen",
+    "appearance": "Weergave",
+    "theme": "Thema",
+    "themeWalnut": "Walnoot",
+    "themeSand": "Zand",
+    "themeHighContrast": "Hoog contrast",
+    "followSystem": "Volg de licht/donker-instelling van Windows",
+    "followSystemHint": "Standaard uit. Zolang dit aanstaat kiest Windows tussen Walnoot en Zand.",
+    "language": "Taal",
+    "languageNl": "Nederlands",
+    "languageEn": "English",
+    "timer": "Timer",
+    "pomodoroMinutes": "Bloklengte (minuten)",
+    "breakMinutes": "Pauzelengte (minuten)",
+    "chime": "Geluid aan het eind van een blok",
+    "notifications": "Windows-melding aan het eind van een blok",
+    "system": "Systeem",
+    "autostart": "TimeBuddy starten met Windows",
+    "backupFolder": "Back-upmap",
+    "backupFolderDefault": "De eigen datamap van de app",
+    "chooseFolder": "Kiezen…",
+    "useDefaultFolder": "Standaard gebruiken",
+    "save": "Opslaan",
+    "saving": "Opslaan…",
+    "saved": "Opgeslagen",
+    "loading": "Instellingen laden…",
+    "loadFailed": "Instellingen konden niet worden geladen."
+  },
   "error": {
     "nameRequired": "Vul een naam in.",
     "durationUnreadable": "Onleesbare duur. Probeer 1:30, 1,5 of 90m.",
@@ -110,6 +142,7 @@
     "timerAlreadyRunning": "Er loopt al een blok.",
     "notFound": "Dat bestaat niet meer.",
     "exportFailed": "Het bestand kon niet worden opgeslagen.",
+    "autostartFailed": "Windows stond automatisch starten niet toe. Er is niets opgeslagen.",
     "unknown": "Dat lukte niet. Probeer het opnieuw."
   },
   "titlebar": {

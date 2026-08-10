@@ -16,6 +16,12 @@ const commands = vi.hoisted(() => ({
 }));
 vi.mock("../data/commands", () => commands);
 
+const chime = vi.hoisted(() => ({ playChime: vi.fn() }));
+vi.mock("../timer/chime", () => chime);
+
+const notify = vi.hoisted(() => ({ notifyBlockEnded: vi.fn() }));
+vi.mock("../timer/notify", () => notify);
+
 const { Timer } = await import("./timer");
 
 const settings: Settings = {
@@ -24,6 +30,10 @@ const settings: Settings = {
   language: "nl",
   pomodoroMinutes: 25,
   breakMinutes: 5,
+  chimeEnabled: true,
+  notificationsEnabled: true,
+  autostart: false,
+  backupFolder: null,
   updatedAt: "2026-08-05T12:00:00Z",
 };
 
@@ -76,6 +86,7 @@ beforeEach(() => {
   commands.startRunningTimer.mockResolvedValue(inFlight(0));
   commands.stopRunningTimer.mockResolvedValue({} as TimeEntry);
   commands.discardRunningTimer.mockResolvedValue(undefined);
+  notify.notifyBlockEnded.mockResolvedValue(undefined);
 });
 
 describe("the idle Timer screen", () => {
@@ -271,14 +282,12 @@ describe("a block found in flight on launch", () => {
   });
 });
 
-describe("a block this session started", () => {
-  /** Nothing in flight on launch; the block appears once Start has been hit. */
-  function appearsAfterStart(block: RunningTimer) {
-    commands.getRunningTimer
-      .mockResolvedValueOnce(null)
-      .mockResolvedValue(block);
-  }
+/** Nothing in flight on launch; the block appears once Start has been hit. */
+function appearsAfterStart(block: RunningTimer) {
+  commands.getRunningTimer.mockResolvedValueOnce(null).mockResolvedValue(block);
+}
 
+describe("a block this session started", () => {
   it("counts down and offers to stop, without asking anything", async () => {
     appearsAfterStart(inFlight(1));
     renderTimer();
@@ -316,5 +325,42 @@ describe("a block this session started", () => {
         expect.objectContaining({ durationMinutes: 25 }),
       ),
     );
+  });
+});
+
+describe("saying that a block has ended", () => {
+  /** Runs a block out with the settings the test asks for. */
+  async function finishBlock(preferences: Partial<Settings> = {}) {
+    commands.getSettings.mockResolvedValue({ ...settings, ...preferences });
+    appearsAfterStart(inFlight(25));
+    renderTimer();
+    await clickStart();
+
+    await waitFor(() => expect(commands.stopRunningTimer).toHaveBeenCalled());
+  }
+
+  it("chimes and notifies, which is what both switches ship as", async () => {
+    await finishBlock();
+
+    expect(chime.playChime).toHaveBeenCalled();
+    expect(notify.notifyBlockEnded).toHaveBeenCalledWith(
+      "TimeBuddy",
+      expect.stringContaining("25 min"),
+    );
+  });
+
+  it("stays quiet when the chime is switched off", async () => {
+    await finishBlock({ chimeEnabled: false });
+
+    expect(chime.playChime).not.toHaveBeenCalled();
+    // Switching one off says nothing about the other.
+    expect(notify.notifyBlockEnded).toHaveBeenCalled();
+  });
+
+  it("raises no notification when they are switched off", async () => {
+    await finishBlock({ notificationsEnabled: false });
+
+    expect(notify.notifyBlockEnded).not.toHaveBeenCalled();
+    expect(chime.playChime).toHaveBeenCalled();
   });
 });

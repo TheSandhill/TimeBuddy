@@ -190,6 +190,14 @@ export interface Settings {
   language: Language;
   pomodoroMinutes: number;
   breakMinutes: number;
+  /** The soft chime at the edge of a block. */
+  chimeEnabled: boolean;
+  /** Whether ending a block also raises a Windows notification. */
+  notificationsEnabled: boolean;
+  /** Whether TimeBuddy registers itself to start with Windows. */
+  autostart: boolean;
+  /** Where backups go. `null` means the app's own data directory. */
+  backupFolder: string | null;
   updatedAt: Instant;
 }
 
@@ -212,7 +220,10 @@ export type CommandError =
   | { kind: "notFound"; entity: string; id: number }
   | { kind: "database"; message: string }
   /** The file could not be written. The hours are safe; the file is not there. */
-  | { kind: "export"; message: string };
+  | { kind: "export"; message: string }
+  /** Windows refused the startup entry. The one setting that lives outside
+   * the database, so it is the one that can fail on its own. */
+  | { kind: "autostart"; message: string };
 
 /**
  * Narrows an unknown rejection to a `CommandError`. Anything else — a dropped
@@ -227,6 +238,7 @@ export function isCommandError(error: unknown): error is CommandError {
     kind === "validation" ||
     kind === "notFound" ||
     kind === "database" ||
-    kind === "export"
+    kind === "export" ||
+    kind === "autostart"
   );
 }
