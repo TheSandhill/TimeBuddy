@@ -49,6 +49,14 @@ pub enum Error {
     /// person watching: their hours are safe, the file is not there.
     #[error("export failed: {message}")]
     Export { message: String },
+
+    /// Registering — or unregistering — TimeBuddy with Windows startup failed.
+    ///
+    /// Its own variant because it is the one setting that lives outside the
+    /// database: the checkbox has to be able to say "Windows said no" rather
+    /// than quietly showing a preference nothing acts on.
+    #[error("autostart failed: {message}")]
+    Autostart { message: String },
 }
 
 impl Error {
@@ -65,6 +73,12 @@ impl Error {
     /// failed export.
     pub fn export(cause: impl std::fmt::Display) -> Self {
         Error::Export {
+            message: cause.to_string(),
+        }
+    }
+
+    pub fn autostart(cause: impl std::fmt::Display) -> Self {
+        Error::Autostart {
             message: cause.to_string(),
         }
     }

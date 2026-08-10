@@ -3,7 +3,12 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fg from "fast-glob";
 import { describe, expect, it } from "vitest";
-import { defaultTheme, themeNames, themeTokens } from "./tokens";
+import {
+  defaultTheme,
+  resolveTheme,
+  themeNames,
+  themeTokens,
+} from "./tokens";
 
 const srcDir = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -42,6 +47,31 @@ describe("theme tokens", () => {
 
   it("gives the default theme no override block of its own", () => {
     expect(stylesheet).not.toContain(`[data-theme="${defaultTheme}"]`);
+  });
+});
+
+describe("which theme is actually on screen", () => {
+  it("uses the chosen theme, whatever the OS thinks", () => {
+    for (const prefersDark of [true, false]) {
+      expect(
+        resolveTheme({ theme: "sand", followSystem: false }, prefersDark),
+      ).toBe("sand");
+      expect(
+        resolveTheme(
+          { theme: "high-contrast", followSystem: false },
+          prefersDark,
+        ),
+      ).toBe("high-contrast");
+    }
+  });
+
+  it("follows the OS only when asked to", () => {
+    expect(resolveTheme({ theme: "sand", followSystem: true }, true)).toBe(
+      "walnut",
+    );
+    expect(resolveTheme({ theme: "walnut", followSystem: true }, false)).toBe(
+      "sand",
+    );
   });
 });
 

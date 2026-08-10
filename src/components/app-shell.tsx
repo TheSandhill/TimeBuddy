@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useSavedAppearance } from "../theme/use-appearance";
 import { Titlebar } from "./titlebar";
 
 const linkClass = "text-sm text-ink-muted transition-colors hover:text-ink";
@@ -9,6 +10,11 @@ const activeClass = "text-sm text-accent";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
+
+  // The shell applies the saved look on every screen, so the Settings screen
+  // only has to save — and every other screen still gets the theme right on a
+  // cold start.
+  useSavedAppearance();
 
   return (
     <div className="flex h-full flex-col bg-surface text-ink">
@@ -38,6 +44,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           activeProps={{ className: activeClass }}
         >
           {t("nav.reports")}
+        </Link>
+        <Link
+          to="/settings"
+          className={linkClass}
+          activeProps={{ className: activeClass }}
+        >
+          {t("nav.settings")}
         </Link>
       </nav>
 

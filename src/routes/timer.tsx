@@ -19,12 +19,12 @@ import { TodayEntries } from "../components/today-entries";
 import {
   discardRunningTimer,
   getRunningTimer,
-  getSettings,
   listProjects,
   listTimeEntries,
   startRunningTimer,
   stopRunningTimer,
 } from "../data/commands";
+import { useSettings } from "../data/use-settings";
 import type { Instant, RunningTimer, StopTimer } from "../data/types";
 import {
   formatCountdown,
@@ -34,6 +34,7 @@ import {
   type BlockOutcome,
 } from "../timer/block";
 import { playChime } from "../timer/chime";
+import { notifyBlockEnded } from "../timer/notify";
 import {
   currentInstant,
   localDay,
@@ -46,7 +47,7 @@ export function Timer() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const settings = useQuery({ queryKey: ["settings"], queryFn: getSettings });
+  const settings = useSettings();
   // What can be started and what today's hours are called are two different
   // lists: an archived project is off the picker but still names its hours.
   const projects = useQuery({
@@ -101,6 +102,23 @@ export function Timer() {
     foundAt.current = null;
   }
   const discoveredAt = foundAt.current ?? now;
+
+  /**
+   * Marks the edge of an interval, in whichever ways are still switched on.
+   *
+   * Both can be turned off independently: a chime is unwelcome in a shared
+   * room and a toast is unwelcome during a call, and neither carries anything
+   * the other does not. Until the settings row has arrived, the shipped
+   * defaults apply — a block cannot have ended before then anyway.
+   */
+  const announce = (message: string) => {
+    if (settings.data?.chimeEnabled ?? true) {
+      playChime();
+    }
+    if (settings.data?.notificationsEnabled ?? true) {
+      void notifyBlockEnded(t("app.name"), message);
+    }
+  };
 
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ["runningTimer"] });
@@ -178,7 +196,7 @@ export function Timer() {
     }
 
     finishing.current = true;
-    playChime();
+    announce(t("timer.blockEnded", { minutes: outcome.durationMinutes }));
     setBreakEndsAt(plusMinutes(now, settings.data?.breakMinutes ?? 0));
     settle(block, outcome);
   }, [block, recovering, now, settings.data]);
@@ -196,7 +214,7 @@ export function Timer() {
   useEffect(() => {
     if (breakEndsAt && Date.parse(now) >= Date.parse(breakEndsAt)) {
       setBreakEndsAt(null);
-      playChime();
+      announce(t("timer.breakEnded"));
     }
   }, [breakEndsAt, now]);
 

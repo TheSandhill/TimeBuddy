@@ -8,6 +8,7 @@ import { AppShell } from "./components/app-shell";
 import { Clients } from "./routes/clients";
 import { Entries } from "./routes/entries";
 import { Reports } from "./routes/reports";
+import { Settings } from "./routes/settings";
 import { Timer } from "./routes/timer";
 
 const rootRoute = createRootRoute({
@@ -46,12 +47,20 @@ const reportsRoute = createRoute({
   component: Reports,
 });
 
+/** The one row in `settings`, and the only screen that writes it. */
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/settings",
+  component: Settings,
+});
+
 export const router = createRouter({
   routeTree: rootRoute.addChildren([
     timerRoute,
     entriesRoute,
     clientsRoute,
     reportsRoute,
+    settingsRoute,
   ]),
   defaultPreload: "intent",
 });

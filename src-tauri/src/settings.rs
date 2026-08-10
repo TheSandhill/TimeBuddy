@@ -6,10 +6,12 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, SqlitePool};
-use tauri::State;
+use tauri::{AppHandle, Manager, Runtime, State};
+use tauri_plugin_autostart::ManagerExt;
 
 use crate::db::Db;
 use crate::error::{Error, Result, ValidationCode};
+use crate::text;
 
 /// The shipped themes (ADR-0004). An enum rather than a string so an unknown
 /// theme is rejected at the boundary instead of leaving the UI unstyled.
@@ -40,10 +42,22 @@ pub struct Settings {
     pub language: Language,
     pub pomodoro_minutes: i64,
     pub break_minutes: i64,
+    /// The soft chime at the edge of a block. On by default — it is the point
+    /// of a timer you are not supposed to watch.
+    pub chime_enabled: bool,
+    /// Whether ending a block also raises a Windows notification.
+    pub notifications_enabled: bool,
+    /// Whether TimeBuddy registers itself to start with Windows. Off by
+    /// default: an app that adds itself to startup uninvited is a nuisance.
+    pub autostart: bool,
+    /// Where daily backups are written. `None` means the app's own data
+    /// directory — a path resolved at runtime rather than frozen in a row.
+    pub backup_folder: Option<String>,
     pub updated_at: DateTime<Utc>,
 }
 
 const SELECT: &str = "SELECT theme, follow_system, language, pomodoro_minutes, break_minutes, \
+                      chime_enabled, notifications_enabled, autostart, backup_folder, \
                       updated_at FROM settings WHERE id = 1";
 
 pub async fn get(pool: &SqlitePool) -> Result<Settings> {
@@ -62,10 +76,16 @@ pub async fn update(pool: &SqlitePool, settings: &Settings, now: DateTime<Utc>) 
         return Err(Error::validation(ValidationCode::DurationSettingNotPositive));
     }
 
+    // A folder someone cleared reads back as `None`, never as `""` — otherwise
+    // "no folder chosen" would have two spellings and the backup job would have
+    // to know both.
+    let backup_folder = text::optional(settings.backup_folder.as_deref());
+
     sqlx::query(
         "UPDATE settings
             SET theme = ?, follow_system = ?, language = ?, pomodoro_minutes = ?,
-                break_minutes = ?, updated_at = ?
+                break_minutes = ?, chime_enabled = ?, notifications_enabled = ?,
+                autostart = ?, backup_folder = ?, updated_at = ?
           WHERE id = 1",
     )
     .bind(settings.theme)
@@ -73,11 +93,36 @@ pub async fn update(pool: &SqlitePool, settings: &Settings, now: DateTime<Utc>) 
     .bind(settings.language)
     .bind(settings.pomodoro_minutes)
     .bind(settings.break_minutes)
+    .bind(settings.chime_enabled)
+    .bind(settings.notifications_enabled)
+    .bind(settings.autostart)
+    .bind(backup_folder)
     .bind(now)
     .execute(pool)
     .await?;
 
     get(pool).await
+}
+
+/// Makes Windows agree with the `autostart` column.
+///
+/// The registry is the truth Windows reads, and this row is the truth the app
+/// reads; they are two places, so they are reconciled explicitly — here on
+/// save, and again on launch, rather than trusted to have stayed in step.
+pub fn apply_autostart<R: Runtime>(app: &impl Manager<R>, enabled: bool) -> Result<()> {
+    let launcher = app.autolaunch();
+
+    // Asking first keeps a re-save from rewriting a registry entry that already
+    // says the right thing.
+    if launcher.is_enabled().map_err(Error::autostart)? == enabled {
+        return Ok(());
+    }
+
+    if enabled {
+        launcher.enable().map_err(Error::autostart)
+    } else {
+        launcher.disable().map_err(Error::autostart)
+    }
 }
 
 // -- Command layer ----------------------------------------------------------
@@ -88,7 +133,19 @@ pub async fn get_settings(db: State<'_, Db>) -> Result<Settings> {
 }
 
 #[tauri::command]
-pub async fn update_settings(db: State<'_, Db>, settings: Settings) -> Result<Settings> {
+pub async fn update_settings(
+    app: AppHandle,
+    db: State<'_, Db>,
+    settings: Settings,
+) -> Result<Settings> {
+    // Windows first: if registering fails, the save has not happened either, so
+    // the checkbox the user is looking at is still telling the truth.
+    //
+    // The other order of failure — registry written, row not — leaves the two
+    // disagreeing until the next launch, which re-asserts the row onto Windows
+    // and settles it. No rollback here, because a rollback that itself fails
+    // would just be a third thing to get wrong.
+    apply_autostart(&app, settings.autostart)?;
     update(&db.0, &settings, Utc::now()).await
 }
 
@@ -109,6 +166,10 @@ mod tests {
         assert_eq!(settings.language, Language::Nl);
         assert_eq!(settings.pomodoro_minutes, 25);
         assert_eq!(settings.break_minutes, 5);
+        assert!(settings.chime_enabled, "the chime is the point of the timer");
+        assert!(settings.notifications_enabled);
+        assert!(!settings.autostart, "nothing adds itself to Windows startup uninvited");
+        assert_eq!(settings.backup_folder, None, "None means the app data dir");
     }
 
     #[tokio::test]
@@ -123,6 +184,10 @@ mod tests {
                 language: Language::En,
                 pomodoro_minutes: 50,
                 break_minutes: 10,
+                chime_enabled: false,
+                notifications_enabled: false,
+                autostart: true,
+                backup_folder: Some("D:\\OneDrive\\TimeBuddy".to_string()),
                 updated_at: now(),
             },
             now(),
@@ -135,7 +200,50 @@ mod tests {
         assert_eq!(saved.language, Language::En);
         assert_eq!(saved.pomodoro_minutes, 50);
         assert_eq!(saved.break_minutes, 10);
+        assert!(!saved.chime_enabled);
+        assert!(!saved.notifications_enabled);
+        assert!(saved.autostart);
+        assert_eq!(
+            saved.backup_folder,
+            Some("D:\\OneDrive\\TimeBuddy".to_string())
+        );
         assert_eq!(get(&pool).await.unwrap(), saved);
+    }
+
+    #[tokio::test]
+    async fn a_cleared_backup_folder_reads_back_as_absent() {
+        let pool = test_pool().await;
+        let base = get(&pool).await.unwrap();
+
+        let chosen = update(
+            &pool,
+            &Settings {
+                backup_folder: Some("  D:\\Backups  ".to_string()),
+                ..base.clone()
+            },
+            now(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            chosen.backup_folder,
+            Some("D:\\Backups".to_string()),
+            "a pasted path keeps no stray whitespace"
+        );
+
+        // Clearing the field must not leave `""` behind for the backup job to
+        // treat as a folder named nothing.
+        let cleared = update(
+            &pool,
+            &Settings {
+                backup_folder: Some("   ".to_string()),
+                ..base
+            },
+            now(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(cleared.backup_folder, None);
     }
 
     #[tokio::test]
