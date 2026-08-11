@@ -13,7 +13,7 @@
 
 import { getVersion } from "@tauri-apps/api/app";
 import { relaunch } from "@tauri-apps/plugin-process";
-import { check } from "@tauri-apps/plugin-updater";
+import { check, type Update } from "@tauri-apps/plugin-updater";
 
 export interface PendingUpdate {
   /** The version on GitHub — already known to be newer than this build. */
@@ -33,6 +33,18 @@ export function currentVersion(): Promise<string> {
 }
 
 /**
+ * The handle the last check left behind, held so that the next one can close it.
+ *
+ * `check()` allocates a resource on the Rust side and answers with a handle to
+ * it. The handle cannot be released when the check returns — it is the thing
+ * that installs the update, possibly minutes later, from a bar the user has not
+ * looked at yet. So it is released when it is **superseded**: one live update at
+ * a time, the newest answer, rather than one per press of the button in Settings
+ * for the rest of the launch.
+ */
+let live: Update | null = null;
+
+/**
  * Asks the endpoint in `tauri.conf.json` whether there is a newer TimeBuddy,
  * and answers `null` when this is already it.
  *
@@ -43,6 +55,14 @@ export function currentVersion(): Promise<string> {
  */
 export async function checkForUpdate(): Promise<PendingUpdate | null> {
   const update = await check();
+
+  // Only once the new answer is actually in: a check that could not be made
+  // leaves the previous update installable, so a lost network is not a reason to
+  // throw away something the user could still have acted on.
+  const superseded = live;
+  live = update;
+  if (superseded !== null) await superseded.close();
+
   if (update === null) return null;
 
   return {

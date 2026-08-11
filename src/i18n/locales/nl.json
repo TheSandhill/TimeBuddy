@@ -180,7 +180,7 @@
     "checking": "Controleren…",
     "upToDate": "Dit is de nieuwste versie.",
     "checkFailed": "Er kon niet worden gecontroleerd op updates — TimeBuddy kon GitHub niet bereiken. Probeer het later opnieuw.",
-    "unsignedNote": "Windows waarschuwt bij het bijwerken misschien over een onbekende uitgever. Dat hoort erbij: TimeBuddy is niet ondertekend, en de update zelf wordt wel gecontroleerd voordat hij wordt geïnstalleerd."
+    "verifiedNote": "TimeBuddy controleert of een update echt van de maker komt voordat hij wordt geïnstalleerd, en weigert hem als dat niet zo is."
   },
   "error": {
     "nameRequired": "Vul een naam in.",

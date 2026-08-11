@@ -56,6 +56,11 @@ export function useUpdateCheck(): UpdateCheck {
     // focus would be another request to GitHub for an answer that changes on
     // the timescale of a release, not of an alt-tab.
     staleTime: Infinity,
+    // And this is what keeps it true across a re-lock. The shell unmounts when
+    // the door closes behind a restore, and the default five minutes would
+    // collect the answer while nobody was looking — so unlocking again would ask
+    // GitHub a second time for a fact about this launch.
+    gcTime: Infinity,
     // No automatic retry. The one thing that fixes a failed check is a network
     // that came back, and nothing here can tell when that happened — so the
     // retry is a button, the same way a failed backup's is (ADR-0007).
@@ -99,8 +104,11 @@ export function useUpdatePrompt(): UpdatePrompt {
    */
   const [dismissed, setDismissed] = useState<string | null>(null);
 
-  const installing = useMutation({
-    mutationFn: () => (update as PendingUpdate).install(),
+  // The update travels in as the argument rather than being read off the
+  // closure, so there is no "install what the check found, if it found anything"
+  // to assert with a cast: an unanswered check has nothing to pass.
+  const install = useMutation({
+    mutationFn: (target: PendingUpdate) => target.install(),
   });
 
   const offered =
@@ -110,9 +118,11 @@ export function useUpdatePrompt(): UpdatePrompt {
 
   return {
     offered,
-    install: () => installing.mutate(),
-    installing: installing.isPending,
-    installFailed: installing.isError,
+    install: () => {
+      if (update) install.mutate(update);
+    },
+    installing: install.isPending,
+    installFailed: install.isError,
     dismiss: () => {
       if (update) setDismissed(update.version);
     },

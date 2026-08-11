@@ -64,7 +64,14 @@ export function UpdateSection() {
         )}
       </div>
 
-      <p className="text-xs text-ink-muted">{t("update.unsignedNote")}</p>
+      {/*
+        Not a word here about the "unknown publisher" prompt. That one belongs to
+        the first install, which happened before this screen existed and which the
+        README covers — an app that warned about it on every visit to Settings
+        would be teaching her to expect a prompt updates do not show (ADR-0009).
+        What is worth saying is the half that happens every time.
+      */}
+      <p className="text-xs text-ink-muted">{t("update.verifiedNote")}</p>
     </section>
   );
 }

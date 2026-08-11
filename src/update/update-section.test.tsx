@@ -91,13 +91,13 @@ describe("the updates section", () => {
     expect(screen.getAllByRole("button")).toHaveLength(1);
   });
 
-  it("warns about the unknown-publisher prompt before it happens", async () => {
-    // TimeBuddy is unsigned (ADR-0009). A Windows warning nobody was told to
-    // expect is one that gets answered with "no".
+  it("says updates are checked, and says nothing about unknown publishers", async () => {
+    // The "unknown publisher" prompt belongs to the first install, which the
+    // README covers. Repeating it here would teach her to expect a prompt that
+    // updates do not show (ADR-0009). What is true every time is the signature.
     renderSection();
 
-    expect(
-      await screen.findByText(/onbekende uitgever/i),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/echt van de maker komt/)).toBeVisible();
+    expect(screen.queryByText(/uitgever/i)).toBeNull();
   });
 });

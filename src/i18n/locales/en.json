@@ -180,7 +180,7 @@
     "checking": "Checking…",
     "upToDate": "This is the newest version.",
     "checkFailed": "Updates could not be checked — TimeBuddy could not reach GitHub. Try again later.",
-    "unsignedNote": "Windows may warn about an unknown publisher while updating. That is expected: TimeBuddy is not signed, and the update itself is verified before it is installed."
+    "verifiedNote": "TimeBuddy checks that an update really came from its author before installing it, and refuses one that did not."
   },
   "error": {
     "nameRequired": "Please enter a name.",
