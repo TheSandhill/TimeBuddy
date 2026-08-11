@@ -145,6 +145,12 @@
     "failedWithLast": "The last backup did not work. The newest copy is from {{when}}. Check that the backup folder can be reached.",
     "failedWithNone": "The last backup did not work and there is no backup at all — your hours exist in one place only. Check that the backup folder can be reached."
   },
+  "crash": {
+    "title": "TimeBuddy could not draw this screen.",
+    "hint": "Your hours are safe — this is the window, not the database. Reloading usually clears it. If it keeps happening, quit from the TimeBuddy icon in the notification area and start the app again.",
+    "detail": "Technical detail",
+    "reload": "Reload"
+  },
   "restore": {
     "title": "Restore",
     "hint": "Going back to a backup replaces everything with how things were that day. TimeBuddy copies today's data aside first, as its own backup, so a restore can be undone. It takes effect the next time the app starts.",
