@@ -34,7 +34,7 @@
       "endpoints": [
         "https://github.com/TheSandhill/TimeBuddy/releases/latest/download/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZGNTU3N0NEMzQ1NThGMzEKUldReGoxVTB6WGRWL3krcFY5Q2syTWlieTBWRWRVYWFJNkNEZzYxNUNMbHJPb2NpL292VjJUWVEK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE5MkVGMzg4NUVFOTczN0MKUldSOGMrbGVpUE11cVU4NTJ1ZlhnT2NDb3ZkU1B5NzVLd1pmM1Vyc1JBLzFwYmdkVVBua3NiVFgK",
       "windows": {
         "installMode": "passive"
       }
