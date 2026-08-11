@@ -145,6 +145,12 @@
     "failedWithLast": "De laatste back-up is mislukt. De nieuwste kopie is van {{when}}. Controleer of de back-upmap bereikbaar is.",
     "failedWithNone": "De laatste back-up is mislukt en er is nog geen back-up — je uren staan op één plek. Controleer of de back-upmap bereikbaar is."
   },
+  "crash": {
+    "title": "TimeBuddy kon dit scherm niet tekenen.",
+    "hint": "Je uren zijn veilig — dit gaat over het venster, niet over de database. Opnieuw laden helpt meestal. Blijft het gebeuren, sluit de app dan af via het TimeBuddy-pictogram in het systeemvak en start opnieuw.",
+    "detail": "Technische details",
+    "reload": "Opnieuw laden"
+  },
   "restore": {
     "title": "Terugzetten",
     "hint": "Een back-up terugzetten vervangt alles door de situatie van die dag. TimeBuddy zet de gegevens van vandaag eerst apart, als eigen back-up, zodat terugzetten ongedaan te maken is. Het gaat in zodra de app opnieuw start.",
