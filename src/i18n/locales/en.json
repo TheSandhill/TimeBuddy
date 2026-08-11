@@ -167,6 +167,21 @@
     "failedSafetyCopy": "The restore did not happen: today's data could not be copied aside first, so nothing was replaced. Check that the backup folder can be reached — the restore is still ready for the next start.",
     "failedSwap": "The restore did not happen: the files could not be moved."
   },
+  "update": {
+    "title": "Updates",
+    "currentVersion": "You are running version {{version}}.",
+    "available": "TimeBuddy {{version}} is available.",
+    "restartWarning": "Updating takes a moment and restarts TimeBuddy.",
+    "install": "Update now",
+    "installing": "Updating…",
+    "later": "Later",
+    "installFailed": "TimeBuddy could not be updated. Nothing has changed — you can try again.",
+    "check": "Check for updates",
+    "checking": "Checking…",
+    "upToDate": "This is the newest version.",
+    "checkFailed": "Updates could not be checked — TimeBuddy could not reach GitHub. Try again later.",
+    "unsignedNote": "Windows may warn about an unknown publisher while updating. That is expected: TimeBuddy is not signed, and the update itself is verified before it is installed."
+  },
   "error": {
     "nameRequired": "Please enter a name.",
     "durationUnreadable": "Can't read that duration. Try 1:30, 1.5 or 90m.",

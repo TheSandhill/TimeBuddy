@@ -145,6 +145,34 @@ different rules, and it does not belong behind the same button.
 A staged restore that **fails** is announced across the top of every screen, and says the current
 database was left alone. Opening on old data in silence would read as the restore having worked.
 
+### Update
+
+A newer TimeBuddy, published as a GitHub Release and offered to the copy that is running. Shipping is
+a `git tag`; updating is one click. See ADR-0009.
+
+The installer is **unsigned** — Windows says "unknown publisher" once, on the first install, and the
+README says it will. Every **update** is signed with a minisign key and verified against the public
+half compiled into the build: the app downloads and runs an installer from one URL without anyone
+watching, so that URL cannot be trusted on its own.
+
+The version number lives in four places — `package.json`, `Cargo.toml`, `tauri.conf.json`, the tag —
+and only `tauri.conf.json`'s is the one the updater compares. They are **checked against each other**
+rather than trusted: a tag pushed against an unbumped tree would offer an update that installs the
+version already running, which is the failure that looks most like success.
+
+**Checked once per launch**, like a Backup, and for the same reason: a scheduler in a program that is
+closed at midnight would never fire. A check that **could not be made** is not announced — a laptop
+with no network puts nothing at risk — it is read on the Settings screen, beside the version and the
+button that asks again. This is the same split Backup draws between failed and merely stale.
+
+An available update is offered **across the top of every screen**, as a status rather than an alarm:
+nothing is wrong. It **can** be waved off, unlike a failed Backup, for the launch it was waved off in
+and for that version only. A failed **install** is announced, with the offer still standing.
+
+Installing restarts the app, and the offer says so before the button that does it. If a Pomodoro Block
+is running, the next launch asks about it exactly as it would after any other death — the same
+question, and not a special case.
+
 ### Theme
 
 A named set of design tokens (`--color-surface`, `--color-ink`, `--color-accent`, …). Components
@@ -250,6 +278,7 @@ the tooltip are the answer.
 - **No invoicing.** Rates are stored, never used.
 - **No multi-user.** No `user_id` anywhere. The lock screen guards one person's data on one machine.
 - **No database encryption.** See ADR-0003.
+- **No code signing.** The installer is unsigned; the updates are signed. See ADR-0009.
 - **No time rounding rules.** Store truth.
 - **No cross-platform.** Windows only.
 

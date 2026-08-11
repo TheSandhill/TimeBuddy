@@ -167,6 +167,21 @@
     "failedSafetyCopy": "Het terugzetten is niet gebeurd: de gegevens van vandaag konden niet eerst apart worden gezet, dus er is niets vervangen. Controleer of de back-upmap bereikbaar is — het terugzetten staat nog klaar voor de volgende start.",
     "failedSwap": "Het terugzetten is niet gebeurd: de bestanden konden niet worden verplaatst."
   },
+  "update": {
+    "title": "Bijwerken",
+    "currentVersion": "Je gebruikt versie {{version}}.",
+    "available": "TimeBuddy {{version}} is beschikbaar.",
+    "restartWarning": "Bijwerken duurt even en start TimeBuddy opnieuw op.",
+    "install": "Nu bijwerken",
+    "installing": "Bijwerken…",
+    "later": "Later",
+    "installFailed": "TimeBuddy kon niet worden bijgewerkt. Er is niets veranderd — je kunt het opnieuw proberen.",
+    "check": "Controleer op updates",
+    "checking": "Controleren…",
+    "upToDate": "Dit is de nieuwste versie.",
+    "checkFailed": "Er kon niet worden gecontroleerd op updates — TimeBuddy kon GitHub niet bereiken. Probeer het later opnieuw.",
+    "unsignedNote": "Windows waarschuwt bij het bijwerken misschien over een onbekende uitgever. Dat hoort erbij: TimeBuddy is niet ondertekend, en de update zelf wordt wel gecontroleerd voordat hij wordt geïnstalleerd."
+  },
   "error": {
     "nameRequired": "Vul een naam in.",
     "durationUnreadable": "Onleesbare duur. Probeer 1:30, 1,5 of 90m.",

@@ -28,6 +28,15 @@ vi.mock("../data/commands", () => commands);
 const dialog = vi.hoisted(() => ({ open: vi.fn() }));
 vi.mock("@tauri-apps/plugin-dialog", () => dialog);
 
+// The Updates section sits at the bottom of this screen. It has its own tests;
+// here it is stubbed to "you are on the newest version", which is the answer
+// that puts nothing on screen for the rest of these tests to trip over.
+const updater = vi.hoisted(() => ({
+  currentVersion: vi.fn().mockResolvedValue("0.1.0"),
+  checkForUpdate: vi.fn().mockResolvedValue(null),
+}));
+vi.mock("../update/updater", () => updater);
+
 const { Settings } = await import("./settings");
 
 const stored: StoredSettings = {
@@ -351,9 +360,9 @@ describe("backups", () => {
 
     await waitFor(() => expect(commands.runBackup).toHaveBeenCalledTimes(1));
     expect(commands.updateSettings).not.toHaveBeenCalled();
-    expect(await screen.findByRole("status")).toHaveTextContent(
-      "Back-up gemaakt",
-    );
+    // Found by its words and then checked for its role: this screen has more
+    // than one thing that reports quietly, so "the status" is not a thing.
+    expect(await screen.findByText("Back-up gemaakt")).toHaveRole("status");
   });
 
   it("says a failed backup failed instead of looking like it worked", async () => {
@@ -469,9 +478,9 @@ describe("restoring a backup", () => {
         "timebuddy-20260803T073000Z.db",
       ),
     );
-    expect(await screen.findByRole("status")).toHaveTextContent(
-      /wordt teruggezet zodra TimeBuddy opnieuw start/,
-    );
+    expect(
+      await screen.findByText(/wordt teruggezet zodra TimeBuddy opnieuw start/),
+    ).toHaveRole("status");
     // And it says *how* to restart, because closing the window only hides it.
     expect(screen.getByText(/systeemvak/)).toBeInTheDocument();
   });
@@ -511,9 +520,9 @@ describe("restoring a backup", () => {
     renderSettings();
     await loaded();
 
-    expect(await screen.findByRole("status")).toHaveTextContent(
-      /Een back-up van .* staat klaar/,
-    );
+    expect(
+      await screen.findByText(/Een back-up van .* staat klaar/),
+    ).toHaveRole("status");
     expect(
       screen.queryByLabelText("Terugzetten vanaf"),
       "one restore is owed at a time",

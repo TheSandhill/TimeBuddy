@@ -1,0 +1,79 @@
+# Shipping TimeBuddy is `git tag` and nothing else (ADR-0009).
+#
+# A tag builds the NSIS installer, signs the update with the minisign key held in
+# the repository secrets, and publishes both plus `latest.json` as a GitHub
+# Release. `latest.json` at the `latest` URL is what every installed copy reads,
+# which is why this workflow publishes releases rather than drafts: a draft is
+# invisible to `releases/latest/download`, so a drafted release would look like
+# a successful ship and update nobody.
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      # tauri-action creates the release and uploads to it.
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: ./src-tauri -> target
+
+      - run: npm ci
+
+      # The tag is the version, so a tag that disagrees with the tree would
+      # publish a release the updater ignores — `v0.2.0` built from a tree that
+      # still says 0.1.0 offers an update that installs the version already
+      # there. The three files are checked against each other by a Rust test;
+      # this is the fourth place the number lives and the only one CI can see.
+      - name: The tag and the version must be the same number
+        shell: bash
+        run: |
+          tagged="${GITHUB_REF_NAME#v}"
+          built=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          if [ "$tagged" != "$built" ]; then
+            echo "tag $GITHUB_REF_NAME does not match version $built" >&2
+            exit 1
+          fi
+
+      - run: npm run typecheck
+      - run: npm test
+      - run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Generated once with `tauri signer generate`. The installer itself is
+          # unsigned — this key signs the *update*, which is what stops one
+          # public URL in every build from being a way to install anything.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: TimeBuddy ${{ github.ref_name }}
+          releaseBody: |
+            Download the `_x64-setup.exe` below and run it.
+
+            Windows will say the publisher is unknown, because TimeBuddy is not
+            code-signed. Choose **More info** and then **Run anyway** — once, on
+            the first install. See the README.
+          releaseDraft: false
+          prerelease: false
+          # Writes `latest.json` beside the installer. Without it there is a
+          # release to install by hand and nothing for the updater to read.
+          includeUpdaterJson: true

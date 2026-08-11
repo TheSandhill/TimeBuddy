@@ -31,6 +31,15 @@ rust_xlsxwriter = { version = "0.97.1", default-features = false, features = ["c
 tauri-plugin-dialog = "2.7.2"
 tauri-plugin-autostart = "2.5.1"
 tauri-plugin-notification = "2.3.3"
+# Shipping is a `git tag` and updating is one click (ADR-0001, ADR-0009). The
+# installer is unsigned; the *update* is signed with a minisign key, which is
+# what stops the one public URL in the binary from being an install-anything
+# hole.
+tauri-plugin-updater = "2.9.0"
+# Only for the relaunch after an update is installed. It exits the process
+# rather than closing the window — which is the point, because closing the
+# window hides it (ADR-0004).
+tauri-plugin-process = "2.3.1"
 # The lock screen's one primitive (ADR-0003). `std` brings `OsRng`, which is
 # what salts a hash and what makes a "remember me" token unguessable.
 argon2 = { version = "0.5", features = ["std"] }
