@@ -20,6 +20,7 @@
 //! is no live pool: the swap happens before one exists.
 
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::Serialize;
@@ -95,7 +96,7 @@ pub enum RestoreFault {
     SwapFailed,
 }
 
-/// What the launch did about a staged restore. Read once, by the app shell.
+/// What the launch did about a staged restore.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "status")]
 pub enum Outcome {
@@ -106,7 +107,8 @@ pub enum Outcome {
     Done {
         restored_from: DateTime<Utc>,
         /// Where the present went, so "undo this" is a file the user can name.
-        safety_copy: String,
+        /// `None` when there was no database to copy aside.
+        safety_copy: Option<String>,
     },
     /// The swap did not happen, and the database on disk is the one that was
     /// already there. Announced rather than passed over: opening on old data in
@@ -114,9 +116,39 @@ pub enum Outcome {
     Failed { fault: RestoreFault },
 }
 
-/// Managed state. Filled once at launch, before the window exists, and read by
-/// the shell — the swap is over long before anything can ask about it.
-pub struct RestoreReport(pub Outcome);
+/// Managed state: what the launch did, and whether the door still owes a close.
+///
+/// Two fields because they are two different kinds of thing. The [`Outcome`] is a
+/// **fact** about this launch, read as often as anything wants to describe it.
+/// The re-lock is an **event**, and it has to happen exactly once: a webview
+/// reload asking the same question again must not throw away the token the
+/// restored database has since issued, which would be a lock screen that could
+/// never be got past with "remember me" ticked.
+pub struct RestoreReport {
+    pub outcome: Outcome,
+    /// Taken by the first caller and false forever after. `AtomicBool` rather
+    /// than a lock because "has this been claimed" is exactly one bit.
+    relock_owed: AtomicBool,
+}
+
+impl RestoreReport {
+    pub fn new(outcome: Outcome) -> Self {
+        // Only a swap that happened invalidates the session. A restore that
+        // failed leaves the database — and the password — the token was issued
+        // by, so there is nothing to drop.
+        let relock_owed = AtomicBool::new(matches!(outcome, Outcome::Done { .. }));
+        Self {
+            outcome,
+            relock_owed,
+        }
+    }
+
+    /// Whether the caller is the one that has to drop the session. True at most
+    /// once per launch.
+    fn claim_relock(&self) -> bool {
+        self.relock_owed.swap(false, Ordering::SeqCst)
+    }
+}
 
 // -- Naming -----------------------------------------------------------------
 
@@ -161,7 +193,7 @@ fn staged(data_dir: &Path) -> Vec<(DateTime<Utc>, PathBuf)> {
 /// answer is immediate, and again at launch before anything is overwritten. The
 /// second is the one that actually guards the swap; a file in a half-synced
 /// OneDrive folder can be whole at the first and truncated at the second.
-async fn verify(path: &Path, latest: i64) -> Result<()> {
+async fn verify(path: &Path) -> Result<()> {
     if !path.is_file() {
         return Err(Error::validation(ValidationCode::BackupUnreadable));
     }
@@ -177,7 +209,7 @@ async fn verify(path: &Path, latest: i64) -> Result<()> {
     .await
     .map_err(|_| Error::validation(ValidationCode::BackupUnreadable))?;
 
-    let verdict = inspect(&mut connection, latest).await;
+    let verdict = inspect(&mut connection).await;
 
     // Closed on **every** path, which is why the checks are a function of their
     // own rather than a run of early returns. Dropping a connection only
@@ -189,7 +221,7 @@ async fn verify(path: &Path, latest: i64) -> Result<()> {
 }
 
 /// The checks themselves, so [`verify`] can own closing the connection.
-async fn inspect(connection: &mut SqliteConnection, latest: i64) -> Result<()> {
+async fn inspect(connection: &mut SqliteConnection) -> Result<()> {
     // Bytes that were never a database fail here, and so does a file whose
     // header survived a half-finished upload while its pages did not.
     let integrity: String = sqlx::query_scalar("PRAGMA integrity_check")
@@ -217,7 +249,7 @@ async fn inspect(connection: &mut SqliteConnection, latest: i64) -> Result<()> {
 
     // Older is fine — the plugin migrates it forward after the swap. Newer is
     // not: nothing migrates backward.
-    if applied_version(connection).await > latest {
+    if applied_version(connection).await > schema::latest_version() {
         return Err(Error::validation(ValidationCode::BackupFromNewerVersion));
     }
 
@@ -294,12 +326,12 @@ pub async fn preview(pool: &SqlitePool, file_name: &str) -> Result<RestorePrevie
 ///
 /// Copied rather than `VACUUM INTO`'d — the source is not open by anyone here,
 /// and it is already the consistent snapshot `VACUUM INTO` made it.
-pub async fn stage(folder: &Path, file_name: &str, data_dir: &Path, latest: i64) -> Result<()> {
+pub async fn stage(folder: &Path, file_name: &str, data_dir: &Path) -> Result<()> {
     let made_at = backup::made_at(file_name)
         .ok_or_else(|| Error::validation(ValidationCode::NotABackup))?;
 
     let chosen = folder.join(file_name);
-    verify(&chosen, latest).await?;
+    verify(&chosen).await?;
 
     // Staged into the app's own directory, not the backup folder: that one is
     // usually synced, and staging into a folder something else is uploading is
@@ -339,7 +371,7 @@ pub fn pending(data_dir: &Path) -> Option<DateTime<Utc>> {
 /// what makes that true — verify, then copy the present aside, then swap — so
 /// nothing is overwritten until the thing overwriting it has been read and the
 /// thing being overwritten has been saved.
-pub async fn take_staged(data_dir: &Path, db_file: &Path, latest: i64) -> Outcome {
+pub async fn take_staged(data_dir: &Path, db_file: &Path) -> Outcome {
     let mut found = staged(data_dir);
     if found.is_empty() {
         return Outcome::Nothing;
@@ -354,7 +386,7 @@ pub async fn take_staged(data_dir: &Path, db_file: &Path, latest: i64) -> Outcom
 
     // Checked again, because the first check was before a sync client had the
     // rest of the night with this file.
-    if verify(&path, latest).await.is_err() {
+    if verify(&path).await.is_err() {
         // A file known to be bad is removed rather than kept: keeping it would
         // be a restore that fails identically on every launch, forever.
         let _ = std::fs::remove_file(&path);
@@ -396,11 +428,11 @@ pub async fn take_staged(data_dir: &Path, db_file: &Path, latest: i64) -> Outcom
 /// The pool is short-lived and **closed before the swap**. The file about to be
 /// replaced must not be open at the moment it is replaced, and `VACUUM INTO` is
 /// the only way to copy one that might have a WAL beside it.
-async fn copy_present_aside(data_dir: &Path, db_file: &Path) -> Result<String> {
+async fn copy_present_aside(data_dir: &Path, db_file: &Path) -> Result<Option<String>> {
     // Nothing to save. A staged restore onto an install with no database is odd
     // but harmless, and refusing it would strand the restore.
     if !db_file.is_file() {
-        return Ok(String::new());
+        return Ok(None);
     }
 
     let pool = db::connect(db_file).await?;
@@ -419,7 +451,7 @@ async fn copy_present_aside(data_dir: &Path, db_file: &Path) -> Result<String> {
     // pool left open would be a handle on the file it is about to move.
     pool.close().await;
 
-    written.map(|_| backup::file_name(now))
+    written.map(|_| Some(backup::file_name(now)))
 }
 
 /// Moves the staged file into place.
@@ -456,13 +488,18 @@ fn swap(data_dir: &Path, db_file: &Path, staged_file: &Path) -> Result<()> {
 
 // -- Command layer ----------------------------------------------------------
 
+/// Where the database and any staged restore live. Named once, so four commands
+/// do not each spell out the same resolution and the same error.
+fn data_dir_for<R: Runtime>(app: &impl Manager<R>) -> Result<PathBuf> {
+    app.path().app_config_dir().map_err(Error::restore)
+}
+
 /// The backup folder this machine and the settings row agree on.
 async fn folder_for<R: Runtime>(app: &impl Manager<R>, pool: &SqlitePool) -> Result<PathBuf> {
     let settings = settings::get(pool).await?;
-    let data_dir = app.path().app_config_dir().map_err(Error::restore)?;
     Ok(backup::resolve_folder(
         settings.backup_folder.as_deref(),
-        &data_dir,
+        &data_dir_for(app)?,
     ))
 }
 
@@ -484,28 +521,37 @@ pub async fn preview_restore(db: State<'_, Db>, file_name: String) -> Result<Res
 #[tauri::command]
 pub async fn stage_restore(app: AppHandle, db: State<'_, Db>, file_name: String) -> Result<()> {
     let folder = folder_for(&app, &db.0).await?;
-    let data_dir = app.path().app_config_dir().map_err(Error::restore)?;
-
-    stage(&folder, &file_name, &data_dir, schema::latest_version()).await
+    stage(&folder, &file_name, &data_dir_for(&app)?).await
 }
 
 #[tauri::command]
 pub fn cancel_restore(app: AppHandle) -> Result<()> {
-    let data_dir = app.path().app_config_dir().map_err(Error::restore)?;
-    cancel(&data_dir)
+    cancel(&data_dir_for(&app)?)
 }
 
 /// When the staged restore is from, or `null` when none is waiting.
 #[tauri::command]
 pub fn pending_restore(app: AppHandle) -> Result<Option<DateTime<Utc>>> {
-    let data_dir = app.path().app_config_dir().map_err(Error::restore)?;
-    Ok(pending(&data_dir))
+    Ok(pending(&data_dir_for(&app)?))
 }
 
-/// What this launch did about a staged restore. The shell asks once.
+/// What this launch did about a staged restore. A fact, so it can be asked for
+/// as often as anything wants to describe it.
 #[tauri::command]
 pub fn restore_outcome(report: State<'_, RestoreReport>) -> Outcome {
-    report.0.clone()
+    report.outcome.clone()
+}
+
+/// Whether the caller has to drop the "remember me" session, because a restore
+/// brought a different account row with it.
+///
+/// **True at most once per launch**, unlike [`restore_outcome`]. The two are
+/// deliberately separate commands: a reload asking the fact again must not be
+/// told to throw away the token the restored database has since issued, or
+/// "remember me" would never survive a restore.
+#[tauri::command]
+pub fn claim_restore_relock(report: State<'_, RestoreReport>) -> bool {
+    report.claim_relock()
 }
 
 #[cfg(test)]
@@ -586,8 +632,19 @@ mod tests {
         names.into_iter().map(|(name,)| name).collect()
     }
 
-    fn latest() -> i64 {
-        schema::latest_version()
+    /// The total minutes logged in the database at `path`.
+    ///
+    /// The hours are what the whole feature is about, so a restore is judged on
+    /// them directly rather than on a row count standing in for them.
+    async fn minutes_in(path: &Path) -> i64 {
+        let pool = db::connect(path).await.expect("a database is there");
+        let (total,): (i64,) =
+            sqlx::query_as("SELECT COALESCE(SUM(duration_minutes), 0) FROM time_entries")
+                .fetch_one(&pool)
+                .await
+                .expect("and it holds the entries");
+        pool.close().await;
+        total
     }
 
     #[tokio::test]
@@ -603,9 +660,10 @@ mod tests {
 
         log_an_hour(&it.pool, "Later Client").await;
         assert_eq!(clients_in(&it.db_file).await.len(), 2);
+        assert_eq!(minutes_in(&it.db_file).await, 120, "two hours logged in all");
 
         let chosen = backup::file_name(at("2026-08-01T09:00:00Z"));
-        stage(&it.folder, &chosen, &it.data_dir, latest())
+        stage(&it.folder, &chosen, &it.data_dir)
             .await
             .unwrap();
 
@@ -615,7 +673,7 @@ mod tests {
 
         // The pool the app had open is gone by the time the next launch runs.
         it.pool.close().await;
-        let outcome = take_staged(&it.data_dir, &it.db_file, latest()).await;
+        let outcome = take_staged(&it.data_dir, &it.db_file).await;
 
         assert!(
             matches!(
@@ -628,6 +686,11 @@ mod tests {
             clients_in(&it.db_file).await,
             vec!["Acme".to_string()],
             "the database is the one from the chosen day"
+        );
+        assert_eq!(
+            minutes_in(&it.db_file).await,
+            60,
+            "and the hours are that day's hours — the second one went with it"
         );
         assert_eq!(pending(&it.data_dir), None, "and the staged file is spent");
     }
@@ -660,15 +723,18 @@ mod tests {
             &it.folder,
             &backup::file_name(at("2026-08-01T09:00:00Z")),
             &it.data_dir,
-            latest(),
         )
         .await
         .unwrap();
         it.pool.close().await;
 
-        let outcome = take_staged(&it.data_dir, &it.db_file, latest()).await;
-        let Outcome::Done { safety_copy, .. } = &outcome else {
-            panic!("expected a restore, got {outcome:?}");
+        let outcome = take_staged(&it.data_dir, &it.db_file).await;
+        let Outcome::Done {
+            safety_copy: Some(safety_copy),
+            ..
+        } = &outcome
+        else {
+            panic!("expected a restore with a safety copy, got {outcome:?}");
         };
 
         // The copy is an ordinary backup: in the same folder, under the same
@@ -686,6 +752,28 @@ mod tests {
                 .any(|candidate| &candidate.file_name == safety_copy),
             "so it is offered back like any other backup"
         );
+
+        // And now the half that makes it a round trip rather than a claim:
+        // restore the safety copy, and the present comes back. This is the
+        // "restoring twice in a row cannot lose the present" the issue asks for.
+        assert_eq!(
+            clients_in(&it.db_file).await,
+            vec!["Acme".to_string()],
+            "the first restore did land"
+        );
+
+        stage(&it.folder, safety_copy, &it.data_dir).await.unwrap();
+        let second = take_staged(&it.data_dir, &it.db_file).await;
+
+        assert!(
+            matches!(second, Outcome::Done { .. }),
+            "the second restore ran too, got {second:?}"
+        );
+        assert_eq!(
+            clients_in(&it.db_file).await,
+            vec!["Acme".to_string(), "Today's Client".to_string()],
+            "and undoing a restore is just restoring the copy it made"
+        );
     }
 
     #[tokio::test]
@@ -700,7 +788,7 @@ mod tests {
         let whole = std::fs::read(it.folder.join(&chosen)).unwrap();
         std::fs::write(it.folder.join(&chosen), &whole[..whole.len() / 3]).unwrap();
 
-        let refused = stage(&it.folder, &chosen, &it.data_dir, latest())
+        let refused = stage(&it.folder, &chosen, &it.data_dir)
             .await
             .unwrap_err();
 
@@ -728,7 +816,7 @@ mod tests {
         let chosen = backup::file_name(now());
         std::fs::write(it.folder.join(&chosen), b"").unwrap();
 
-        let refused = stage(&it.folder, &chosen, &it.data_dir, latest())
+        let refused = stage(&it.folder, &chosen, &it.data_dir)
             .await
             .unwrap_err();
 
@@ -759,7 +847,7 @@ mod tests {
         .unwrap();
         future.close().await;
 
-        let refused = stage(&it.folder, &chosen, &it.data_dir, latest())
+        let refused = stage(&it.folder, &chosen, &it.data_dir)
             .await
             .unwrap_err();
 
@@ -788,7 +876,7 @@ mod tests {
         .unwrap();
         old.close().await;
 
-        stage(&it.folder, &chosen, &it.data_dir, latest())
+        stage(&it.folder, &chosen, &it.data_dir)
             .await
             .expect("older is what a backup usually is");
     }
@@ -800,7 +888,7 @@ mod tests {
         let it = install().await;
         log_an_hour(&it.pool, "Acme").await;
         backup::run(&it.pool, &it.folder, now()).await.unwrap();
-        stage(&it.folder, &backup::file_name(now()), &it.data_dir, latest())
+        stage(&it.folder, &backup::file_name(now()), &it.data_dir)
             .await
             .unwrap();
 
@@ -809,7 +897,7 @@ mod tests {
         std::fs::write(&staged_file, &whole[..whole.len() / 3]).unwrap();
 
         it.pool.close().await;
-        let outcome = take_staged(&it.data_dir, &it.db_file, latest()).await;
+        let outcome = take_staged(&it.data_dir, &it.db_file).await;
 
         assert_eq!(
             outcome,
@@ -837,7 +925,7 @@ mod tests {
         let it = install().await;
         log_an_hour(&it.pool, "Acme").await;
         backup::run(&it.pool, &it.folder, now()).await.unwrap();
-        stage(&it.folder, &backup::file_name(now()), &it.data_dir, latest())
+        stage(&it.folder, &backup::file_name(now()), &it.data_dir)
             .await
             .unwrap();
 
@@ -855,7 +943,7 @@ mod tests {
         .unwrap();
         it.pool.close().await;
 
-        let outcome = take_staged(&it.data_dir, &it.db_file, latest()).await;
+        let outcome = take_staged(&it.data_dir, &it.db_file).await;
 
         assert_eq!(
             outcome,
@@ -875,7 +963,7 @@ mod tests {
         let it = install().await;
 
         assert_eq!(
-            take_staged(&it.data_dir, &it.db_file, latest()).await,
+            take_staged(&it.data_dir, &it.db_file).await,
             Outcome::Nothing,
             "the overwhelmingly common launch"
         );
@@ -893,7 +981,7 @@ mod tests {
             "..\\timebuddy-20260805T120000Z.db",
             "../timebuddy-20260805T120000Z.db",
         ] {
-            let refused = stage(&it.folder, stranger, &it.data_dir, latest())
+            let refused = stage(&it.folder, stranger, &it.data_dir)
                 .await
                 .unwrap_err();
             assert!(
@@ -918,14 +1006,9 @@ mod tests {
         it.pool.close().await;
 
         for day in ["2026-08-02T09:00:00Z", "2026-08-01T09:00:00Z"] {
-            stage(
-                &it.folder,
-                &backup::file_name(at(day)),
-                &it.data_dir,
-                latest(),
-            )
-            .await
-            .unwrap();
+            stage(&it.folder, &backup::file_name(at(day)), &it.data_dir)
+                .await
+                .unwrap();
         }
 
         assert_eq!(staged(&it.data_dir).len(), 1, "one restore is owed, not two");
@@ -937,7 +1020,7 @@ mod tests {
         let it = install().await;
         log_an_hour(&it.pool, "Acme").await;
         backup::run(&it.pool, &it.folder, now()).await.unwrap();
-        stage(&it.folder, &backup::file_name(now()), &it.data_dir, latest())
+        stage(&it.folder, &backup::file_name(now()), &it.data_dir)
             .await
             .unwrap();
 
@@ -946,7 +1029,7 @@ mod tests {
         assert_eq!(pending(&it.data_dir), None);
         it.pool.close().await;
         assert_eq!(
-            take_staged(&it.data_dir, &it.db_file, latest()).await,
+            take_staged(&it.data_dir, &it.db_file).await,
             Outcome::Nothing
         );
     }
@@ -1070,6 +1153,38 @@ mod tests {
         swap(data_dir, &db_file, &staged_file).unwrap();
 
         assert_eq!(std::fs::read(&db_file).unwrap(), b"the restore");
+    }
+
+    #[test]
+    fn the_relock_is_owed_once_and_then_never_again() {
+        // The bug this closes: a webview reload asking again, being told to
+        // re-lock again, and throwing away the token the *restored* database
+        // had just issued — a "remember me" that could never survive a restore.
+        let report = RestoreReport::new(Outcome::Done {
+            restored_from: now(),
+            safety_copy: Some(backup::file_name(now())),
+        });
+
+        assert!(report.claim_relock(), "the launch that swapped owes a re-lock");
+        assert!(!report.claim_relock(), "and no later reload owes another");
+        assert!(
+            matches!(report.outcome, Outcome::Done { .. }),
+            "while the fact of the restore stays readable, for the notice"
+        );
+    }
+
+    #[test]
+    fn a_launch_that_restored_nothing_owes_no_relock() {
+        for outcome in [
+            Outcome::Nothing,
+            // Nothing was replaced, so the password the token was issued
+            // against is still the one in the database.
+            Outcome::Failed {
+                fault: RestoreFault::SwapFailed,
+            },
+        ] {
+            assert!(!RestoreReport::new(outcome).claim_relock());
+        }
     }
 
     #[test]

@@ -77,6 +77,7 @@ export const commandNames = [
   "cancel_restore",
   "pending_restore",
   "restore_outcome",
+  "claim_restore_relock",
   "sync_tray",
 ] as const;
 
@@ -354,6 +355,19 @@ export function pendingRestore(): Promise<Instant | null> {
  */
 export function restoreOutcome(): Promise<RestoreOutcome> {
   return call("restore_outcome");
+}
+
+/**
+ * Whether this caller is the one that has to drop the "remember me" session,
+ * because a restore brought a different account row with it.
+ *
+ * **True at most once per launch**, which is why it is not folded into
+ * `restoreOutcome`: that one is a fact and is read repeatedly, and a reload
+ * being told to re-lock again would throw away the token the restored database
+ * has since issued (ADR-0008).
+ */
+export function claimRestoreRelock(): Promise<boolean> {
+  return call("claim_restore_relock");
 }
 
 // -- Tray -------------------------------------------------------------------

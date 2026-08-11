@@ -279,7 +279,12 @@ export type RestoreFault =
  */
 export type RestoreOutcome =
   | { status: "nothing" }
-  | { status: "done"; restoredFrom: Instant; safetyCopy: string }
+  | {
+      status: "done";
+      restoredFrom: Instant;
+      /** Where the present went. `null` when there was none to copy aside. */
+      safetyCopy: string | null;
+    }
   | { status: "failed"; fault: RestoreFault };
 
 /**

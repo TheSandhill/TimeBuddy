@@ -23,13 +23,16 @@ file its own pool holds.
 
 ### The swap happens at launch, before anything opens the file
 
-Choosing a backup **stages** it: the chosen file is verified, then copied to `restore-pending.db`
-beside the database. Nothing else is written, and nothing is destroyed. The next launch finds that
-file and performs the swap before the pool opens and before `tauri-plugin-sql` migrates anything.
+Choosing a backup **stages** it: the chosen file is verified, then copied beside the database as
+`restore-pending-<stamp>.db`, carrying the stamp of the backup it holds. Nothing else is written, and
+nothing is destroyed. The next launch finds that file and performs the swap before the pool opens and
+before `tauri-plugin-sql` migrates anything.
 
 The file's **presence is the record**, exactly as the backup folder is the record in ADR-0007. There
 is no `restore_pending` column, because a row and a file could disagree about whether a restore is
-owed.
+owed. The stamp is in the name for the same reason, and it is load-bearing rather than decorative:
+the original file name is gone once the copy is made, so the name is the only thing left that knows
+which day the restore is from — which is what the swap has to say afterwards.
 
 This inverts one thing ADR-0007's implementation relied on: the sql plugin is now registered from
 inside the app's `setup` hook, *after* the swap, rather than on the builder. Plugin `setup` hooks run
@@ -75,11 +78,29 @@ on the lock screen anyway. This makes that explicit rather than incidental: the 
 a swap, and the notice says which day's password is now the one that works. A door that silently
 reverted to an older key would be the worst kind of surprise.
 
+The re-lock is owed **once per launch**, and Rust hands it out once — a separate command from the one
+that reports the outcome. The two look like the same question and are not: the outcome is a *fact*
+about the launch and is read repeatedly, by the notice and by the Settings screen, while the re-lock is
+an *event*. Conflating them means a webview reload is told to re-lock again and throws away the token
+the restored database has just issued, so "remember me" could never survive a restore.
+
 ### Whole file only
 
 There is no partial restore — no "this client's hours". That is a merge, not a restore: it needs
 conflict rules for rows edited on both sides, and identity for rows whose `id` has since been reused.
 A feature with different semantics does not belong behind the same button.
+
+### A staged restore can be called off, and a finished one is on the record
+
+Two small things the scope did not ask for, both of which fall out of the staging being a two-launch
+act rather than one:
+
+- **Cancelling.** Staging is a decision that takes effect later, so without a way to undo it the
+  Settings screen would be a trap: the only way out of a restore chosen by accident would be to let it
+  happen. Clearing the staged file is the whole implementation.
+- **Saying what the last restore was.** The safety copy is only useful as an undo if the user can name
+  it, and the file is one of seven UTC stamps in a folder. So the restore that happened is *read* on
+  Settings — never announced there, which is the split ADR-0007 already drew for backup staleness.
 
 ### The failure is never silent
 
@@ -97,7 +118,7 @@ explanation would read as the restore having worked.
   the second is the one that actually guards the swap.
 - The pre-restore copy is taken through a short-lived pool that is closed before the swap, so the file
   being replaced is not open at the moment it is replaced.
-- `restore-pending.db` sits beside the database in the app config directory, not in the backup folder.
+- The staged file sits beside the database in the app config directory, not in the backup folder.
   The backup folder is often synced, and staging a file into a folder something else is uploading is
   asking for the swap to read a partial copy.
 - The swap is a rename, not a copy: on the same volume it is atomic, so an interrupted restore leaves

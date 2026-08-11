@@ -72,11 +72,7 @@ pub fn run() {
             //
             // The outcome is kept rather than acted on — a failed restore is
             // news the shell delivers, and a successful one re-locks the app.
-            let restored = tauri::async_runtime::block_on(restore::take_staged(
-                &dir,
-                &path,
-                schema::latest_version(),
-            ));
+            let restored = tauri::async_runtime::block_on(restore::take_staged(&dir, &path));
 
             // Now the migrations, onto whichever database came out of that.
             app.handle().plugin(
@@ -105,7 +101,7 @@ pub fn run() {
 
             app.manage(Db(pool));
             app.manage(tray::TrayMenu::default());
-            app.manage(restore::RestoreReport(restored));
+            app.manage(restore::RestoreReport::new(restored));
             Ok(())
         })
         // Close means hide, not quit: a block keeps running after the window
@@ -160,6 +156,7 @@ pub fn run() {
             restore::cancel_restore,
             restore::pending_restore,
             restore::restore_outcome,
+            restore::claim_restore_relock,
             tray::sync_tray,
         ])
         .run(tauri::generate_context!())

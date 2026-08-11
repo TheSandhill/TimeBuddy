@@ -17,6 +17,7 @@ const commands = vi.hoisted(() => ({
   createProject: vi.fn(),
   updateSettings: vi.fn(),
   restoreOutcome: vi.fn(),
+  claimRestoreRelock: vi.fn(),
 }));
 vi.mock("../data/commands", () => commands);
 vi.mock("@tauri-apps/api/event", () => ({
@@ -71,6 +72,7 @@ beforeEach(() => {
   commands.accountExists.mockResolvedValue(true);
   commands.resumeSession.mockResolvedValue(false);
   commands.restoreOutcome.mockResolvedValue({ status: "nothing" });
+  commands.claimRestoreRelock.mockResolvedValue(false);
   commands.listClients.mockResolvedValue([acme]);
   commands.getRunningTimer.mockResolvedValue(null);
   commands.getSettings.mockResolvedValue(settings);

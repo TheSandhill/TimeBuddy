@@ -21,6 +21,7 @@ const commands = vi.hoisted(() => ({
   cancelRestore: vi.fn(),
   pendingRestore: vi.fn(),
   restoreOutcome: vi.fn(),
+  claimRestoreRelock: vi.fn(),
 }));
 vi.mock("../data/commands", () => commands);
 
@@ -100,6 +101,7 @@ beforeEach(() => {
   // No restore staged, and none was performed by this launch.
   commands.pendingRestore.mockResolvedValue(null);
   commands.restoreOutcome.mockResolvedValue({ status: "nothing" });
+  commands.claimRestoreRelock.mockResolvedValue(false);
   dialog.open.mockResolvedValue(null);
 });
 

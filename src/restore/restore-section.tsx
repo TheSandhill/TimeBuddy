@@ -58,7 +58,7 @@ export function RestoreSection() {
       {outcome.data?.status === "done" ? (
         <p className="text-sm text-ink">
           {t("restore.lastRestore", { when: when(outcome.data.restoredFrom) })}
-          {outcome.data.safetyCopy === "" ? null : (
+          {outcome.data.safetyCopy === null ? null : (
             <>
               {" "}
               {t("restore.previousSavedAs", { file: outcome.data.safetyCopy })}

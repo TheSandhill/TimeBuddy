@@ -8,7 +8,11 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { accountExists, restoreOutcome, resumeSession } from "../data/commands";
+import {
+  accountExists,
+  claimRestoreRelock,
+  resumeSession,
+} from "../data/commands";
 import { clearToken, readToken, writeToken } from "./session";
 
 export type SessionState =
@@ -40,7 +44,12 @@ export function useSession(): Session {
       // is dropped deliberately rather than left to fail its own check. A door
       // that quietly reverted to an older key would be the worst kind of
       // surprise, which is why the lock screen says what happened.
-      if ((await restoreOutcome()).status === "done") {
+      //
+      // Claimed, not read: this is owed once per launch. Asking whether a
+      // restore *happened* would still be true after the user has unlocked and
+      // ticked "remember me", so a reload would throw away the token the
+      // restored database had just issued — a box that could never stay ticked.
+      if (await claimRestoreRelock()) {
         clearToken();
         return (await accountExists()) ? ("locked" as const) : ("setup" as const);
       }
