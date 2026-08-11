@@ -50,8 +50,8 @@ pub struct Settings {
     /// Whether TimeBuddy registers itself to start with Windows. Off by
     /// default: an app that adds itself to startup uninvited is a nuisance.
     pub autostart: bool,
-    /// Where daily backups are written. `None` means the app's own data
-    /// directory — a path resolved at runtime rather than frozen in a row.
+    /// Where daily backups are written. `None` means `backups` under the app's
+    /// own data directory — a path resolved at runtime, not frozen in a row.
     pub backup_folder: Option<String>,
     pub updated_at: DateTime<Utc>,
 }

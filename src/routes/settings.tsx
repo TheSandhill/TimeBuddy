@@ -14,6 +14,8 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
+import { momentLabel } from "../backup/moment-label";
+import { useBackupStatus, useRunBackup } from "../backup/use-backup";
 import { primaryButtonClass } from "../components/button";
 import { fieldClass, labelClass } from "../components/field";
 import { updateSettings } from "../data/commands";
@@ -42,10 +44,12 @@ const quietButtonClass =
   "rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors hover:text-ink";
 
 export function Settings() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
 
   const settings = useSettings();
+  const backup = useBackupStatus();
+  const backupNow = useRunBackup();
 
   /** Unsaved edits, or `null` while the screen still shows what is stored. */
   const [draft, setDraft] = useState<StoredSettings | null>(null);
@@ -219,6 +223,12 @@ export function Settings() {
           />
           {t("settings.autostart")}
         </label>
+      </fieldset>
+
+      <fieldset className={sectionClass}>
+        <legend className={legendClass}>{t("backup.title")}</legend>
+
+        <p className="text-xs text-ink-muted">{t("backup.hint")}</p>
 
         <div className="flex flex-col gap-2">
           <span className={legendClass}>{t("settings.backupFolder")}</span>
@@ -244,6 +254,51 @@ export function Settings() {
               </button>
             )}
           </div>
+        </div>
+
+        {/*
+          Read off the folder, not off a column: the newest file's own name is
+          when the last backup succeeded (ADR-0007). A backup made from here
+          updates this line without a round trip, because the command answers
+          with the folder as it stands afterwards.
+        */}
+        <p className="text-sm text-ink">
+          {backup.data === undefined
+            ? t("backup.reading")
+            : backup.data.lastBackupAt === null
+              ? t("backup.never")
+              : t("backup.last", {
+                  when: momentLabel(backup.data.lastBackupAt, i18n.language),
+                  kept: backup.data.kept,
+                })}
+        </p>
+
+        {/* The quiet half of the warning. A stale folder is announced across the
+            top of the app when a backup actually fails; here it is simply read,
+            in the one place someone comes to look. */}
+        {backup.data?.stale ? (
+          <p className="text-sm text-danger">{t("backup.staleNote")}</p>
+        ) : null}
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className={quietButtonClass}
+            disabled={backupNow.isPending}
+            onClick={() => backupNow.mutate()}
+          >
+            {backupNow.isPending ? t("backup.running") : t("backup.now")}
+          </button>
+          {backupNow.isError ? (
+            <span role="alert" className="text-sm text-danger">
+              {t(errorKey(backupNow.error))}
+            </span>
+          ) : null}
+          {backupNow.isSuccess ? (
+            <span role="status" className="text-sm text-ink-muted">
+              {t("backup.done")}
+            </span>
+          ) : null}
         </div>
       </fieldset>
 

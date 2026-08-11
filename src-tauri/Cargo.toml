@@ -40,4 +40,7 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 # An .xlsx is a zip of XML. The export tests open one and read the cells, so
 # "the numbers are numbers" is checked rather than hoped for.
 zip = { version = "8", default-features = false, features = ["deflate"] }
+# The backup tests rotate real files in a real folder. Rotation deletes things,
+# so it is checked where a mistake costs a temporary directory and nothing else.
+tempfile = "3"
 

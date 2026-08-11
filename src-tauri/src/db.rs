@@ -30,6 +30,19 @@ pub async fn connect(path: &Path) -> Result<SqlitePool, sqlx::Error> {
         .await
 }
 
+/// Runs every shipped migration, in order — so a table added in migration 2 is
+/// as real to the tests as one added in migration 1.
+#[cfg(test)]
+async fn migrate(pool: &SqlitePool) {
+    for migration in crate::schema::migrations() {
+        let version = migration.version;
+        sqlx::raw_sql(migration.sql)
+            .execute(pool)
+            .await
+            .unwrap_or_else(|error| panic!("migration {version} applies: {error}"));
+    }
+}
+
 /// A migrated, empty, in-memory database for tests.
 ///
 /// Capped at one connection: `sqlite::memory:` gives every *connection* its own
@@ -37,7 +50,6 @@ pub async fn connect(path: &Path) -> Result<SqlitePool, sqlx::Error> {
 /// disabled for the same reason — a closed connection is a dropped schema.
 #[cfg(test)]
 pub async fn test_pool() -> SqlitePool {
-    use crate::schema::migrations;
     use std::str::FromStr;
 
     let pool = SqlitePoolOptions::new()
@@ -52,16 +64,25 @@ pub async fn test_pool() -> SqlitePool {
         .await
         .expect("in-memory sqlite");
 
-    // Every shipped migration, in order — so a table added in migration 2 is
-    // as real to the tests as one added in migration 1.
-    for migration in migrations() {
-        let version = migration.version;
-        sqlx::raw_sql(migration.sql)
-            .execute(&pool)
-            .await
-            .unwrap_or_else(|error| panic!("migration {version} applies: {error}"));
-    }
+    migrate(&pool).await;
+    pool
+}
 
+/// A migrated, empty database in a real file at `path`.
+///
+/// For the tests that are about the file rather than about a query. `VACUUM
+/// INTO` is a **silent no-op** on `sqlite::memory:` — it reports success and
+/// writes nothing — so the backup tests cannot use [`test_pool`] and still be
+/// testing anything.
+#[cfg(test)]
+pub async fn test_file_pool(path: &Path) -> SqlitePool {
+    let pool = SqlitePoolOptions::new()
+        .max_connections(1)
+        .connect_with(options(path))
+        .await
+        .expect("sqlite in a file");
+
+    migrate(&pool).await;
     pool
 }
 

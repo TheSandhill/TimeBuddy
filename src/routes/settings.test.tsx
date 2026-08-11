@@ -3,11 +3,13 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
-import type { Settings as StoredSettings } from "../data/types";
+import type { BackupStatus, Settings as StoredSettings } from "../data/types";
 
 const commands = vi.hoisted(() => ({
   getSettings: vi.fn(),
   updateSettings: vi.fn(),
+  backupStatus: vi.fn(),
+  runBackup: vi.fn(),
 }));
 vi.mock("../data/commands", () => commands);
 
@@ -27,6 +29,14 @@ const stored: StoredSettings = {
   autostart: false,
   backupFolder: null,
   updatedAt: "2026-08-09T12:00:00Z",
+};
+
+const backedUp: BackupStatus = {
+  folder: "C:\\Users\\test\\AppData\\Roaming\\TimeBuddy\\backups",
+  lastBackupAt: "2026-08-09T07:30:00Z",
+  kept: 7,
+  due: false,
+  stale: false,
 };
 
 function renderSettings() {
@@ -57,6 +67,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   commands.getSettings.mockResolvedValue(stored);
   commands.updateSettings.mockImplementation(async (next: StoredSettings) => next);
+  commands.backupStatus.mockResolvedValue(backedUp);
+  commands.runBackup.mockResolvedValue(backedUp);
   dialog.open.mockResolvedValue(null);
 });
 
@@ -246,5 +258,103 @@ describe("the backup folder", () => {
         expect.objectContaining({ backupFolder: null }),
       ),
     );
+  });
+});
+
+describe("backups", () => {
+  it("says when the last one was made and how many are kept", async () => {
+    renderSettings();
+    await loaded();
+
+    expect(
+      await screen.findByText(/Laatste back-up: .* — 7 bewaard\./),
+    ).toBeInTheDocument();
+  });
+
+  it("says so plainly when there has never been one", async () => {
+    commands.backupStatus.mockResolvedValue({
+      ...backedUp,
+      lastBackupAt: null,
+      kept: 0,
+      due: true,
+      stale: true,
+    });
+    renderSettings();
+    await loaded();
+
+    expect(
+      await screen.findByText("Er is nog geen back-up gemaakt."),
+    ).toBeInTheDocument();
+  });
+
+  it("marks a backup that has gone stale, where someone comes to look", async () => {
+    // The loud half of this is a banner, raised by a failed attempt. This half
+    // is the one that is read rather than announced.
+    commands.backupStatus.mockResolvedValue({ ...backedUp, stale: true });
+    renderSettings();
+    await loaded();
+
+    expect(
+      await screen.findByText(/langer geleden dan het zou moeten zijn/),
+    ).toBeInTheDocument();
+  });
+
+  it("says nothing about staleness when the backups are current", async () => {
+    renderSettings();
+    await loaded();
+    await screen.findByText(/Laatste back-up/);
+
+    expect(
+      screen.queryByText(/langer geleden dan het zou moeten zijn/),
+    ).not.toBeInTheDocument();
+  });
+
+  it("makes one on request, without needing Save", async () => {
+    // The button is an act, not an edit: there is nothing in the row to save.
+    renderSettings();
+    await loaded();
+
+    click("Nu back-uppen");
+
+    await waitFor(() => expect(commands.runBackup).toHaveBeenCalledTimes(1));
+    expect(commands.updateSettings).not.toHaveBeenCalled();
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Back-up gemaakt",
+    );
+  });
+
+  it("says a failed backup failed instead of looking like it worked", async () => {
+    commands.runBackup.mockRejectedValue({
+      kind: "backup",
+      message: "D:\\ is not there",
+    });
+    renderSettings();
+    await loaded();
+
+    click("Nu back-uppen");
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "De back-up kon niet worden geschreven.",
+    );
+  });
+
+  it("shows the newly made backup's time without asking again", async () => {
+    commands.backupStatus.mockResolvedValue({
+      ...backedUp,
+      lastBackupAt: null,
+      kept: 0,
+      due: true,
+      stale: true,
+    });
+    commands.runBackup.mockResolvedValue({ ...backedUp, kept: 1 });
+    renderSettings();
+    await screen.findByText("Er is nog geen back-up gemaakt.");
+
+    click("Nu back-uppen");
+
+    expect(
+      await screen.findByText(/Laatste back-up: .* — 1 bewaard\./),
+    ).toBeInTheDocument();
+    expect(commands.backupStatus).toHaveBeenCalledTimes(1);
   });
 });

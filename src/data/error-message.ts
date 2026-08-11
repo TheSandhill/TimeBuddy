@@ -15,6 +15,7 @@ export type ErrorKey = `error.${
   | ValidationCode
   | "notFound"
   | "exportFailed"
+  | "backupFailed"
   | "autostartFailed"
   | "trayFailed"
   | "unknown"}`;
@@ -30,6 +31,10 @@ export function errorKey(error: unknown): ErrorKey {
       // is not there, even though their hours are untouched.
       case "export":
         return "error.exportFailed";
+      // The one failure nobody asked to hear about: the daily backup runs on
+      // its own, so this is the only word the user gets that it did not.
+      case "backup":
+        return "error.backupFailed";
       // Nothing was saved either, so the checkbox on screen is still true.
       case "autostart":
         return "error.autostartFailed";

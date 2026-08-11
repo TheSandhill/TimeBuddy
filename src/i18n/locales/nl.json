@@ -131,6 +131,20 @@
     "loading": "Instellingen laden…",
     "loadFailed": "Instellingen konden niet worden geladen."
   },
+  "backup": {
+    "title": "Back-ups",
+    "hint": "TimeBuddy kopieert de database hier één keer per dag naartoe en bewaart de laatste zeven. Een map die synchroniseert — OneDrive, Dropbox — zorgt dat een kapotte laptop geen verloren jaar is.",
+    "reading": "Back-upmap controleren…",
+    "never": "Er is nog geen back-up gemaakt.",
+    "last": "Laatste back-up: {{when}} — {{kept}} bewaard.",
+    "now": "Nu back-uppen",
+    "running": "Back-uppen…",
+    "done": "Back-up gemaakt",
+    "retry": "Opnieuw proberen",
+    "staleNote": "Dat is langer geleden dan het zou moeten zijn — controleer of de back-upmap bereikbaar is.",
+    "failedWithLast": "De laatste back-up is mislukt. De nieuwste kopie is van {{when}}. Controleer of de back-upmap bereikbaar is.",
+    "failedWithNone": "De laatste back-up is mislukt en er is nog geen back-up — je uren staan op één plek. Controleer of de back-upmap bereikbaar is."
+  },
   "error": {
     "nameRequired": "Vul een naam in.",
     "durationUnreadable": "Onleesbare duur. Probeer 1:30, 1,5 of 90m.",
@@ -142,6 +156,7 @@
     "timerAlreadyRunning": "Er loopt al een blok.",
     "notFound": "Dat bestaat niet meer.",
     "exportFailed": "Het bestand kon niet worden opgeslagen.",
+    "backupFailed": "De back-up kon niet worden geschreven. Controleer de back-upmap.",
     "autostartFailed": "Windows stond automatisch starten niet toe. Er is niets opgeslagen.",
     "trayFailed": "Er kon geen systeemvakpictogram worden gemaakt. Sluiten sluit nu echt af.",
     "unknown": "Dat lukte niet. Probeer het opnieuw.",
@@ -187,7 +202,7 @@
     "recoveryPhrase": "Herstelzin",
     "recoveryHint": "Schrijf deze ergens veilig op. Het is de enige weg terug als je je wachtwoord vergeet — je uren raak je nooit kwijt, maar zonder deze zin kan het wachtwoord niet worden gewijzigd.",
     "backupTitle": "Waar back-ups komen",
-    "backupHint": "Een map die synchroniseert — OneDrive bijvoorbeeld — zorgt dat een kapotte laptop geen verloren jaar is.",
+    "backupHint": "TimeBuddy kopieert je uren hier één keer per dag naartoe. Een map die synchroniseert — OneDrive, Dropbox — zorgt dat een kapotte laptop geen verloren jaar is.",
     "backupDefault": "De eigen datamap van de app",
     "chooseFolder": "Map kiezen…",
     "workTitle": "Je eerste werk",
