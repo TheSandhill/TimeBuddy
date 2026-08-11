@@ -238,6 +238,51 @@ export interface BackupStatus {
 }
 
 /**
+ * A backup offered as something to go back to (ADR-0008).
+ *
+ * `fileName` is the handle every restore command takes — never a path. Only
+ * names matching a backup's own pattern can be staged, which is what keeps an
+ * arbitrary file on disk off this list.
+ */
+export interface RestorableBackup {
+  fileName: string;
+  madeAt: Instant;
+}
+
+/**
+ * What restoring a particular backup would cost, said in what is lost.
+ *
+ * Counted in the database as it stands: entries logged *since* the backup was
+ * made are the ones the restore discards.
+ */
+export interface RestorePreview {
+  fileName: string;
+  madeAt: Instant;
+  entriesSince: number;
+  minutesSince: number;
+}
+
+/** Why a staged restore did not happen. */
+export type RestoreFault =
+  /** The staged file no longer verified — a synced folder can rot overnight. */
+  | "stagedFileRejected"
+  /** The present could not be copied aside, so nothing was swapped. */
+  | "safetyCopyFailed"
+  /** The files themselves could not be moved. */
+  | "swapFailed";
+
+/**
+ * What this launch did about a staged restore.
+ *
+ * Asked once, by the shell. A `failed` is announced rather than passed over:
+ * opening on old data in silence would read as the restore having worked.
+ */
+export type RestoreOutcome =
+  | { status: "nothing" }
+  | { status: "done"; restoredFrom: Instant; safetyCopy: string }
+  | { status: "failed"; fault: RestoreFault };
+
+/**
  * Why an input was rejected. A code, not a sentence — the message the user
  * reads comes from the i18n catalogues.
  */
@@ -253,7 +298,13 @@ export type ValidationCode =
   | "recoveryPhraseTooShort"
   | "accountAlreadyExists"
   | "wrongPassword"
-  | "wrongRecoveryPhrase";
+  | "wrongRecoveryPhrase"
+  /** The chosen backup is not a database we can open — truncated, or not one. */
+  | "backupUnreadable"
+  /** The chosen backup has a newer schema than this build knows. */
+  | "backupFromNewerVersion"
+  /** A file was offered for restore that this app did not write. */
+  | "notABackup";
 
 /** What a rejected command rejects with. */
 export type CommandError =
@@ -271,7 +322,10 @@ export type CommandError =
   /** No tray icon could be made. Close then has nowhere to hide the window. */
   | { kind: "tray"; message: string }
   /** Argon2 itself failed. Not a wrong password — a fault. */
-  | { kind: "hashing"; message: string };
+  | { kind: "hashing"; message: string }
+  /** A backup could not be staged. Nothing was written over — the database on
+   * screen is still the one they have. */
+  | { kind: "restore"; message: string };
 
 /**
  * Narrows an unknown rejection to a `CommandError`. Anything else — a dropped

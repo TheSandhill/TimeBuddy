@@ -2,6 +2,8 @@
 
 - **Status**: Accepted
 - **Date**: 2026-08-11
+- **Amended by**: ADR-0008 — there *is* a restore. Everything else here stands, and the restore is
+  built on all of it.
 
 ## Context
 
@@ -52,9 +54,11 @@ per launch.
 - A row and a folder can never disagree about whether the data is safe. Deleting the backups is
   understood by the app immediately, because there was never a second place recording that they had
   existed.
-- Restoring is copying one file back by hand and renaming it. There is no restore feature, and that
+- ~~Restoring is copying one file back by hand and renaming it. There is no restore feature, and that
   is deliberate: a restore button is a delete-everything button with a nicer label, and the manual
-  version is a thing one person can do on one laptop without the app's help.
+  version is a thing one person can do on one laptop without the app's help.~~ **Reversed by
+  ADR-0008.** The mechanism was described correctly and the person was not: by hand it also means
+  knowing to quit from the tray first, and the one doing it has already lost something.
 - A folder that has stopped shedding old copies is visible rather than merely tolerated: the count
   the Settings screen shows is the number of files actually there, not the seven that were intended.
 - The stamp is UTC while the reader is in Amsterdam, so `momentLabel` converts at the edge. Whether

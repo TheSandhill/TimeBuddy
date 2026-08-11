@@ -3,13 +3,24 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
-import type { BackupStatus, Settings as StoredSettings } from "../data/types";
+import type {
+  BackupStatus,
+  RestorableBackup,
+  RestorePreview,
+  Settings as StoredSettings,
+} from "../data/types";
 
 const commands = vi.hoisted(() => ({
   getSettings: vi.fn(),
   updateSettings: vi.fn(),
   backupStatus: vi.fn(),
   runBackup: vi.fn(),
+  listRestorableBackups: vi.fn(),
+  previewRestore: vi.fn(),
+  stageRestore: vi.fn(),
+  cancelRestore: vi.fn(),
+  pendingRestore: vi.fn(),
+  restoreOutcome: vi.fn(),
 }));
 vi.mock("../data/commands", () => commands);
 
@@ -37,6 +48,19 @@ const backedUp: BackupStatus = {
   kept: 7,
   due: false,
   stale: false,
+};
+
+const restorable: RestorableBackup[] = [
+  { fileName: "timebuddy-20260809T073000Z.db", madeAt: "2026-08-09T07:30:00Z" },
+  { fileName: "timebuddy-20260803T073000Z.db", madeAt: "2026-08-03T07:30:00Z" },
+];
+
+/** Restoring the older of the two would discard two and a half hours. */
+const cost: RestorePreview = {
+  fileName: "timebuddy-20260803T073000Z.db",
+  madeAt: "2026-08-03T07:30:00Z",
+  entriesSince: 3,
+  minutesSince: 150,
 };
 
 function renderSettings() {
@@ -69,6 +93,13 @@ beforeEach(() => {
   commands.updateSettings.mockImplementation(async (next: StoredSettings) => next);
   commands.backupStatus.mockResolvedValue(backedUp);
   commands.runBackup.mockResolvedValue(backedUp);
+  commands.listRestorableBackups.mockResolvedValue(restorable);
+  commands.previewRestore.mockResolvedValue(cost);
+  commands.stageRestore.mockResolvedValue(undefined);
+  commands.cancelRestore.mockResolvedValue(undefined);
+  // No restore staged, and none was performed by this launch.
+  commands.pendingRestore.mockResolvedValue(null);
+  commands.restoreOutcome.mockResolvedValue({ status: "nothing" });
   dialog.open.mockResolvedValue(null);
 });
 
@@ -356,5 +387,165 @@ describe("backups", () => {
       await screen.findByText(/Laatste back-up: .* — 1 bewaard\./),
     ).toBeInTheDocument();
     expect(commands.backupStatus).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("restoring a backup", () => {
+  /** Choosing from the picker, which is what asks Rust what it would cost. */
+  const choose = async (fileName: string) => {
+    const picker = await screen.findByLabelText("Terugzetten vanaf");
+    fireEvent.change(picker, { target: { value: fileName } });
+  };
+
+  it("offers the backups newest first, by when they were made", async () => {
+    renderSettings();
+    await loaded();
+
+    const picker = await screen.findByLabelText("Terugzetten vanaf");
+    const options = [...picker.querySelectorAll("option")];
+
+    // The empty prompt, then the two backups.
+    expect(options).toHaveLength(3);
+    expect(options[1]).toHaveValue("timebuddy-20260809T073000Z.db");
+    expect(options[2]).toHaveValue("timebuddy-20260803T073000Z.db");
+  });
+
+  it("costs nothing to open: no backup is previewed until one is chosen", async () => {
+    renderSettings();
+    await loaded();
+
+    expect(commands.previewRestore).not.toHaveBeenCalled();
+  });
+
+  it("says what would be lost before offering the button that loses it", async () => {
+    renderSettings();
+    await loaded();
+
+    await choose("timebuddy-20260803T073000Z.db");
+
+    expect(
+      await screen.findByText(/3 regels/),
+      "the warning is in the words of what goes",
+    ).toBeInTheDocument();
+    expect(screen.getByText(/2:30 werk/)).toBeInTheDocument();
+    expect(commands.previewRestore).toHaveBeenCalledWith(
+      "timebuddy-20260803T073000Z.db",
+    );
+  });
+
+  it("says so plainly when a restore would discard nothing", async () => {
+    commands.previewRestore.mockResolvedValue({
+      ...cost,
+      entriesSince: 0,
+      minutesSince: 0,
+    });
+    renderSettings();
+    await loaded();
+
+    await choose("timebuddy-20260803T073000Z.db");
+
+    expect(
+      await screen.findByText(/laat niets vervallen/),
+    ).toBeInTheDocument();
+  });
+
+  it("stages rather than restores, and asks for a restart", async () => {
+    // The live database is open, so the swap is the next launch's job. Saying
+    // "restored" here would be the one lie this feature cannot tell.
+    commands.pendingRestore
+      .mockResolvedValueOnce(null)
+      .mockResolvedValue("2026-08-03T07:30:00Z");
+    renderSettings();
+    await loaded();
+    await choose("timebuddy-20260803T073000Z.db");
+    await screen.findByText(/3 regels/);
+
+    click("Terugzetten voorbereiden");
+
+    await waitFor(() =>
+      expect(commands.stageRestore).toHaveBeenCalledWith(
+        "timebuddy-20260803T073000Z.db",
+      ),
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      /wordt teruggezet zodra TimeBuddy opnieuw start/,
+    );
+    // And it says *how* to restart, because closing the window only hides it.
+    expect(screen.getByText(/systeemvak/)).toBeInTheDocument();
+  });
+
+  it("does not save the settings row on the way", async () => {
+    // A restore is not a preference, so it must not ride along with Save.
+    renderSettings();
+    await loaded();
+    await choose("timebuddy-20260803T073000Z.db");
+    await screen.findByText(/3 regels/);
+
+    click("Terugzetten voorbereiden");
+
+    await waitFor(() => expect(commands.stageRestore).toHaveBeenCalled());
+    expect(commands.updateSettings).not.toHaveBeenCalled();
+  });
+
+  it("refuses a damaged backup and says nothing was changed", async () => {
+    commands.stageRestore.mockRejectedValue({
+      kind: "validation",
+      code: "backupUnreadable",
+    });
+    renderSettings();
+    await loaded();
+    await choose("timebuddy-20260803T073000Z.db");
+    await screen.findByText(/3 regels/);
+
+    click("Terugzetten voorbereiden");
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /niet te lezen .* Er is niets gewijzigd\./,
+    );
+  });
+
+  it("shows the staged restore instead of the picker, with the way out of it", async () => {
+    commands.pendingRestore.mockResolvedValue("2026-08-03T07:30:00Z");
+    renderSettings();
+    await loaded();
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      /Een back-up van .* staat klaar/,
+    );
+    expect(
+      screen.queryByLabelText("Terugzetten vanaf"),
+      "one restore is owed at a time",
+    ).not.toBeInTheDocument();
+
+    click("Toch niet terugzetten");
+    await waitFor(() => expect(commands.cancelRestore).toHaveBeenCalledTimes(1));
+  });
+
+  it("says there is nothing to restore from on a folder with no backups", async () => {
+    commands.listRestorableBackups.mockResolvedValue([]);
+    renderSettings();
+    await loaded();
+
+    expect(
+      await screen.findByText("Er zijn nog geen back-ups om terug te zetten."),
+    ).toBeInTheDocument();
+  });
+
+  it("records a restore that happened, and names the copy it can be undone from", async () => {
+    // Read here rather than announced across the app: the restore is explained
+    // on the lock screen it caused, and this is where it is looked up after.
+    commands.restoreOutcome.mockResolvedValue({
+      status: "done",
+      restoredFrom: "2026-08-03T07:30:00Z",
+      safetyCopy: "timebuddy-20260809T120000Z.db",
+    });
+    renderSettings();
+    await loaded();
+
+    expect(await screen.findByText(/Teruggezet vanaf/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/timebuddy-20260809T120000Z\.db/),
+      "undoing a restore is restoring the copy it made",
+    ).toBeInTheDocument();
   });
 });

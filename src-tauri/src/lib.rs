@@ -7,6 +7,7 @@ mod error;
 mod export;
 mod projects;
 mod reports;
+mod restore;
 mod running_timer;
 mod schema;
 mod settings;
@@ -50,15 +51,12 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None::<Vec<&str>>,
         ))
-        .plugin(
-            tauri_plugin_sql::Builder::default()
-                .add_migrations(DB_URL, schema::migrations())
-                .build(),
-        )
+        // The sql plugin is **not** registered here, and that is deliberate:
+        // plugin setup hooks run before this builder's own, so a plugin added
+        // on the builder would migrate the database a staged restore is about
+        // to replace. It is registered inside `setup` instead, after the swap
+        // (ADR-0008).
         .setup(|app| {
-            // The plugin has already migrated the file by the time app setup
-            // runs; this pool is the one every command goes through (ADR-0002).
-            //
             // The directory is created here as well as by the plugin, so that
             // opening the pool never depends on someone else's side effect
             // having happened first — SQLite reports a missing parent
@@ -67,6 +65,28 @@ pub fn run() {
             std::fs::create_dir_all(&dir)?;
 
             let path = dir.join(DB_FILE);
+
+            // Before anything opens the file: if a restore was staged, this is
+            // where it happens. Nothing has a handle on the database yet, which
+            // is the only moment it can be replaced (ADR-0008).
+            //
+            // The outcome is kept rather than acted on — a failed restore is
+            // news the shell delivers, and a successful one re-locks the app.
+            let restored = tauri::async_runtime::block_on(restore::take_staged(
+                &dir,
+                &path,
+                schema::latest_version(),
+            ));
+
+            // Now the migrations, onto whichever database came out of that.
+            app.handle().plugin(
+                tauri_plugin_sql::Builder::default()
+                    .add_migrations(DB_URL, schema::migrations())
+                    .build(),
+            )?;
+
+            // Migrated by the plugin above; this pool is the one every command
+            // goes through (ADR-0002).
             let pool = tauri::async_runtime::block_on(db::connect(&path))?;
 
             // Windows keeps its own copy of "start with Windows", and a user
@@ -85,6 +105,7 @@ pub fn run() {
 
             app.manage(Db(pool));
             app.manage(tray::TrayMenu::default());
+            app.manage(restore::RestoreReport(restored));
             Ok(())
         })
         // Close means hide, not quit: a block keeps running after the window
@@ -133,6 +154,12 @@ pub fn run() {
             settings::update_settings,
             backup::backup_status,
             backup::run_backup,
+            restore::list_restorable_backups,
+            restore::preview_restore,
+            restore::stage_restore,
+            restore::cancel_restore,
+            restore::pending_restore,
+            restore::restore_outcome,
             tray::sync_tray,
         ])
         .run(tauri::generate_context!())

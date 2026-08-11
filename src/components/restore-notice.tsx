@@ -1,0 +1,32 @@
+import { useTranslation } from "react-i18next";
+import { momentLabel } from "../backup/moment-label";
+import type { Instant } from "../data/types";
+
+/**
+ * Why the app is asking for a password it was not asking for yesterday.
+ *
+ * The account row travels with the database (ADR-0003), so a restore brings the
+ * password from the day the backup was made — and a "remember me" session issued
+ * by a database that is no longer here stops working. That re-lock is correct and
+ * completely baffling unless it is explained, so it is explained on the screen
+ * doing the asking (ADR-0008).
+ */
+export function RestoreNotice({ restoredFrom }: { restoredFrom: Instant }) {
+  const { t, i18n } = useTranslation();
+
+  return (
+    <div
+      role="status"
+      className="mx-auto mb-6 max-w-sm rounded-lg border border-border bg-surface-raised px-4 py-3"
+    >
+      <p className="text-sm text-ink">
+        {t("restore.doneFrom", {
+          when: momentLabel(restoredFrom, i18n.language),
+        })}
+      </p>
+      <p className="mt-1 text-xs text-ink-muted">
+        {t("restore.passwordIsFromThen")}
+      </p>
+    </div>
+  );
+}

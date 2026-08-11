@@ -22,6 +22,7 @@ import { updateSettings } from "../data/commands";
 import { errorKey } from "../data/error-message";
 import type { Settings as StoredSettings } from "../data/types";
 import { settingsKey, useSettings } from "../data/use-settings";
+import { RestoreSection } from "../restore/restore-section";
 import { supportedLanguages, type Language } from "../i18n/config";
 import { themeNames, type ThemeName } from "../theme/tokens";
 
@@ -322,6 +323,13 @@ export function Settings() {
           </span>
         ) : null}
       </div>
+
+      {/*
+        Below the Save on purpose, and outside every fieldset: a restore is not a
+        preference. It touches neither the draft nor the row this form posts, so
+        Save cannot carry one and its own buttons cannot submit this form.
+      */}
+      <RestoreSection />
     </form>
   );
 }

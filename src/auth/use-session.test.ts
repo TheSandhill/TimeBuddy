@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const commands = vi.hoisted(() => ({
   accountExists: vi.fn(),
   resumeSession: vi.fn(),
+  restoreOutcome: vi.fn(),
 }));
 vi.mock("../data/commands", () => commands);
 
@@ -15,6 +16,8 @@ beforeEach(() => {
   window.localStorage.clear();
   commands.accountExists.mockResolvedValue(true);
   commands.resumeSession.mockResolvedValue(false);
+  // The overwhelmingly common launch: no restore was staged.
+  commands.restoreOutcome.mockResolvedValue({ status: "nothing" });
 });
 
 describe("which door the app opens with", () => {
@@ -64,6 +67,61 @@ describe("which door the app opens with", () => {
     const { result } = renderHook(() => useSession());
 
     await waitFor(() => expect(result.current.state).toBe("locked"));
+  });
+});
+
+describe("a launch that restored a backup", () => {
+  it("re-locks, because the password came back with the database", async () => {
+    // The account row travels with the file (ADR-0008), so the password is now
+    // the one from the day that backup was made. Staying open would leave the
+    // app unlocked by a key it no longer accepts.
+    writeToken("issued by the database that just left");
+    commands.resumeSession.mockResolvedValue(true);
+    commands.restoreOutcome.mockResolvedValue({
+      status: "done",
+      restoredFrom: "2026-08-01T09:00:00Z",
+      safetyCopy: "timebuddy-20260809T120000Z.db",
+    });
+
+    const { result } = renderHook(() => useSession());
+
+    await waitFor(() => expect(result.current.state).toBe("locked"));
+    expect(readToken()).toBeNull();
+    expect(
+      commands.resumeSession,
+      "a token from a database that is gone is not worth asking about",
+    ).not.toHaveBeenCalled();
+  });
+
+  it("raises the wizard when the restored database has no account", async () => {
+    // A backup from before setup finished is still a backup. It restores to
+    // what it was, which is an install that has to be set up.
+    commands.accountExists.mockResolvedValue(false);
+    commands.restoreOutcome.mockResolvedValue({
+      status: "done",
+      restoredFrom: "2026-08-01T09:00:00Z",
+      safetyCopy: "timebuddy-20260809T120000Z.db",
+    });
+
+    const { result } = renderHook(() => useSession());
+
+    await waitFor(() => expect(result.current.state).toBe("setup"));
+  });
+
+  it("leaves a remembered session alone when the restore failed", async () => {
+    // Nothing was replaced, so the database — and the password — are the ones
+    // this webview's token was issued by.
+    writeToken("still good");
+    commands.resumeSession.mockResolvedValue(true);
+    commands.restoreOutcome.mockResolvedValue({
+      status: "failed",
+      fault: "safetyCopyFailed",
+    });
+
+    const { result } = renderHook(() => useSession());
+
+    await waitFor(() => expect(result.current.state).toBe("open"));
+    expect(readToken()).toBe("still good");
   });
 });
 
