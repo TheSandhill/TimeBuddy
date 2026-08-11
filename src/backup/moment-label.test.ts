@@ -24,3 +24,14 @@ describe("when the last backup was", () => {
     expect(nl).not.toBe(en);
   });
 });
+
+describe("a stamp that will not parse", () => {
+  it("is shown rather than thrown over", () => {
+    // This is the lock screen and the app shell, where there is nothing above to
+    // catch a throw: `Intl` raising here blanks the entire window. It happened —
+    // a field that crossed from Rust under the wrong name arrived as undefined.
+    expect(() => momentLabel(undefined as unknown as string, "nl")).not.toThrow();
+    expect(() => momentLabel("not an instant", "nl")).not.toThrow();
+    expect(momentLabel("not an instant", "nl")).toBe("not an instant");
+  });
+});

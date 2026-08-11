@@ -97,8 +97,15 @@ pub enum RestoreFault {
 }
 
 /// What the launch did about a staged restore.
+///
+/// `rename_all` on an enum renames the **variants**; the fields inside a struct
+/// variant need `rename_all_fields`, which is why it is spelled out here. Without
+/// it `restored_from` crosses to the webview under that name, the frontend reads
+/// `restoredFrom` as `undefined`, and formatting an undefined instant throws at
+/// the root of the tree — which blanks the whole window rather than one line.
+/// `wire_format` below is the test that keeps this honest.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase", tag = "status")]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "status")]
 pub enum Outcome {
     /// Nothing was staged — the overwhelmingly common launch.
     Nothing,
@@ -1155,6 +1162,83 @@ mod tests {
         assert_eq!(std::fs::read(&db_file).unwrap(), b"the restore");
     }
 
+    /// The exact JSON the webview receives, key for key.
+    ///
+    /// `types.ts` is written by hand against these names, and nothing else
+    /// compares the two — so a field that crosses under the wrong name is a
+    /// `undefined` on the other side, not a compile error. That is how a missing
+    /// `rename_all_fields` blanked the entire window once: the notice formatted
+    /// an undefined instant, threw at the root of the tree, and took the app
+    /// with it. This test is cheaper than that.
+    #[test]
+    fn the_wire_format_matches_the_names_the_frontend_reads() {
+        let json = |outcome: &Outcome| serde_json::to_value(outcome).unwrap();
+
+        assert_eq!(
+            json(&Outcome::Done {
+                restored_from: now(),
+                safety_copy: Some("timebuddy-20260809T120000Z.db".into()),
+            }),
+            serde_json::json!({
+                "status": "done",
+                "restoredFrom": "2026-08-05T12:00:00Z",
+                "safetyCopy": "timebuddy-20260809T120000Z.db",
+            })
+        );
+
+        assert_eq!(
+            json(&Outcome::Done {
+                restored_from: now(),
+                safety_copy: None,
+            })["safetyCopy"],
+            serde_json::Value::Null,
+            "absent is null, not an empty string"
+        );
+
+        assert_eq!(
+            json(&Outcome::Nothing),
+            serde_json::json!({ "status": "nothing" })
+        );
+
+        assert_eq!(
+            json(&Outcome::Failed {
+                fault: RestoreFault::SafetyCopyFailed,
+            }),
+            serde_json::json!({ "status": "failed", "fault": "safetyCopyFailed" })
+        );
+    }
+
+    #[test]
+    fn the_listing_and_the_preview_cross_in_camel_case_too() {
+        assert_eq!(
+            serde_json::to_value(RestorableBackup {
+                file_name: "timebuddy-20260805T120000Z.db".into(),
+                made_at: now(),
+            })
+            .unwrap(),
+            serde_json::json!({
+                "fileName": "timebuddy-20260805T120000Z.db",
+                "madeAt": "2026-08-05T12:00:00Z",
+            })
+        );
+
+        assert_eq!(
+            serde_json::to_value(RestorePreview {
+                file_name: "timebuddy-20260805T120000Z.db".into(),
+                made_at: now(),
+                entries_since: 3,
+                minutes_since: 150,
+            })
+            .unwrap(),
+            serde_json::json!({
+                "fileName": "timebuddy-20260805T120000Z.db",
+                "madeAt": "2026-08-05T12:00:00Z",
+                "entriesSince": 3,
+                "minutesSince": 150,
+            })
+        );
+    }
+
     #[test]
     fn the_relock_is_owed_once_and_then_never_again() {
         // The bug this closes: a webview reload asking again, being told to
@@ -1206,3 +1290,4 @@ mod tests {
         }
     }
 }
+
