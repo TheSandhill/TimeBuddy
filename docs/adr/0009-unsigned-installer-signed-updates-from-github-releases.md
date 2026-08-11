@@ -102,12 +102,14 @@ second thing that can be wrong.
 
 ## Consequences
 
-- **The release assets must be publicly readable, and the repository is currently private.** The
-  updater fetches `latest.json` and the installer with no credentials — it cannot have any, because a
-  token compiled into a build is a token given away. A private repository's release assets answer 404
-  to an anonymous request, so the update path does not work until either the repository is public or
-  releases are published somewhere that is. This is the one part of the feature that cannot be settled
-  in code, and nothing about the app has to change when it is settled.
+- **The release assets have to be publicly readable.** The updater fetches `latest.json` and the
+  installer with no credentials — it cannot have any, because a token compiled into a build is a token
+  given away. A private repository's release assets answer 404 to an anonymous request, so this was
+  the one part of the feature that could not be settled in code. **Settled on 11 August 2026 by making
+  the repository public** (issue #27), which is the option that needs no second repository and no
+  cross-repo token. Nothing in the app changed. The code discloses nothing an attacker would not
+  already have: the database is deliberately unencrypted (ADR-0003), and the only key in the tree is
+  the updater's public half.
 - She sees the "unknown publisher" prompt on the first install, and never again — updates are
   installed by an app that is already trusted to run. It is written down in the README, and the
   Settings screen warns about it before it appears.
