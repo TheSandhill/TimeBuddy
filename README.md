@@ -92,5 +92,5 @@ updatable until it is replaced by hand.
 
 The release assets also have to be readable **without credentials**: the updater cannot hold a token,
 because a token compiled into a build is a token given away. On a private repository, release downloads
-answer 404 to an anonymous request, so the update path needs the repository — or at least the releases
-— to be public.
+answer 404 to an anonymous request — which is why this repository is public. Making it private again
+would silently stop every installed copy from updating, and nothing in the app would say so.
