@@ -99,6 +99,36 @@ ALTER TABLE settings ADD COLUMN autostart             INTEGER NOT NULL DEFAULT 0
 ALTER TABLE settings ADD COLUMN backup_folder         TEXT;
 "#;
 
+/// Migration 4 — the single local account.
+///
+/// `CHECK (id = 1)` again: there is one user, and ADR-0003 keeps it that way —
+/// no `user_id` columns, no second row for one to point at.
+///
+/// The row is **not** seeded. Its absence is what "this install has never been
+/// set up" means, and it is the only thing the first-run wizard is triggered
+/// by. A seeded row with an empty hash would be an account with no password.
+///
+/// Both hashes are Argon2 PHC strings, salt included. Neither the password nor
+/// the recovery phrase is stored, and neither can be read back out — the door
+/// is checked by hashing what was typed and comparing (ADR-0003).
+///
+/// `remembered_token_hash` is "remember me for 30 days": a random token lives
+/// in the webview, its hash lives here, and `remembered_until` is when it stops
+/// being accepted. Hashed like the rest, so a stolen database file is not a
+/// stolen session — though the same file is readable anyway, which is the
+/// trade ADR-0003 makes out loud.
+pub const V4_ACCOUNT: &str = r#"
+CREATE TABLE account (
+    id                    INTEGER PRIMARY KEY CHECK (id = 1),
+    password_hash         TEXT NOT NULL,
+    recovery_phrase_hash  TEXT NOT NULL,
+    remembered_token_hash TEXT,
+    remembered_until      TEXT,
+    created_at            TEXT NOT NULL,
+    updated_at            TEXT NOT NULL
+);
+"#;
+
 /// Every migration, in application order.
 pub fn migrations() -> Vec<Migration> {
     vec![
@@ -118,6 +148,12 @@ pub fn migrations() -> Vec<Migration> {
             version: 3,
             description: "settings preferences",
             sql: V3_SETTINGS_PREFERENCES,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 4,
+            description: "account",
+            sql: V4_ACCOUNT,
             kind: MigrationKind::Up,
         },
     ]

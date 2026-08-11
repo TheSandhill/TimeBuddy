@@ -25,6 +25,18 @@ pub enum ValidationCode {
     /// A Pomodoro Block was started while one was already in flight. There is
     /// at most one Running Timer, and silently replacing it would drop work.
     TimerAlreadyRunning,
+    /// The chosen password is shorter than the door is worth.
+    PasswordTooShort,
+    /// The chosen recovery phrase is too short to be worth recovering with.
+    RecoveryPhraseTooShort,
+    /// Setting up an account on an install that already has one. Overwriting
+    /// would be a password reset without the phrase that authorises it.
+    AccountAlreadyExists,
+    /// The password did not match. Deliberately says nothing more: there is
+    /// one account, so "which" was wrong is not a question.
+    WrongPassword,
+    /// The recovery phrase did not match, so the password stands.
+    WrongRecoveryPhrase,
 }
 
 /// Anything a command can fail with.
@@ -58,6 +70,12 @@ pub enum Error {
     #[error("autostart failed: {message}")]
     Autostart { message: String },
 
+    /// Argon2 refused to hash. Not actionable by the user and not a wrong
+    /// password — it means the primitive itself failed, which is a fault to
+    /// report rather than a door to close politely.
+    #[error("hashing failed: {message}")]
+    Hashing { message: String },
+
     /// The tray icon or its menu could not be built or renamed.
     ///
     /// Its own variant because the close button hides the window behind the
@@ -87,6 +105,12 @@ impl Error {
 
     pub fn autostart(cause: impl std::fmt::Display) -> Self {
         Error::Autostart {
+            message: cause.to_string(),
+        }
+    }
+
+    pub fn hashing(cause: impl std::fmt::Display) -> Self {
+        Error::Hashing {
             message: cause.to_string(),
         }
     }

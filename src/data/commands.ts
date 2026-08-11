@@ -33,6 +33,11 @@ import type {
  * not the other fails the suite rather than the app.
  */
 export const commandNames = [
+  "account_exists",
+  "create_account",
+  "unlock_account",
+  "resume_session",
+  "reset_account_password",
   "list_clients",
   "get_client",
   "create_client",
@@ -69,6 +74,45 @@ function call<Result>(
   args?: Record<string, unknown>,
 ): Promise<Result> {
   return invoke<Result>(name, args);
+}
+
+// -- Account ----------------------------------------------------------------
+
+/** Whether this install has been set up. `false` is what raises the wizard. */
+export function accountExists(): Promise<boolean> {
+  return call("account_exists");
+}
+
+/** First run only. Rejects if an account already exists. */
+export function createAccount(
+  password: string,
+  recoveryPhrase: string,
+): Promise<void> {
+  return call("create_account", { password, recoveryPhrase });
+}
+
+/**
+ * Checks the password, and hands back a "remember me" token when one was asked
+ * for. The token is the only thing worth keeping — the password never is.
+ */
+export function unlockAccount(
+  password: string,
+  remember: boolean,
+): Promise<string | null> {
+  return call("unlock_account", { password, remember });
+}
+
+/** Whether a token from a previous launch still opens the door. */
+export function resumeSession(token: string): Promise<boolean> {
+  return call("resume_session", { token });
+}
+
+/** The offline reset: the recovery phrase buys a new password (ADR-0003). */
+export function resetAccountPassword(
+  recoveryPhrase: string,
+  password: string,
+): Promise<void> {
+  return call("reset_account_password", { recoveryPhrase, password });
 }
 
 // -- Clients ----------------------------------------------------------------
