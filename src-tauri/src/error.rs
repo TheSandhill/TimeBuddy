@@ -37,6 +37,16 @@ pub enum ValidationCode {
     WrongPassword,
     /// The recovery phrase did not match, so the password stands.
     WrongRecoveryPhrase,
+    /// The chosen backup is not a database this app can open — a truncated file
+    /// in a half-synced folder, or bytes that were never a database at all.
+    /// Refused while the current database is still there (ADR-0008).
+    BackupUnreadable,
+    /// The chosen backup has a newer schema than this build knows. Migrating
+    /// forward is something the plugin does; migrating backward is not.
+    BackupFromNewerVersion,
+    /// A file was offered for restore that this app did not write. Only names
+    /// matching a backup's own pattern are candidates.
+    NotABackup,
 }
 
 /// Anything a command can fail with.
@@ -92,6 +102,15 @@ pub enum Error {
     /// can be brought back and one that cannot.
     #[error("tray failed: {message}")]
     Tray { message: String },
+
+    /// A backup could not be staged for restore — the copy into the app's own
+    /// directory failed, or a staged file could not be cleared.
+    ///
+    /// Separate from `Backup` because it says the opposite thing to the person
+    /// watching: nothing was written over, and the database they are looking at
+    /// is the one they still have (ADR-0008).
+    #[error("restore failed: {message}")]
+    Restore { message: String },
 }
 
 impl Error {
@@ -132,6 +151,12 @@ impl Error {
 
     pub fn tray(cause: impl std::fmt::Display) -> Self {
         Error::Tray {
+            message: cause.to_string(),
+        }
+    }
+
+    pub fn restore(cause: impl std::fmt::Display) -> Self {
+        Error::Restore {
             message: cause.to_string(),
         }
     }

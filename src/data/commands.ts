@@ -13,12 +13,16 @@ import type {
   ClientTotal,
   DateRange,
   EntryFilter,
+  Instant,
   NewTimeEntry,
   Period,
   Project,
   ProjectFilter,
   ProjectTotal,
   Report,
+  RestorableBackup,
+  RestoreOutcome,
+  RestorePreview,
   RunningTimer,
   Settings,
   SheetLabels,
@@ -67,6 +71,13 @@ export const commandNames = [
   "update_settings",
   "backup_status",
   "run_backup",
+  "list_restorable_backups",
+  "preview_restore",
+  "stage_restore",
+  "cancel_restore",
+  "pending_restore",
+  "restore_outcome",
+  "claim_restore_relock",
   "sync_tray",
 ] as const;
 
@@ -293,6 +304,70 @@ export function backupStatus(): Promise<BackupStatus> {
  */
 export function runBackup(): Promise<BackupStatus> {
   return call("run_backup");
+}
+
+// -- Restore ----------------------------------------------------------------
+
+/**
+ * The backups that can be gone back to, newest first.
+ *
+ * Off the same listing rotation uses, so what is offered back and what is kept
+ * can never be two different sets of files.
+ */
+export function listRestorableBackups(): Promise<RestorableBackup[]> {
+  return call("list_restorable_backups");
+}
+
+/**
+ * What restoring this backup would discard — the day, and the hours logged
+ * since. Read-only: asking the cost changes nothing.
+ */
+export function previewRestore(fileName: string): Promise<RestorePreview> {
+  return call("preview_restore", { fileName });
+}
+
+/**
+ * Verifies the backup and stages it for the next launch.
+ *
+ * Does **not** restore. The live database is open, so the swap happens at the
+ * next launch before anything opens the file (ADR-0008) — which is why the UI
+ * asks for a relaunch rather than reporting success.
+ */
+export function stageRestore(fileName: string): Promise<void> {
+  return call("stage_restore", { fileName });
+}
+
+/** Clears a staged restore. What "never mind" does, before the relaunch. */
+export function cancelRestore(): Promise<void> {
+  return call("cancel_restore");
+}
+
+/** When the staged restore is from, or `null` when none is waiting. */
+export function pendingRestore(): Promise<Instant | null> {
+  return call("pending_restore");
+}
+
+/**
+ * What this launch did about a staged restore.
+ *
+ * Answered off state filled before the window existed, so it is a fact about
+ * this launch rather than a question that could race the swap.
+ */
+export function restoreOutcome(): Promise<RestoreOutcome> {
+  return call("restore_outcome");
+}
+
+/**
+ * Whether this caller is the one that has to drop the "remember me" session,
+ * because a restore brought a different account row with it.
+ *
+ * **True at most once per launch**, which is why it is not folded into
+ * `restoreOutcome`: that one is a fact and is read repeatedly, and a reload
+ * being told to re-lock again would throw away the token the restored database
+ * has since issued (ADR-0008).
+ */
+export function claimRestoreRelock(): Promise<boolean> {
+  return call("claim_restore_relock");
 }
 
 // -- Tray -------------------------------------------------------------------

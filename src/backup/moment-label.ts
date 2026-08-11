@@ -10,8 +10,18 @@
 import type { Instant } from "../data/types";
 
 export function momentLabel(at: Instant, language: string): string {
+  const moment = new Date(at);
+
+  // `Intl` throws on an unparseable date, and this is called from the lock screen
+  // and the app shell — the two places where a throw is not one bad line but the
+  // whole window, because there is nothing above them left to render. So an
+  // instant that will not parse is shown as it arrived instead.
+  if (Number.isNaN(moment.getTime())) {
+    return String(at);
+  }
+
   return new Intl.DateTimeFormat(language, {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(at));
+  }).format(moment);
 }

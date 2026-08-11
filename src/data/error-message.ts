@@ -16,6 +16,7 @@ export type ErrorKey = `error.${
   | "notFound"
   | "exportFailed"
   | "backupFailed"
+  | "restoreFailed"
   | "autostartFailed"
   | "trayFailed"
   | "unknown"}`;
@@ -35,6 +36,10 @@ export function errorKey(error: unknown): ErrorKey {
       // its own, so this is the only word the user gets that it did not.
       case "backup":
         return "error.backupFailed";
+      // The opposite news to a failed backup: nothing was written over, and the
+      // database they are looking at is the one they still have (ADR-0008).
+      case "restore":
+        return "error.restoreFailed";
       // Nothing was saved either, so the checkbox on screen is still true.
       case "autostart":
         return "error.autostartFailed";

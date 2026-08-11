@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from "react";
+import { RestoreNotice } from "../components/restore-notice";
 import { WindowFrame } from "../components/window-frame";
+import { useRestoreOutcome } from "../restore/use-restore";
 import { Unlock } from "./unlock";
 import { useFirstRun } from "./use-first-run";
 import { useSession } from "./use-session";
@@ -21,6 +23,11 @@ import { Wizard } from "./wizard";
  */
 export function Gate({ children }: { children: ReactNode }) {
   const { state, open } = useSession();
+
+  // A restore re-locks the app, so this door is sometimes being shown for a
+  // reason the person did not cause today. The explanation belongs on the
+  // screen doing the asking (ADR-0008).
+  const restored = useRestoreOutcome();
 
   /**
    * Whether this run has walked the wizard already.
@@ -60,6 +67,9 @@ export function Gate({ children }: { children: ReactNode }) {
     return (
       <WindowFrame revealsWork={false}>
         <Setting>
+          {restored.data?.status === "done" ? (
+            <RestoreNotice restoredFrom={restored.data.restoredFrom} />
+          ) : null}
           <Unlock onOpen={open} />
         </Setting>
       </WindowFrame>

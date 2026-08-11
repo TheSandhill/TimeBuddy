@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const commands = vi.hoisted(() => ({
   accountExists: vi.fn(),
   resumeSession: vi.fn(),
+  claimRestoreRelock: vi.fn(),
 }));
 vi.mock("../data/commands", () => commands);
 
@@ -15,6 +16,9 @@ beforeEach(() => {
   window.localStorage.clear();
   commands.accountExists.mockResolvedValue(true);
   commands.resumeSession.mockResolvedValue(false);
+  // The overwhelmingly common launch: no restore happened, so no session is owed
+  // a close.
+  commands.claimRestoreRelock.mockResolvedValue(false);
 });
 
 describe("which door the app opens with", () => {
@@ -64,6 +68,69 @@ describe("which door the app opens with", () => {
     const { result } = renderHook(() => useSession());
 
     await waitFor(() => expect(result.current.state).toBe("locked"));
+  });
+});
+
+describe("a launch that restored a backup", () => {
+  it("re-locks, because the password came back with the database", async () => {
+    // The account row travels with the file (ADR-0008), so the password is now
+    // the one from the day that backup was made. Staying open would leave the
+    // app unlocked by a key it no longer accepts.
+    writeToken("issued by the database that just left");
+    commands.resumeSession.mockResolvedValue(true);
+    commands.claimRestoreRelock.mockResolvedValue(true);
+
+    const { result } = renderHook(() => useSession());
+
+    await waitFor(() => expect(result.current.state).toBe("locked"));
+    expect(readToken()).toBeNull();
+    expect(
+      commands.resumeSession,
+      "a token from a database that is gone is not worth asking about",
+    ).not.toHaveBeenCalled();
+  });
+
+  it("raises the wizard when the restored database has no account", async () => {
+    // A backup from before setup finished is still a backup. It restores to
+    // what it was, which is an install that has to be set up.
+    commands.accountExists.mockResolvedValue(false);
+    commands.claimRestoreRelock.mockResolvedValue(true);
+
+    const { result } = renderHook(() => useSession());
+
+    await waitFor(() => expect(result.current.state).toBe("setup"));
+  });
+
+  it("claims the re-lock rather than asking whether a restore happened", async () => {
+    // The distinction matters: "did a restore happen" stays true for the whole
+    // launch, so a reload would keep throwing away the token the *restored*
+    // database has since issued — a "remember me" that could never stay ticked.
+    // Rust hands the re-lock out once, and this is the call that takes it.
+    commands.claimRestoreRelock.mockResolvedValue(false);
+    writeToken("issued after the restore, by the restored database");
+    commands.resumeSession.mockResolvedValue(true);
+
+    const { result } = renderHook(() => useSession());
+
+    await waitFor(() => expect(result.current.state).toBe("open"));
+    expect(
+      readToken(),
+      "the second look at the same launch keeps the new token",
+    ).toBe("issued after the restore, by the restored database");
+    expect(commands.claimRestoreRelock).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves a remembered session alone when nothing was replaced", async () => {
+    // A restore that failed leaves the database — and the password — that this
+    // webview's token was issued by, so Rust owes no re-lock.
+    writeToken("still good");
+    commands.resumeSession.mockResolvedValue(true);
+    commands.claimRestoreRelock.mockResolvedValue(false);
+
+    const { result } = renderHook(() => useSession());
+
+    await waitFor(() => expect(result.current.state).toBe("open"));
+    expect(readToken()).toBe("still good");
   });
 });
 

@@ -36,7 +36,10 @@ const SUFFIX: &str = ".db";
 /// The stamp inside the name, in UTC. Sortable as text, and — unlike a file's
 /// mtime — it survives the file being copied somewhere else, which for a backup
 /// is a thing that happens on purpose.
-const STAMP: &str = "%Y%m%dT%H%M%SZ";
+///
+/// Shared with the staged-restore file, which carries the stamp of the backup it
+/// holds so that the swap can say which day it restored from (ADR-0008).
+pub const STAMP: &str = "%Y%m%dT%H%M%SZ";
 
 /// Where backups go when no folder has been chosen: a `backups` folder beside
 /// the database, rather than mixed in with it.
@@ -77,7 +80,11 @@ pub fn file_name(at: DateTime<Utc>) -> String {
 /// The gate that makes rotation safe: a folder the user shares with their own
 /// files — a synced folder, which is the whole recommendation — must not have
 /// anything deleted out of it that TimeBuddy did not put there.
-fn made_at(name: &str) -> Option<DateTime<Utc>> {
+///
+/// It is the same gate on the way back in. A restore takes a *file name* and
+/// asks this whether it is one of ours, which is what keeps `..\` and an
+/// arbitrary path off the list of things that can be staged (ADR-0008).
+pub fn made_at(name: &str) -> Option<DateTime<Utc>> {
     let stamp = name.strip_prefix(PREFIX)?.strip_suffix(SUFFIX)?;
 
     // The trailing `Z` in the format is a literal, not an offset chrono can

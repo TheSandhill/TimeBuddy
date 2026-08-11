@@ -159,9 +159,28 @@ pub fn migrations() -> Vec<Migration> {
     ]
 }
 
+/// The highest migration this build knows how to apply.
+///
+/// A restore candidate stamped higher than this comes from a later version of
+/// TimeBuddy, and is refused: the plugin migrates forward, never back, so a
+/// database from the future would be opened by code that does not know its
+/// columns (ADR-0008).
+pub fn latest_version() -> i64 {
+    migrations()
+        .iter()
+        .map(|migration| migration.version)
+        .max()
+        .expect("there is at least one migration")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_latest_version_is_the_highest_migration_there_is() {
+        assert_eq!(latest_version(), migrations().len() as i64);
+    }
 
     #[test]
     fn migrations_are_versioned_upwards_without_gaps_or_repeats() {

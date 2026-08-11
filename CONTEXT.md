@@ -108,8 +108,42 @@ that owes a backup, and every launch attempts the one it owes — so the two are
 the failure says why. Staleness is shown on the Settings screen, where it is read rather than
 announced.
 
-There is **no restore**. Restoring is copying one file back by hand, which is a thing one person can
-do on one laptop; a restore button is a delete-everything button with a nicer label.
+### Restore
+
+Going back to a Backup: the whole database, replaced by the copy from a chosen day.
+
+ADR-0007 said there would be none, on the grounds that copying one file back is a thing a person can
+do unaided. ADR-0008 amends it — by hand it means renaming a UTC stamp under `%APPDATA%` and knowing
+to quit from the Tray first, because close only hides. That is the one moment the app cannot afford to
+be absent.
+
+A restore is **two launches**. Choosing one *stages* it: the file is verified and copied beside the
+database, and nothing is destroyed. The next launch swaps it in **before the pool opens** — a process
+may not overwrite the file its own pool holds. So the honest end state of the button is "prepared",
+never "done", and the screen says so.
+
+The **file's presence is the record**, like the Backup folder is: no `restore_pending` column, because
+a row and a file could disagree about whether a restore is owed.
+
+Before the swap, the database being replaced is copied aside — as an **ordinary Backup**, under the
+same naming, counting against the same seven. A second convention would be a second thing rotation
+has to understand, and it has a better consequence this way: the safety copy is itself restorable, so
+undoing a restore is the same act as making one. Without it a restore could only be run once
+correctly.
+
+The chosen file is **verified twice** — once when it is chosen, so the answer is immediate, and again
+at launch before anything is overwritten, because a synced folder can rot overnight. A file whose
+schema is *newer* than this build is refused: nothing migrates backward.
+
+A restore **re-locks the app**. The Account row travels with the database, so the password that opens
+the door afterwards is the one from the day that Backup was made — and the lock screen says so, rather
+than leaving a person to discover it.
+
+Whole file only. There is no partial restore: merging one Client's hours is a different feature with
+different rules, and it does not belong behind the same button.
+
+A staged restore that **fails** is announced across the top of every screen, and says the current
+database was left alone. Opening on old data in silence would read as the restore having worked.
 
 ### Theme
 

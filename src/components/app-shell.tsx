@@ -2,8 +2,10 @@ import type { ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useDailyBackup } from "../backup/use-daily-backup";
+import { useRestoreOutcome } from "../restore/use-restore";
 import { requestTimerToggle } from "../tray/toggle-request";
 import { BackupBanner } from "./backup-banner";
+import { RestoreBanner } from "./restore-banner";
 import { WindowFrame } from "./window-frame";
 
 const linkClass = "text-sm text-ink-muted transition-colors hover:text-ink";
@@ -19,6 +21,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   // its failure has to be visible from wherever they are instead.
   const backup = useDailyBackup();
 
+  // A restore that did not happen is announced here for the same reason a failed
+  // backup is: opening on old data in silence would read as it having worked.
+  // A restore that *did* happen is not announced — it is explained on the lock
+  // screen it caused, and read afterwards on Settings.
+  const restored = useRestoreOutcome();
+
   // The tray's Start/Stop item is answered by the Timer screen, which is the
   // one place that knows what a stopped block is worth — so the request is
   // latched and the Timer is navigated to, in that order, because the screen
@@ -30,6 +38,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         void navigate({ to: "/" });
       }}
     >
+      {restored.data?.status === "failed" ? (
+        <RestoreBanner fault={restored.data.fault} />
+      ) : null}
+
       {backup.failure === null ? null : (
         <BackupBanner
           lastBackupAt={backup.failure.lastBackupAt}
