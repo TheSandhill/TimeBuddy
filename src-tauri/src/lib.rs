@@ -1,5 +1,6 @@
 mod account;
 mod archive;
+mod backup;
 mod clients;
 mod db;
 mod error;
@@ -130,6 +131,8 @@ pub fn run() {
             export::export_report,
             settings::get_settings,
             settings::update_settings,
+            backup::backup_status,
+            backup::run_backup,
             tray::sync_tray,
         ])
         .run(tauri::generate_context!())

@@ -8,6 +8,7 @@
 
 import { invoke } from "@tauri-apps/api/core";
 import type {
+  BackupStatus,
   Client,
   ClientTotal,
   DateRange,
@@ -64,6 +65,8 @@ export const commandNames = [
   "export_report",
   "get_settings",
   "update_settings",
+  "backup_status",
+  "run_backup",
   "sync_tray",
 ] as const;
 
@@ -272,6 +275,24 @@ export function getSettings(): Promise<Settings> {
 
 export function updateSettings(settings: Settings): Promise<Settings> {
   return call("update_settings", { settings });
+}
+
+// -- Backups ----------------------------------------------------------------
+
+/** Reads the backup folder. Cheap: a directory listing, no copying. */
+export function backupStatus(): Promise<BackupStatus> {
+  return call("backup_status");
+}
+
+/**
+ * Makes a backup now and rotates the folder down to seven.
+ *
+ * One command for both the daily one the app owes and the one the user asks
+ * for by pressing the button — they are the same act, and a second command
+ * would only be a second thing to keep working.
+ */
+export function runBackup(): Promise<BackupStatus> {
+  return call("run_backup");
 }
 
 // -- Tray -------------------------------------------------------------------

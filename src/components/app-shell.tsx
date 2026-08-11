@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useDailyBackup } from "../backup/use-daily-backup";
 import { requestTimerToggle } from "../tray/toggle-request";
+import { BackupBanner } from "./backup-banner";
 import { WindowFrame } from "./window-frame";
 
 const linkClass = "text-sm text-ink-muted transition-colors hover:text-ink";
@@ -11,6 +13,11 @@ const activeClass = "text-sm text-accent";
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  // The daily backup is asked for here, once, rather than on the Settings
+  // screen: it has to happen whether or not anybody goes looking for it, and
+  // its failure has to be visible from wherever they are instead.
+  const backup = useDailyBackup();
 
   // The tray's Start/Stop item is answered by the Timer screen, which is the
   // one place that knows what a stopped block is worth — so the request is
@@ -23,6 +30,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         void navigate({ to: "/" });
       }}
     >
+      {backup.failure === null ? null : (
+        <BackupBanner
+          lastBackupAt={backup.failure.lastBackupAt}
+          onRetry={backup.retry}
+          retrying={backup.retrying}
+        />
+      )}
+
       <nav className="flex shrink-0 items-center gap-4 border-b border-border px-6 py-2">
         <Link to="/" className={linkClass} activeProps={{ className: activeClass }}>
           {t("nav.timer")}

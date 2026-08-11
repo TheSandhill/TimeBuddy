@@ -87,6 +87,30 @@ with it: the week of 28 December 2026 runs into January and is still 2026 week 5
 A Report's TimeEntries written out as an `.xlsx` — one sheet, one row per entry, scoped to the
 range on screen, saved wherever the native dialog says. **No CSV.** See ADR-0006.
 
+### Backup
+
+A dated copy of the whole database, written with SQLite's own `VACUUM INTO` — never a file copy of a
+database that is open and being written to. See ADR-0007.
+
+The **newest seven** are kept. The eighth evicts the oldest, and only files TimeBuddy named are ever
+candidates: the recommended folder is a synced one, which is a folder with other things in it.
+
+There is **no `last_backup_at` column**. The newest file's own name is when the last backup
+succeeded — the folder is the record, so a row and a folder can never disagree about whether the data
+is safe.
+
+**Daily means "on launch, if today's has not been made".** There is no scheduler: one in a program
+that is closed at midnight would never fire.
+
+A backup that **fails** is announced across the top of every screen, with the retry on it, and says
+which copy is still good. A backup that is merely **stale** is not: every stale folder is also one
+that owes a backup, and every launch attempts the one it owes — so the two are the same news and only
+the failure says why. Staleness is shown on the Settings screen, where it is read rather than
+announced.
+
+There is **no restore**. Restoring is copying one file back by hand, which is a thing one person can
+do on one laptop; a restore button is a delete-everything button with a nicer label.
+
 ### Theme
 
 A named set of design tokens (`--color-surface`, `--color-ink`, `--color-accent`, …). Components
@@ -154,9 +178,9 @@ migration, never absent, so reading it can never miss.
 It is edited on one screen and **saved as a unit**. A partial update would only invite
 half-applied states, so there is one Save and one `UPDATE`.
 
-A blank backup folder is stored as **absent**, not as `""`, and absent means the app's own data
-directory — a path resolved at runtime rather than frozen into a row on whichever machine ran the
-migration.
+A blank backup folder is stored as **absent**, not as `""`, and absent means `backups` under the
+app's own data directory — a path resolved at runtime rather than frozen into a row on whichever
+machine ran the migration.
 
 **Autostart is the one setting that does not live in the database.** Windows keeps its own copy in
 the registry, and a person can change it from Task Manager without this app hearing about it. The

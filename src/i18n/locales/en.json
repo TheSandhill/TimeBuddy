@@ -131,6 +131,20 @@
     "loading": "Loading settings…",
     "loadFailed": "Settings could not be loaded."
   },
+  "backup": {
+    "title": "Backups",
+    "hint": "TimeBuddy copies the database here once a day and keeps the last seven. A folder that syncs — OneDrive, Dropbox — means a broken laptop is not a lost year.",
+    "reading": "Checking the backup folder…",
+    "never": "No backup has been made yet.",
+    "last": "Last backup: {{when}} — {{kept}} kept.",
+    "now": "Back up now",
+    "running": "Backing up…",
+    "done": "Backed up",
+    "retry": "Try again",
+    "staleNote": "That is longer ago than it should be — check that the backup folder can be reached.",
+    "failedWithLast": "The last backup did not work. The newest copy is from {{when}}. Check that the backup folder can be reached.",
+    "failedWithNone": "The last backup did not work and there is no backup at all — your hours exist in one place only. Check that the backup folder can be reached."
+  },
   "error": {
     "nameRequired": "Please enter a name.",
     "durationUnreadable": "Can't read that duration. Try 1:30, 1.5 or 90m.",
@@ -142,6 +156,7 @@
     "timerAlreadyRunning": "A block is already running.",
     "notFound": "That no longer exists.",
     "exportFailed": "The file could not be saved.",
+    "backupFailed": "The backup could not be written. Check the backup folder.",
     "autostartFailed": "Windows would not let TimeBuddy start automatically. Nothing was saved.",
     "trayFailed": "No tray icon could be created. Close now really closes.",
     "unknown": "That didn't work. Please try again.",
@@ -187,7 +202,7 @@
     "recoveryPhrase": "Recovery phrase",
     "recoveryHint": "Write this down somewhere safe. It is the only way back in if you forget your password — your hours are never lost, but without it the password cannot be changed.",
     "backupTitle": "Where backups go",
-    "backupHint": "A folder that syncs — OneDrive, for instance — means a broken laptop is not a lost year.",
+    "backupHint": "TimeBuddy copies your hours here once a day. A folder that syncs — OneDrive, Dropbox — means a broken laptop is not a lost year.",
     "backupDefault": "The app's own data folder",
     "chooseFolder": "Choose a folder…",
     "workTitle": "Your first work",

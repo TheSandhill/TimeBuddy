@@ -4666,6 +4666,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-notification",
  "tauri-plugin-sql",
+ "tempfile",
  "thiserror 2.0.19",
  "tokio",
  "zip",

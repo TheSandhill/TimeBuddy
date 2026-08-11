@@ -76,6 +76,15 @@ pub enum Error {
     #[error("hashing failed: {message}")]
     Hashing { message: String },
 
+    /// A backup could not be written or rotated — a folder on a drive that has
+    /// been unplugged, a synced folder that has been moved, a full disk.
+    ///
+    /// Its own variant because it is the one failure the user must be told
+    /// about without having asked anything: the daily backup runs on its own,
+    /// and one that fails quietly is worse than none at all.
+    #[error("backup failed: {message}")]
+    Backup { message: String },
+
     /// The tray icon or its menu could not be built or renamed.
     ///
     /// Its own variant because the close button hides the window behind the
@@ -111,6 +120,12 @@ impl Error {
 
     pub fn hashing(cause: impl std::fmt::Display) -> Self {
         Error::Hashing {
+            message: cause.to_string(),
+        }
+    }
+
+    pub fn backup(cause: impl std::fmt::Display) -> Self {
+        Error::Backup {
             message: cause.to_string(),
         }
     }

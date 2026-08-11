@@ -218,6 +218,26 @@ export interface Settings {
 }
 
 /**
+ * Whether the hours are safe, read off the backup folder.
+ *
+ * There is no `lastBackupAt` column behind this — the newest file's own name is
+ * when the last backup succeeded, so a row and a folder can never end up
+ * disagreeing (ADR-0007). Every field describes the same single read.
+ */
+export interface BackupStatus {
+  /** The resolved folder, so the screen can say where to go and look. */
+  folder: string;
+  /** When the newest backup was made. `null` when there are none. */
+  lastBackupAt: Instant | null;
+  /** How many backups are in the folder, at most seven. */
+  kept: number;
+  /** No backup has been made today, so one is owed. */
+  due: boolean;
+  /** The newest backup is old enough to be worth warning about. */
+  stale: boolean;
+}
+
+/**
  * Why an input was rejected. A code, not a sentence — the message the user
  * reads comes from the i18n catalogues.
  */
@@ -242,6 +262,9 @@ export type CommandError =
   | { kind: "database"; message: string }
   /** The file could not be written. The hours are safe; the file is not there. */
   | { kind: "export"; message: string }
+  /** A backup could not be written. The one failure nobody asked to hear about
+   * and everybody needs to. */
+  | { kind: "backup"; message: string }
   /** Windows refused the startup entry. The one setting that lives outside
    * the database, so it is the one that can fail on its own. */
   | { kind: "autostart"; message: string }
@@ -264,6 +287,7 @@ export function isCommandError(error: unknown): error is CommandError {
     kind === "notFound" ||
     kind === "database" ||
     kind === "export" ||
+    kind === "backup" ||
     kind === "autostart" ||
     kind === "tray" ||
     kind === "hashing"
