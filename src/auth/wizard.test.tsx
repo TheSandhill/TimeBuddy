@@ -210,6 +210,33 @@ describe("the first client and project", () => {
     await waitFor(() => expect(onDone).toHaveBeenCalled());
   });
 
+  it("throws away what the app read before there was anything to read", async () => {
+    // The window frame was already asking about settings and a running block
+    // while the wizard was still being walked. Opening onto those answers is
+    // how a fresh install lands in an app that looks empty.
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const invalidate = vi.spyOn(client, "invalidateQueries");
+    render(
+      <QueryClientProvider client={client}>
+        <I18nextProvider i18n={createI18n("nl")}>
+          <Wizard onDone={onDone} />
+        </I18nextProvider>
+      </QueryClientProvider>,
+    );
+    await setUpAccount();
+    press("Volgende");
+    await screen.findByLabelText("Je eerste werk");
+
+    type("Klant", "Acme");
+    type("Project", "Website");
+    press("Aan de slag");
+
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect(invalidate).toHaveBeenCalled();
+  });
+
   it("does not open the app when the work could not be created", async () => {
     commands.createClient.mockRejectedValue({
       kind: "validation",

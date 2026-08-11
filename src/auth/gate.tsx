@@ -23,9 +23,11 @@ export function Gate({ children }: { children: ReactNode }) {
   const { state, open } = useSession();
 
   /**
-   * Whether this run has walked the wizard already. Without it, finishing
-   * setup would race the very query that decides whether setup is needed, and
-   * the wizard could reappear over the app it just filled.
+   * Whether this run has walked the wizard already.
+   *
+   * The wizard writes the very Client that `useFirstRun` looks for, so once it
+   * has finished there is nothing left to ask — and asking anyway means a
+   * blank window while the answer comes back.
    */
   const [walked, setWalked] = useState(false);
 
@@ -62,6 +64,12 @@ export function Gate({ children }: { children: ReactNode }) {
         </Setting>
       </WindowFrame>
     );
+  }
+
+  // Straight through: the wizard just finished, and this render already knows
+  // what a fresh query would come back and say.
+  if (walked) {
+    return <>{children}</>;
   }
 
   // Unlocked, but setup never got past the password. The account exists, so

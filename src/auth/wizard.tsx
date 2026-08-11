@@ -13,7 +13,7 @@
  */
 
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { open as chooseDirectory } from "@tauri-apps/plugin-dialog";
 import { useTranslation } from "react-i18next";
 import { primaryButtonClass } from "../components/button";
@@ -45,6 +45,7 @@ export function Wizard({
   onDone: () => void;
 }) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
   const [step, setStep] = useState<Step>(startAt);
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +92,14 @@ export function Wizard({
       const created = await createClient(client);
       await createProject(created.id, project);
     },
-    onSuccess: () => onDone(),
+    onSuccess: async () => {
+      // Everything the app knows, it read while there was nothing to read.
+      // The window frame was already asking about settings and a running
+      // block before the first step, so the app behind this must not open
+      // onto answers that predate the setup it is opening because of.
+      await queryClient.invalidateQueries();
+      onDone();
+    },
     onError: fail,
   });
 
