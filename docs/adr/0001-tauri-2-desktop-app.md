@@ -2,6 +2,8 @@
 
 - **Status**: Accepted
 - **Date**: 2026-08-07
+- **Expanded by**: ADR-0009 — the distribution bullet, in full: what is signed, what is not, and why
+  shipping is a `git tag`. Everything here stands.
 
 ## Context
 

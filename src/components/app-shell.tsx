@@ -4,8 +4,10 @@ import { useTranslation } from "react-i18next";
 import { useDailyBackup } from "../backup/use-daily-backup";
 import { useRestoreOutcome } from "../restore/use-restore";
 import { requestTimerToggle } from "../tray/toggle-request";
+import { useUpdatePrompt } from "../update/use-update";
 import { BackupBanner } from "./backup-banner";
 import { RestoreBanner } from "./restore-banner";
+import { UpdateBanner } from "./update-banner";
 import { WindowFrame } from "./window-frame";
 
 const linkClass = "text-sm text-ink-muted transition-colors hover:text-ink";
@@ -27,6 +29,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   // screen it caused, and read afterwards on Settings.
   const restored = useRestoreOutcome();
 
+  // Asked for here, once per launch, for the same reason the backup is: shipping
+  // is a `git tag`, so an update she is never told about is an update she never
+  // gets (ADR-0009). Mounted behind the lock screen, because the offer belongs to
+  // whoever already got in.
+  const update = useUpdatePrompt();
+
   // The tray's Start/Stop item is answered by the Timer screen, which is the
   // one place that knows what a stopped block is worth — so the request is
   // latched and the Timer is navigated to, in that order, because the screen
@@ -47,6 +55,18 @@ export function AppShell({ children }: { children: ReactNode }) {
           lastBackupAt={backup.failure.lastBackupAt}
           onRetry={backup.retry}
           retrying={backup.retrying}
+        />
+      )}
+
+      {/* Last of the three, nearest the app: the other two are things that went
+          wrong, and this one is only an offer. */}
+      {update.offered === null ? null : (
+        <UpdateBanner
+          version={update.offered.version}
+          onInstall={update.install}
+          onDismiss={update.dismiss}
+          installing={update.installing}
+          failed={update.installFailed}
         />
       )}
 

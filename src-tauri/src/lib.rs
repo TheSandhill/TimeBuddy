@@ -45,6 +45,16 @@ pub fn run() {
         // "the block has ended" — the one that arrives when TimeBuddy is behind
         // another window, which is where it usually is.
         .plugin(tauri_plugin_notification::init())
+        // Shipping is a `git tag`; updating is one click (ADR-0009). Only the
+        // plugin is registered here — *whether* to offer an update is a
+        // question about the person at the keyboard, so it is asked from the
+        // frontend, behind the lock screen, where the answer has somewhere to
+        // appear.
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        // The relaunch after an update installs. Nothing else uses it: the way
+        // out of the app is the tray's Quit (ADR-0004), and this is the one
+        // exit the app asks for on its own behalf.
+        .plugin(tauri_plugin_process::init())
         // No launch arguments: TimeBuddy started by Windows should behave
         // exactly like TimeBuddy started by hand.
         .plugin(tauri_plugin_autostart::init(
@@ -167,6 +177,14 @@ pub fn run() {
 mod tests {
     use super::*;
 
+    /// `tauri.conf.json`, parsed. Several of these tests read it, and reading it
+    /// through `include_str!` is what makes them tests of the shipped file
+    /// rather than of a copy somebody remembered to update.
+    fn config() -> serde_json::Value {
+        serde_json::from_str(include_str!("../tauri.conf.json"))
+            .expect("tauri.conf.json is valid JSON")
+    }
+
     #[test]
     fn the_plugin_and_the_pool_open_the_same_file() {
         assert_eq!(DB_URL, format!("sqlite:{DB_FILE}"));
@@ -178,9 +196,7 @@ mod tests {
     /// silence this test exists to break.
     #[test]
     fn the_config_asks_the_plugin_to_preload_our_database() {
-        let config: serde_json::Value =
-            serde_json::from_str(include_str!("../tauri.conf.json"))
-                .expect("tauri.conf.json is valid JSON");
+        let config = config();
 
         let preload = config["plugins"]["sql"]["preload"]
             .as_array()
@@ -198,10 +214,7 @@ mod tests {
     /// nothing by it.
     #[test]
     fn the_window_cannot_be_maximised_and_has_a_floor_to_resize_to() {
-        let config: serde_json::Value =
-            serde_json::from_str(include_str!("../tauri.conf.json"))
-                .expect("tauri.conf.json is valid JSON");
-
+        let config = config();
         let window = &config["app"]["windows"][0];
 
         assert_eq!(window["decorations"], serde_json::json!(false));
@@ -209,5 +222,100 @@ mod tests {
         assert_eq!(window["resizable"], serde_json::json!(true));
         assert!(window["minWidth"].as_i64().unwrap_or(0) > 0);
         assert!(window["minHeight"].as_i64().unwrap_or(0) > 0);
+    }
+
+    /// Three files carry a version number and only one of them is the one the
+    /// updater compares: `tauri.conf.json`'s. A release tagged off a
+    /// `package.json` that was bumped alone would ship an installer that
+    /// believes it is the version it is replacing — so the update would install
+    /// and change nothing, which is the worst way for this to fail (ADR-0009).
+    #[test]
+    fn the_three_version_numbers_agree() {
+        let package: serde_json::Value =
+            serde_json::from_str(include_str!("../../package.json"))
+                .expect("package.json is valid JSON");
+
+        let config = config();
+
+        assert_eq!(
+            config["version"].as_str(),
+            Some(env!("CARGO_PKG_VERSION")),
+            "tauri.conf.json and Cargo.toml disagree about the version"
+        );
+        assert_eq!(
+            package["version"].as_str(),
+            Some(env!("CARGO_PKG_VERSION")),
+            "package.json and Cargo.toml disagree about the version"
+        );
+    }
+
+    /// The updater needs somewhere to look and a key to check what it finds
+    /// with. Without the key the plugin refuses to start; without `https` the
+    /// one URL baked into every build would be a way to serve her anything at
+    /// all over a café network (ADR-0009).
+    #[test]
+    fn the_updater_has_an_https_endpoint_and_a_public_key() {
+        let config = config();
+        let updater = &config["plugins"]["updater"];
+
+        let endpoints = updater["endpoints"]
+            .as_array()
+            .expect("plugins.updater.endpoints is a list");
+
+        assert!(!endpoints.is_empty(), "no updater endpoint to check");
+        for endpoint in endpoints {
+            let url = endpoint.as_str().expect("an endpoint is a string");
+            assert!(url.starts_with("https://"), "{url} is not over https");
+        }
+
+        let pubkey = updater["pubkey"].as_str().unwrap_or_default();
+        assert!(!pubkey.is_empty(), "plugins.updater.pubkey is empty");
+    }
+
+    /// The updater reads `latest.json` and a signature beside the installer.
+    /// Neither is built unless this is on, so the flag being lost would leave a
+    /// tagged release that installs fine and can never be updated from.
+    #[test]
+    fn the_bundle_ships_the_artifacts_the_updater_reads() {
+        let config = config();
+
+        assert_eq!(
+            config["bundle"]["createUpdaterArtifacts"],
+            serde_json::json!(true)
+        );
+
+        let targets = config["bundle"]["targets"]
+            .as_array()
+            .expect("bundle.targets is a list");
+        assert!(
+            targets.iter().any(|target| target == "nsis"),
+            "the NSIS installer is what the updater replaces, got {targets:?}"
+        );
+    }
+
+    /// The frontend asks about updates and restarts into one, so the window has
+    /// to be allowed to do both. `process:allow-restart` is deliberately the
+    /// only `process:` permission: `allow-exit` would be a second way out of
+    /// the app, and the way out is the tray's Quit (ADR-0004).
+    #[test]
+    fn the_window_may_check_for_updates_and_restart_into_one() {
+        let capability: serde_json::Value =
+            serde_json::from_str(include_str!("../capabilities/default.json"))
+                .expect("capabilities/default.json is valid JSON");
+
+        let permissions = capability["permissions"]
+            .as_array()
+            .expect("permissions is a list");
+
+        for needed in ["updater:default", "process:allow-restart"] {
+            assert!(
+                permissions.iter().any(|granted| granted == needed),
+                "{needed} is missing, got {permissions:?}"
+            );
+        }
+        assert!(
+            !permissions.iter().any(|granted| granted == "process:allow-exit"),
+            "process:allow-exit would be a second way to quit (ADR-0004)"
+        );
     }
 }

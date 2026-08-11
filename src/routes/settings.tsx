@@ -23,6 +23,7 @@ import { errorKey } from "../data/error-message";
 import type { Settings as StoredSettings } from "../data/types";
 import { settingsKey, useSettings } from "../data/use-settings";
 import { RestoreSection } from "../restore/restore-section";
+import { UpdateSection } from "../update/update-section";
 import { supportedLanguages, type Language } from "../i18n/config";
 import { themeNames, type ThemeName } from "../theme/tokens";
 
@@ -330,6 +331,10 @@ export function Settings() {
         Save cannot carry one and its own buttons cannot submit this form.
       */}
       <RestoreSection />
+
+      {/* Below the restore for the same reason it is below the Save: which
+          version this is is not a preference either, and nothing here posts. */}
+      <UpdateSection />
     </form>
   );
 }
