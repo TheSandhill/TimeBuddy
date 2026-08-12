@@ -60,11 +60,17 @@ const SELECT: &str = "SELECT theme, follow_system, language, pomodoro_minutes, b
                       chime_enabled, notifications_enabled, autostart, backup_folder, \
                       updated_at FROM settings WHERE id = 1";
 
-pub async fn get(pool: &SqlitePool) -> Result<Settings> {
+/// Generic over the executor rather than taking `&SqlitePool`, because the
+/// restore swap reads this over a single connection it closes by hand — see
+/// [`crate::db::connect_one`]. Every other caller still passes the pool.
+pub async fn get<'e, E>(executor: E) -> Result<Settings>
+where
+    E: sqlx::Executor<'e, Database = sqlx::Sqlite>,
+{
     // The row is seeded by migration 1, so its absence is a corrupt database
     // rather than a state the caller should have to handle.
     sqlx::query_as(SELECT)
-        .fetch_optional(pool)
+        .fetch_optional(executor)
         .await?
         .ok_or_else(|| Error::not_found("settings", 1))
 }

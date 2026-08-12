@@ -116,8 +116,13 @@ explanation would read as the restore having worked.
   is the right trade — the copy protecting the present is worth more than the seventh-oldest past.
 - Two verifications of the same file is deliberate duplication. The first is for the person choosing;
   the second is the one that actually guards the swap.
-- The pre-restore copy is taken through a short-lived pool that is closed before the swap, so the file
-  being replaced is not open at the moment it is replaced.
+- The pre-restore copy is taken through a **single short-lived connection**, closed before the swap, so
+  the file being replaced is not open at the moment it is replaced. It was originally a short-lived
+  *pool*, which does not buy this: `SqlitePool::close` waits for the pool to be done with its
+  connections, but sqlx defers closing the connections themselves to tasks it spawns as each is
+  dropped, so on a busy machine SQLite still held the file when the swap tried to rename it. Windows
+  refuses a rename on an open handle, and the restore failed with `SwapFailed` — see #46. Only
+  `SqliteConnection::close` waits for the handle to actually go.
 - The staged file sits beside the database in the app config directory, not in the backup folder.
   The backup folder is often synced, and staging a file into a folder something else is uploading is
   asking for the swap to read a partial copy.
