@@ -27,8 +27,12 @@ Needs, on Windows:
   Put it on the `PATH` or point `MSEDGEDRIVER` at it. The CI job does exactly
   this, in `.github/workflows/e2e.yml`.
 - **A desktop that is logged in and unlocked.** The drag test moves the real
-  mouse pointer, because nothing else moves a window (below). Do not type
-  during a run.
+  mouse pointer, because nothing else moves a window (below), and the tray test
+  moves it onto the notification area. Do not type during a run.
+- **No TimeBuddy of your own in the tray.** The tray test finds the icon by its
+  tooltip, and two of them are two icons it cannot tell apart — so it says so
+  and stops rather than pressing one at random. A session with no notification
+  area at all skips that file instead, and says why.
 
 Rebuild whenever Rust or the frontend changes: `test:e2e` runs whatever
 `e2e:build` last produced, and says so rather than running against a binary
@@ -61,35 +65,54 @@ what is asserted. It raises the window and refuses if anything is covering the
 point first: a real mouse presses whatever is on top there, and dragging the
 editor you had open would fail the test for no reason to do with the app.
 
-**An empty `%APPDATA%` and `%LOCALAPPDATA%` per launch.** The database lives in
-one and WebView2's user data folder in the other, and both matter. The first
-keeps the suite off the developer's real hours. The second keeps each launch
-in a browser process of its own: two WebView2 hosts sharing a user data folder
-share the browser behind it, so a launch that joined one started without the
-debugging port would never open it — which is a genuinely confusing way for
-this to fail, since the app is running and the port simply is not there.
+**A bundle identifier of its own, and an empty pair of directories under it.**
+The database lives under `%APPDATA%\<identifier>` and WebView2's user data
+folder under `%LOCALAPPDATA%\<identifier>`, and both matter. The first keeps
+the suite off the developer's real hours. The second keeps each launch in a
+browser process of its own: two WebView2 hosts sharing a user data folder share
+the browser behind it, so a launch that joined one started without the
+debugging port would never open it — a genuinely confusing way for this to
+fail, since the app is running and the port simply is not there.
+
+Setting `%APPDATA%` on the launched process is the obvious way to do that and
+does not work at all. Tauri resolves the app data directory with
+`SHGetKnownFolderPath`, as does the WebView2 loader, and neither reads the
+environment — so every run before this one opened the developer's real
+database. What *can* be moved is the identifier both paths are built from, so
+`tauri.e2e.conf.json` carries one of its own and `app.ts` empties the two
+directories that hang off it before each launch. `lib.rs` fails if the shipped
+and e2e identifiers are ever the same again.
+
+**UI Automation, for the tray and only the tray.** A tray icon is not a window,
+so `win32.ps1` cannot see it; Windows 11 hid the icons behind an overflow
+flyout, so nothing older can either. `support/tray.ps1` uses UIA to find the
+icon and read its tooltip, and hands everything else back to the APIs that own
+it: the mouse is real, and the menu is read out of its `HMENU` because a
+`TrackPopupMenu` menu exposes no items to UIA at all. At length in ADR-0013.
 
 ## What is covered
 
-| Test                       | Asks                                                     |
-| -------------------------- | -------------------------------------------------------- |
-| `titlebar-drag`            | Does dragging the titlebar move the window?              |
-| `close-hides-to-tray`      | Does close hide the window and leave the app running?    |
+| Test                  | Asks                                                    |
+| --------------------- | ------------------------------------------------------- |
+| `titlebar-drag`       | Does dragging the titlebar move the window?             |
+| `close-hides-to-tray` | Does close hide the window and leave the app running?   |
+| `tray-menu`           | Does the icon's menu start, stop and quit — with no window? |
 
-The tray icon's *presence* is covered by implication rather than by
-enumeration: `hide_to_tray` refuses to hide when there is no tray, and a
-refused hide is a close that closes (ADR-0004). A window that is hidden with
-the process still alive is therefore a window with a tray behind it.
+The tray icon's *presence* is also covered by implication, which is what
+`close-hides-to-tray` leans on rather than enumerating anything:
+`hide_to_tray` refuses to hide when there is no tray, and a refused hide is a
+close that closes (ADR-0004). A window that is hidden with the process still
+alive is therefore a window with a tray behind it.
+
+`tray-menu` is the slow one, and unavoidably: the tray tooltip counts in whole
+minutes, so watching it count down is sixty seconds of watching whatever the
+block length is. The same minute buys the other half — a block stopped from the
+menu logs the minute actually worked, not the twenty-five it was going to run
+for (ADR-0010).
 
 ## What is not covered
 
-**The tray menu.** Starting and stopping a block from Show / Start / Quit is
-the third test #33 asked for, and it is not here. Reaching it means finding a
-tray icon's screen rect and right-clicking it: WebDriver cannot see the
-notification area at all, and Windows 11 moved the icons behind an overflow
-flyout that has to be driven through UI Automation. That is a different
-harness, not another test in this one — #43.
-
-What is asserted instead, in unit tests, is that both halves agree on the
-event: `src-tauri/src/tray.rs` reads `src/tray/use-tray.ts` and fails if the
-strings drift. That covers the wiring and not the click.
+**The classic notification area.** `tray.ps1` handles the pre-Windows-11 shell
+as well as the flyout, but only the flyout has been run against. The CI
+runners are Server images and are the other one, so a red tray job there is as
+likely to be this as the app.

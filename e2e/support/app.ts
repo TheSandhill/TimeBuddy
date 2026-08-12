@@ -7,16 +7,16 @@
  * Two more things are this file's rather than each test's:
  *
  * 1. **The data.** The app resolves its database under `%APPDATA%`, so a suite
- *    that inherited the developer's environment would run against their real
- *    hours. Every launch gets an empty directory and throws it away after.
+ *    that ran as the developer would run against their real hours. What buys
+ *    the isolation is the e2e build's own bundle identifier, and every launch
+ *    empties the directories that hang off it.
  * 2. **Which process is ours.** The developer's own TimeBuddy is in their tray
  *    while they work on this, so every native question is asked about the pid
  *    this file started and no other.
  */
 
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { connect } from "node:net";
 import { fileURLToPath } from "node:url";
@@ -36,6 +36,52 @@ export const APP_BINARY = join(REPO, "src-tauri", "target", "release", "TimeBudd
 
 /** How `Get-Process` and `taskkill` both name it. */
 const PROCESS_NAME = "TimeBuddy";
+
+/**
+ * The bundle identifier the e2e build carries, read from the overlay that
+ * gives it rather than repeated here — two copies of this string are two
+ * directories, and the one that gets emptied would sooner or later be the one
+ * nothing is written to.
+ */
+const E2E_IDENTIFIER = (
+  JSON.parse(
+    readFileSync(join(REPO, "src-tauri", "tauri.e2e.conf.json"), "utf8"),
+  ) as { identifier?: string }
+).identifier;
+
+/**
+ * Throws away everything the last launch left behind, so this one is an
+ * install that has never been run: no database, no account, no settings.
+ *
+ * Not done by pointing `%APPDATA%` at a temporary directory, which is the
+ * obvious thing and does not work. Tauri resolves the app's data directory
+ * with `SHGetKnownFolderPath`, and so does the WebView2 loader for its user
+ * data folder — neither reads the environment, so a launch given a scratch
+ * `%APPDATA%` opens the developer's real hours regardless and says nothing
+ * about it.
+ *
+ * What can be moved is the identifier those paths are built from, and
+ * `tauri.e2e.conf.json` moves it. Which makes these two directories the e2e
+ * build's alone, and emptying them safe: nothing but this suite has ever
+ * written to them. A Rust test fails if the identifiers are ever the same
+ * again.
+ *
+ * The WebView2 folder matters for its own reason. Two hosts sharing one share
+ * the browser process behind it, so a launch that joined a browser started
+ * without the debugging port would never open one — an app that looks for all
+ * the world like it ignored its own config.
+ */
+function emptyAppData() {
+  if (!E2E_IDENTIFIER) {
+    throw new Error("tauri.e2e.conf.json names no identifier of its own — see lib.rs");
+  }
+
+  for (const variable of ["APPDATA", "LOCALAPPDATA"]) {
+    const root = process.env[variable];
+    if (!root) throw new Error(`no %${variable}% to clear the e2e data out of`);
+    rmSync(join(root, E2E_IDENTIFIER), { recursive: true, force: true });
+  }
+}
 
 /**
  * The titlebar, which is the window's own chrome (ADR-0004) and the one
@@ -189,21 +235,14 @@ export async function launchApp(): Promise<LaunchedApp> {
     );
   }
 
-  // An empty %APPDATA% is an app that has never been run: no database, no
-  // account, no settings. Which is the state these tests want — the titlebar
-  // and the tray are there from the first frame, behind the lock screen.
-  //
-  // %LOCALAPPDATA% goes with it for a second reason: WebView2 keeps its user
-  // data folder there, and two hosts sharing one share the browser process
-  // behind it. A launch that joined a browser started without the debugging
-  // port would never open one, and would look for all the world like an app
-  // that simply ignored its own config.
-  const dataDir = mkdtempSync(join(tmpdir(), "timebuddy-e2e-"));
+  // An install that has never been run, which is the state these tests want:
+  // the titlebar and the tray are there from the first frame, in front of the
+  // first-run wizard.
+  emptyAppData();
 
   const app: ChildProcess = spawn(APP_BINARY, [], {
     stdio: "ignore",
     windowsHide: false,
-    env: { ...process.env, APPDATA: dataDir, LOCALAPPDATA: dataDir },
   });
   const processId = app.pid!;
 
@@ -222,7 +261,6 @@ export async function launchApp(): Promise<LaunchedApp> {
     if (browser) await browser.deleteSession().catch(() => {});
     killTree(processId);
     driver.kill();
-    rmSync(dataDir, { recursive: true, force: true });
 
     // The port is the one thing the next file cannot start without, and a
     // killed process gives it up on Windows' schedule rather than on ours.

@@ -1,5 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
+  "identifier": "com.renszandbergen.timebuddy.e2e",
   "app": {
     "windows": [
       {

@@ -276,6 +276,30 @@ mod tests {
         );
     }
 
+    /// The e2e build must not open the database the shipped one opens.
+    ///
+    /// Everything under `%APPDATA%` hangs off the bundle identifier, and so
+    /// does the WebView2 user data folder under `%LOCALAPPDATA%` — both by way
+    /// of `SHGetKnownFolderPath`, which is why neither can be moved by setting
+    /// an environment variable on the process the suite launches. The overlay
+    /// changes the identifier instead, and that is the whole of the isolation:
+    /// share it again and an e2e run walks the first-run wizard over somebody's
+    /// real hours.
+    #[test]
+    fn the_e2e_build_keeps_its_data_somewhere_else() {
+        let shipped = config()["identifier"].as_str().map(str::to_owned);
+        let e2e = e2e_config()["identifier"].as_str().map(str::to_owned);
+
+        assert!(
+            e2e.is_some(),
+            "tauri.e2e.conf.json must name an identifier of its own"
+        );
+        assert_ne!(
+            e2e, shipped,
+            "the e2e build shares the shipped identifier, which is the shipped database"
+        );
+    }
+
     /// Three files carry a version number and only one of them is the one the
     /// updater compares: `tauri.conf.json`'s. A release tagged off a
     /// `package.json` that was bumped alone would ship an installer that
