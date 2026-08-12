@@ -31,9 +31,8 @@ const bus = vi.hoisted(() => {
 });
 vi.mock("@tauri-apps/api/event", () => ({ listen: bus.listen }));
 
-const { useTray, TOGGLE_TIMER_EVENT, HIDDEN_TO_TRAY_EVENT } = await import(
-  "./use-tray"
-);
+const { useTray, TOGGLE_TIMER_EVENT, TOGGLE_PAUSE_EVENT, HIDDEN_TO_TRAY_EVENT } =
+  await import("./use-tray");
 
 const idle: RunningBlock = { block: null, now: "2026-08-05T12:00:00Z" };
 
@@ -49,16 +48,36 @@ const inFlight: RunningBlock = {
   now: "2026-08-05T12:10:00Z",
 };
 
+/** The same block, held five minutes in and read five minutes later. */
+const held: RunningBlock = {
+  block: { ...inFlight.block!, pausedAt: "2026-08-05T12:05:00Z" },
+  now: "2026-08-05T12:10:00Z",
+};
+
 function renderTray(
   running: RunningBlock = idle,
-  onToggle: () => void = vi.fn(),
-  language: "nl" | "en" = "en",
+  {
+    onToggle = vi.fn(),
+    onPause = vi.fn(),
+    language = "en",
+    orphaned = false,
+  }: {
+    onToggle?: () => void;
+    onPause?: () => void;
+    language?: "nl" | "en";
+    orphaned?: boolean;
+  } = {},
 ) {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <I18nextProvider i18n={createI18n(language)}>{children}</I18nextProvider>
   );
   return renderHook(
-    ({ block }: { block: RunningBlock }) => useTray(block, onToggle),
+    ({ block }: { block: RunningBlock }) =>
+      useTray(block, {
+        orphaned,
+        onToggleRequested: onToggle,
+        onPauseRequested: onPause,
+      }),
     { wrapper, initialProps: { block: running } },
   );
 }
@@ -84,14 +103,32 @@ describe("what the tray says", () => {
       expect(lastSync()).toMatchObject({
         show: "Show TimeBuddy",
         toggle: "Start timer",
+        pause: "Pause timer",
         quit: "Quit",
         tooltip: "TimeBuddy",
       }),
     );
   });
 
+  it("greys the Pause item while there is no block to hold", async () => {
+    renderTray();
+
+    await waitFor(() => expect(lastSync().pauseEnabled).toBe(false));
+  });
+
+  it("greys it for a block that is waiting on the recovery question", async () => {
+    // The menu never answers that question, in either direction — so there is
+    // nothing this item could do, and it says so rather than swallowing a click.
+    renderTray(inFlight, { orphaned: true });
+
+    await waitFor(() => expect(lastSync().pauseEnabled).toBe(false));
+    // The tooltip still counts: the block is real, and hiding it would be a
+    // second decision about a question that has not been answered.
+    expect(lastSync().tooltip).toBe("15 min left");
+  });
+
   it("says it in Dutch when the app is in Dutch", async () => {
-    renderTray(idle, vi.fn(), "nl");
+    renderTray(idle, { language: "nl" });
 
     await waitFor(() => expect(lastSync().quit).toBe("Afsluiten"));
   });
@@ -102,7 +139,24 @@ describe("what the tray says", () => {
     await waitFor(() =>
       expect(lastSync()).toMatchObject({
         toggle: "Stop timer",
+        pause: "Pause timer",
+        pauseEnabled: true,
         tooltip: "15 min left",
+      }),
+    );
+  });
+
+  it("offers to resume, and says paused, while a block is held", async () => {
+    renderTray(held);
+
+    await waitFor(() =>
+      expect(lastSync()).toMatchObject({
+        // Stop is still Stop: a held block is ended the same way a running one
+        // is, and it is the only item whose word does not change.
+        toggle: "Stop timer",
+        pause: "Resume timer",
+        pauseEnabled: true,
+        tooltip: "Paused — 20 min left",
       }),
     );
   });
@@ -145,7 +199,7 @@ describe("what the tray says", () => {
 describe("the Start/Stop menu item", () => {
   it("is heard on the event Rust emits", async () => {
     const onToggle = vi.fn();
-    renderTray(idle, onToggle);
+    renderTray(idle, { onToggle });
 
     await waitFor(() =>
       expect(bus.handlers.get(TOGGLE_TIMER_EVENT)?.size).toBe(1),
@@ -176,6 +230,35 @@ describe("the Start/Stop menu item", () => {
 
     await waitFor(() =>
       expect(bus.handlers.get(TOGGLE_TIMER_EVENT)?.size).toBe(0),
+    );
+  });
+});
+
+describe("the Pause menu item", () => {
+  it("is heard on the event Rust emits for it, not the Start/Stop one", async () => {
+    const onToggle = vi.fn();
+    const onPause = vi.fn();
+    renderTray(inFlight, { onToggle, onPause });
+
+    await waitFor(() =>
+      expect(bus.handlers.get(TOGGLE_PAUSE_EVENT)?.size).toBe(1),
+    );
+    bus.fire(TOGGLE_PAUSE_EVENT);
+
+    expect(onPause).toHaveBeenCalledTimes(1);
+    expect(onToggle).not.toHaveBeenCalled();
+  });
+
+  it("is let go of when the window's chrome goes", async () => {
+    const { unmount } = renderTray();
+    await waitFor(() =>
+      expect(bus.handlers.get(TOGGLE_PAUSE_EVENT)?.size).toBe(1),
+    );
+
+    unmount();
+
+    await waitFor(() =>
+      expect(bus.handlers.get(TOGGLE_PAUSE_EVENT)?.size).toBe(0),
     );
   });
 });

@@ -20,11 +20,18 @@ import type { RunningBlock } from "../timer/lifecycle";
 import { explainHiddenToTray } from "./hidden-notice";
 
 /**
- * The tray's Start/Stop item, on its way to the Timer screen. Rust emits both
- * of these, and asserts the strings against this file from its own tests — so
- * a rename on one side alone fails the suite rather than the menu.
+ * The tray's Start/Stop item, on its way to the block's lifecycle. Rust emits
+ * every one of these, and asserts the strings against this file from its own
+ * tests — so a rename on one side alone fails the suite rather than the menu.
  */
 export const TOGGLE_TIMER_EVENT = "tray://toggle-timer";
+
+/**
+ * The tray's Pause/Resume item. A second event rather than a second meaning for
+ * the first one: Stop and Pause are both offered while a block runs, so the two
+ * have to be told apart by which item was pressed.
+ */
+export const TOGGLE_PAUSE_EVENT = "tray://toggle-pause";
 
 /** The window has just gone into the tray, by whichever route. */
 export const HIDDEN_TO_TRAY_EVENT = "tray://hidden";
@@ -79,22 +86,43 @@ function useTauriEvent(name: string, handler: () => void): void {
 
 export function useTray(
   { block, now }: RunningBlock,
-  onToggleRequested: () => void,
+  {
+    orphaned,
+    onToggleRequested,
+    onPauseRequested,
+  }: {
+    /**
+     * Whether the block in flight is one a death left behind. It is not held or
+     * let go from here — that is a question, and the menu does not answer it —
+     * so as far as the Pause item is concerned there is nothing to hold.
+     */
+    orphaned: boolean;
+    onToggleRequested: () => void;
+    onPauseRequested: () => void;
+  },
 ): void {
   const { t } = useTranslation();
 
   const minutesLeft = block
     ? Math.ceil(remainingSeconds(block, now) / SECONDS_PER_MINUTE)
     : null;
+  const held = block !== null && isPaused(block);
 
   const labels: TrayLabels = {
     show: t("tray.show"),
     toggle: block ? t("tray.stop") : t("tray.start"),
+    pause: held ? t("tray.resume") : t("tray.pause"),
+    // Greyed rather than absent while there is nothing to hold: an item that
+    // comes and goes moves the ones under it, and Quit is the one that must
+    // always be where it was last time (ADR-0004). Greyed rather than merely
+    // inert, too — a click that does nothing reads as a bug, which is why the
+    // block awaiting the recovery question counts as nothing to hold.
+    pauseEnabled: block !== null && !orphaned,
     quit: t("tray.quit"),
     tooltip:
       minutesLeft === null
         ? t("app.name")
-        : block !== null && isPaused(block)
+        : held
           ? t("tray.paused", { minutes: minutesLeft })
           : t("tray.remaining", { minutes: minutesLeft }),
   };
@@ -121,6 +149,8 @@ export function useTray(
   });
 
   useTauriEvent(TOGGLE_TIMER_EVENT, onToggleRequested);
+
+  useTauriEvent(TOGGLE_PAUSE_EVENT, onPauseRequested);
 
   useTauriEvent(HIDDEN_TO_TRAY_EVENT, () => {
     void explainHiddenToTray({

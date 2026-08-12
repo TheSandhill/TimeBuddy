@@ -28,9 +28,12 @@ vi.mock("../timer/notify", () => notify);
 const { Timer } = await import("./timer");
 const { TimerLifecycleProvider } = await import("../timer/lifecycle");
 const { UNDO_WINDOW_MS } = await import("../entries/use-undoable-delete");
-const { clearTimerToggle, requestTimerToggle } = await import(
-  "../tray/toggle-request"
-);
+const {
+  clearTimerPause,
+  clearTimerToggle,
+  requestTimerPause,
+  requestTimerToggle,
+} = await import("../tray/toggle-request");
 
 const settings: Settings = {
   theme: "walnut",
@@ -103,6 +106,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.useFakeTimers({ shouldAdvanceTime: true });
   clearTimerToggle();
+  clearTimerPause();
   commands.getSettings.mockResolvedValue(settings);
   commands.listProjects.mockResolvedValue([website]);
   commands.listTimeEntries.mockResolvedValue([]);
@@ -667,6 +671,69 @@ describe("pausing a block", () => {
         expect.objectContaining({ durationMinutes: 10 }),
       ),
     );
+  });
+
+  describe("from the tray menu", () => {
+    /** The Pause item, which reaches the lifecycle through a latch of its own. */
+    const clickMenuItem = () => act(() => requestTimerPause());
+
+    it("holds the block, as the big button would", async () => {
+      withRow();
+      renderTimer();
+      await clickStart();
+      await screen.findByRole("button", { name: "Pauzeer" });
+
+      clickMenuItem();
+
+      await waitFor(() => expect(held()).not.toBeNull());
+      expect(commands.pauseRunningTimer).toHaveBeenCalledTimes(1);
+    });
+
+    it("lets a held block carry on again", async () => {
+      await startAndPause();
+
+      clickMenuItem();
+
+      await waitFor(() => expect(held()).toBeNull());
+      expect(commands.resumeRunningTimer).toHaveBeenCalledTimes(1);
+    });
+
+    it("does nothing at all while no block is in flight", async () => {
+      renderTimer();
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: "Start" })).toBeEnabled(),
+      );
+
+      clickMenuItem();
+
+      expect(commands.pauseRunningTimer).not.toHaveBeenCalled();
+      expect(commands.startRunningTimer).not.toHaveBeenCalled();
+    });
+
+    it("leaves a block found on launch to the prompt to decide", async () => {
+      // The recovery question has two answers and holding is neither: resuming
+      // one would vouch for minutes nobody watched.
+      commands.getRunningTimer.mockResolvedValue(inFlight(10));
+      renderTimer();
+      await screen.findByText("Er liep nog een blok");
+
+      clickMenuItem();
+
+      expect(commands.pauseRunningTimer).not.toHaveBeenCalled();
+    });
+
+    it("never ends the block it was asked to hold", async () => {
+      withRow();
+      renderTimer();
+      await clickStart();
+      await screen.findByRole("button", { name: "Pauzeer" });
+
+      clickMenuItem();
+      await act(() => vi.advanceTimersByTimeAsync(UNDO_WINDOW_MS + 100));
+
+      expect(commands.stopRunningTimer).not.toHaveBeenCalled();
+      expect(commands.discardRunningTimer).not.toHaveBeenCalled();
+    });
   });
 });
 

@@ -38,6 +38,12 @@ export interface TrayIcon {
 /** One line of the menu the icon opens, and where a click on it lands. */
 export interface TrayMenuItem {
   name: string;
+  /**
+   * Whether Windows would accept a click on it, read out of the `HMENU` rather
+   * than from anything the app says. The Pause item is greyed while no block is
+   * in flight, and greyed is the only honest way to say so.
+   */
+  enabled: boolean;
   x: number;
   y: number;
 }
@@ -51,7 +57,8 @@ export interface TrayMenuItem {
  */
 export const SHOW_ITEM = 0;
 export const TOGGLE_ITEM = 1;
-export const QUIT_ITEM = 2;
+export const PAUSE_ITEM = 2;
+export const QUIT_ITEM = 3;
 
 function powershell(args: string[]): string {
   return execFileSync(

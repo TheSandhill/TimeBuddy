@@ -1,66 +1,85 @@
 /**
- * A start/stop asked for from the tray, held until the Timer screen can act.
+ * What was asked of the block from the tray, held until something can act on it.
  *
- * The tray menu is reachable from every screen, but only the Timer screen
- * knows what stopping a block is worth. So the request is latched here, the
- * shell navigates to the Timer, and the Timer picks the request up when it
- * mounts — which is usually a beat after it was made.
+ * The tray menu is reachable from every screen, and what it asks for is answered
+ * by the block's lifecycle above all of them (ADR-0010) rather than by whichever
+ * screen happens to be mounted. Start/Stop is latched all the same, because the
+ * shell still navigates to the Timer on its way — and an event fired at a
+ * listener that has just been remounted is an event nobody hears.
  *
- * A latch rather than a plain event, precisely because of that beat: an event
- * fired at a screen that is not mounted yet is an event nobody hears.
+ * Pause goes through a latch of its own rather than sharing that one. Both are
+ * offered while a block runs, so a single pending flag could not say which item
+ * was pressed.
  */
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
 
 /**
- * How many requests have been made, or `0` for "nothing pending". A count
- * rather than an instant: it only ever has to differ from the last one, and
- * two clicks inside the same millisecond would not.
- */
-let pending = 0;
-const listeners = new Set<() => void>();
-
-function announce() {
-  for (const listener of listeners) {
-    listener();
-  }
-}
-
-export function requestTimerToggle(): void {
-  pending += 1;
-  announce();
-}
-
-/** Drops the outstanding request without acting on it. */
-export function clearTimerToggle(): void {
-  pending = 0;
-  announce();
-}
-
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-const snapshot = () => pending;
-
-/**
- * Runs `toggle` once per request, then clears it.
+ * One request outstanding, or none.
  *
- * `toggle` is deliberately not a dependency of the effect: acting is tied to a
- * request arriving, not to the handler being rebuilt — and it is rebuilt on
- * every tick of the countdown.
+ * Counted rather than stamped: it only ever has to differ from the last one it
+ * was read at, and two clicks inside the same millisecond would not.
  */
-export function useTimerToggle(toggle: () => void): void {
-  const pending = useSyncExternalStore(subscribe, snapshot, snapshot);
-  const latest = useRef(toggle);
-  latest.current = toggle;
+function latch() {
+  let pending = 0;
+  const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    if (pending === 0) {
-      return;
+  const announce = () => {
+    for (const listener of listeners) {
+      listener();
     }
-    clearTimerToggle();
-    latest.current();
-  }, [pending]);
+  };
+
+  const request = () => {
+    pending += 1;
+    announce();
+  };
+
+  const clear = () => {
+    pending = 0;
+    announce();
+  };
+
+  const subscribe = (listener: () => void) => {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  };
+
+  const snapshot = () => pending;
+
+  /**
+   * Runs `answer` once per request, then clears it.
+   *
+   * `answer` is deliberately not a dependency of the effect: acting is tied to a
+   * request arriving, not to the handler being rebuilt — and it is rebuilt on
+   * every tick of the countdown.
+   */
+  const use = (answer: () => void) => {
+    const pending = useSyncExternalStore(subscribe, snapshot, snapshot);
+    const latest = useRef(answer);
+    latest.current = answer;
+
+    useEffect(() => {
+      if (pending === 0) {
+        return;
+      }
+      clear();
+      latest.current();
+    }, [pending]);
+  };
+
+  return { request, clear, use };
 }
+
+const toggle = latch();
+const hold = latch();
+
+export const requestTimerToggle = toggle.request;
+/** Drops the outstanding request without acting on it. */
+export const clearTimerToggle = toggle.clear;
+export const useTimerToggle = toggle.use;
+
+/** The Pause/Resume item, which needs no screen and so no navigation. */
+export const requestTimerPause = hold.request;
+export const clearTimerPause = hold.clear;
+export const useTimerPause = hold.use;

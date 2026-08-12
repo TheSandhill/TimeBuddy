@@ -95,6 +95,9 @@ public static extern int GetMenuStringW(IntPtr menu, uint item, System.Text.Stri
 [DllImport("user32.dll")]
 public static extern bool GetMenuItemRect(IntPtr hWnd, IntPtr menu, uint item, out RECT rect);
 
+[DllImport("user32.dll")]
+public static extern uint GetMenuState(IntPtr menu, uint item, uint flags);
+
 /// GA_ROOT — the point lands on an inner host window, and what is wanted is
 /// the top-level one it belongs to.
 public const uint GA_ROOT = 2;
@@ -107,6 +110,12 @@ public const uint MN_GETHMENU = 0x01E1;
 /// MF_BYPOSITION — items are addressed top to bottom rather than by the
 /// command ids `muda` assigns, which are its own business.
 public const uint MF_BYPOSITION = 0x0400;
+
+/// MF_GRAYED / MF_DISABLED — a greyed item, which is what the Pause entry is
+/// while no block is in flight. Both bits are checked: which of the two an item
+/// carries is the menu builder's business, and neither can be clicked.
+public const uint MF_GRAYED = 0x0001;
+public const uint MF_DISABLED = 0x0002;
 
 public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
 public const uint MOUSEEVENTF_LEFTUP = 0x0004;
@@ -409,10 +418,14 @@ function Open-Menu([string]$runtimeId) {
     $bounds = New-Object TimeBuddyTray.Win32+RECT
     [void][TimeBuddyTray.Win32]::GetMenuItemRect($window, $menu, [uint32]$position, [ref]$bounds)
 
+    $state = [TimeBuddyTray.Win32]::GetMenuState($menu, [uint32]$position, [TimeBuddyTray.Win32]::MF_BYPOSITION)
+    $greyed = ($state -band ([TimeBuddyTray.Win32]::MF_GRAYED -bor [TimeBuddyTray.Win32]::MF_DISABLED)) -ne 0
+
     [void]$items.Add([pscustomobject]@{
-      name = $text.ToString()
-      x    = [int](($bounds.Left + $bounds.Right) / 2)
-      y    = [int](($bounds.Top + $bounds.Bottom) / 2)
+      name    = $text.ToString()
+      enabled = (-not $greyed)
+      x       = [int](($bounds.Left + $bounds.Right) / 2)
+      y       = [int](($bounds.Top + $bounds.Bottom) / 2)
     })
   }
 
