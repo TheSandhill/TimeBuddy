@@ -45,6 +45,16 @@ A TimeEntry **is** hard-deletable, behind a 5-second undo.
 A timed working interval — default 25 minutes, configurable — that stops itself. The user restarts
 it deliberately, which is the point: a timer that ends on its own can't be left running overnight.
 
+Its length is offered as four **presets** on the Timer screen — 15, 25, 45, 60 — because "a
+quarter of an hour, now" should not be a trip to Settings. Picking one saves it as the block length
+from then on; there is no one-off override. A fixed four, not an editable set: an editable one would
+need somewhere of its own to live, and being quicker than the screen that already exists is the whole
+reason these are here.
+
+A block's length is **frozen when it starts**. Raising the default — from either screen — must never
+move the finish line of a block already under way, so the presets go dead while one is running rather
+than change something the user cannot see.
+
 A completed block logs its full length. A block stopped early logs the **actual elapsed time**,
 never the nominal length.
 
@@ -259,8 +269,13 @@ The single row every preference lives in — theme, "follow system", language, P
 length, the chime and OS-notification toggles, autostart, and the backup folder. Created by the
 migration, never absent, so reading it can never miss.
 
-It is edited on one screen and **saved as a unit**. A partial update would only invite
-half-applied states, so there is one Save and one `UPDATE`.
+It is **saved as a unit**. A partial update would only invite half-applied states, so there is one
+`UPDATE` and the whole row goes back with it.
+
+The Settings screen is where it is *edited*, but not the only screen that writes it: the Timer's
+duration presets save `pomodoro_minutes` the same way, by sending the whole row with that one field
+different. Which is the point — a preset is not a second place a block length can live, so the dial
+and the number on the Settings screen cannot come to disagree.
 
 A blank backup folder is stored as **absent**, not as `""`, and absent means `backups` under the
 app's own data directory — a path resolved at runtime rather than frozen into a row on whichever

@@ -21,7 +21,18 @@ import {
   secondsUntil,
 } from "../timer/block";
 import { currentInstant, localDay, SECONDS_PER_MINUTE } from "../timer/clock";
-import { useTimerLifecycle } from "../timer/lifecycle";
+import { useTimerLifecycle, type TimerFault } from "../timer/lifecycle";
+import { DurationPresets } from "../components/duration-presets";
+
+/**
+ * One alert slot, two things that can have gone wrong in it. A length that
+ * would not save is not the same news as a block that would not log, and
+ * saying "that did not work" for both would leave the user guessing which.
+ */
+const faultMessages = {
+  block: "timer.failed",
+  blockLength: "timer.presetFailed",
+} as const satisfies Record<TimerFault, string>;
 
 export function Timer() {
   const { t } = useTranslation();
@@ -33,7 +44,8 @@ export function Timer() {
     projectId,
     chooseProject,
     plannedMinutes,
-    failed,
+    chooseLength,
+    fault,
     busy,
     canStart,
     start,
@@ -69,9 +81,9 @@ export function Timer() {
 
   return (
     <section className="flex flex-col gap-10">
-      {failed ? (
+      {fault !== null ? (
         <p role="alert" className="text-sm text-danger">
-          {t("timer.failed")}
+          {t(faultMessages[fault])}
         </p>
       ) : null}
 
@@ -98,6 +110,23 @@ export function Timer() {
               canStart={canStart}
               onStart={start}
               onStop={stop}
+            />
+
+            {/*
+             * Between the dial and the picker, so the screen reads countdown →
+             * how long → what for. It also puts the two controls that go dead
+             * while a block runs next to each other, which makes that one rule
+             * rather than two coincidences.
+             */}
+            {/*
+             * Dead until the settings row has arrived: the new length is that
+             * row with one field changed, so there is nothing to change yet —
+             * and none of the four could be shown as the one in force either.
+             */}
+            <DurationPresets
+              value={plannedMinutes}
+              onChange={chooseLength}
+              disabled={block !== null || busy || plannedMinutes === 0}
             />
 
             <ProjectPicker

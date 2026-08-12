@@ -32,8 +32,9 @@ import {
   listProjects,
   startRunningTimer,
   stopRunningTimer,
+  updateSettings,
 } from "../data/commands";
-import { useSettings } from "../data/use-settings";
+import { settingsKey, useSettings } from "../data/use-settings";
 import type { Instant, RunningTimer, StopTimer } from "../data/types";
 import { useTimerToggle } from "../tray/toggle-request";
 import { outcomeAt, type BlockOutcome } from "./block";
@@ -56,6 +57,9 @@ export interface RunningBlock {
   now: Instant;
 }
 
+/** What failed to be written. Each has its own sentence on the screen. */
+export type TimerFault = "block" | "blockLength";
+
 export interface TimerLifecycle extends RunningBlock {
   /**
    * What an Orphaned Block is worth, frozen at the instant it was found — or
@@ -70,8 +74,19 @@ export interface TimerLifecycle extends RunningBlock {
   chooseProject: (id: number) => void;
   /** The nominal length a block started now would have. */
   plannedMinutes: number;
-  /** A write did not land. The block, if any, is deliberately left in flight. */
-  failed: boolean;
+  /**
+   * Changes the length the next block will run for, by saving it. There is no
+   * one-off override: the dial and the number on the Settings screen are the
+   * same number, and two of them could disagree.
+   */
+  chooseLength: (minutes: number) => void;
+  /**
+   * Which write did not land, or `null`. Named rather than boolean because the
+   * two say different things: a block that could not be logged is work at risk,
+   * and a length that could not be saved is only the next block being wrong.
+   * The block, if any, is deliberately left in flight either way.
+   */
+  fault: TimerFault | null;
   /** A write is in flight, so nothing should be asked of the block yet. */
   busy: boolean;
   canStart: boolean;
@@ -132,7 +147,7 @@ export function TimerLifecycleProvider({
 
   const [projectId, setProjectId] = useState<number | null>(null);
   const [breakEndsAt, setBreakEndsAt] = useState<Instant | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [fault, setFault] = useState<TimerFault | null>(null);
 
   /**
    * Whether the block in flight is one this *process* started.
@@ -197,10 +212,10 @@ export function TimerLifecycleProvider({
     onSuccess: () => {
       startedHere.current = true;
       setBreakEndsAt(null);
-      setFailed(false);
+      setFault(null);
       return refresh();
     },
-    onError: () => setFailed(true),
+    onError: () => setFault("block"),
   });
 
   // A failed write leaves the block in flight on purpose. Clearing the guard
@@ -208,13 +223,13 @@ export function TimerLifecycleProvider({
   // a block nothing will ever offer back.
   const writeFailed = () => {
     finishing.current = false;
-    setFailed(true);
+    setFault("block");
   };
 
   const stopBlock = useMutation({
     mutationFn: (ending: StopTimer) => stopRunningTimer(ending),
     onSuccess: () => {
-      setFailed(false);
+      setFault(null);
       return refresh();
     },
     onError: writeFailed,
@@ -223,10 +238,34 @@ export function TimerLifecycleProvider({
   const discardBlock = useMutation({
     mutationFn: discardRunningTimer,
     onSuccess: () => {
-      setFailed(false);
+      setFault(null);
       return refresh();
     },
     onError: writeFailed,
+  });
+
+  /**
+   * Saves a new block length.
+   *
+   * The whole settings row goes back, as it always does — the Settings screen's
+   * one Save and one `UPDATE` is preserved, and this is that same write with one
+   * field different rather than a second place a duration can live. Which is why
+   * the dial can never disagree with the number on that screen.
+   */
+  const saveLength = useMutation({
+    mutationFn: (minutes: number) => {
+      const current = settings.data;
+      if (!current) {
+        throw new Error("no settings row to change");
+      }
+      return updateSettings({ ...current, pomodoroMinutes: minutes });
+    },
+    onSuccess: async (saved) => {
+      setFault(null);
+      queryClient.setQueryData(settingsKey, saved);
+      await queryClient.invalidateQueries({ queryKey: settingsKey });
+    },
+    onError: () => setFault("blockLength"),
   });
 
   /** Turns an outcome into either a logged entry or nothing at all. */
@@ -319,7 +358,14 @@ export function TimerLifecycleProvider({
     projectId,
     chooseProject: setProjectId,
     plannedMinutes,
-    failed,
+    // A block already under way keeps the length it started with, so there is
+    // nothing for this to do while one is running.
+    chooseLength: (minutes: number) => {
+      if (block === null) {
+        saveLength.mutate(minutes);
+      }
+    },
+    fault,
     busy,
     canStart,
     start: () => {
