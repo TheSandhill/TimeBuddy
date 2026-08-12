@@ -58,11 +58,12 @@ WebDriver and no desktop, and must keep needing none of them.
 The regression that prompted this is now caught: with `core:window:allow-start-dragging` removed, the
 drag test fails and everything else still passes.
 
-**The tray menu is still not covered.** Clicking Start/Stop on the icon means finding a tray icon's
-screen rect and driving a native menu — WebDriver cannot see the notification area, and Windows 11
-put the icons behind an overflow flyout that only UI Automation reaches. That is a different harness,
-and it is #43 rather than a gap this ADR pretends to close. What the icon's *presence* is
-covered by is implication: `hide_to_tray` refuses to hide when there is no tray, so a window that hid
+**The tray menu was not covered by this.** Clicking Start/Stop on the icon means finding a tray
+icon's screen rect and driving a native menu — WebDriver cannot see the notification area, and
+Windows 11 put the icons behind an overflow flyout that only UI Automation reaches. That was a
+different harness, and it was #43 rather than a gap this ADR pretended to close. It has since been
+built, alongside this one rather than inside it: ADR-0013. What the icon's *presence* is covered by
+here remains implication: `hide_to_tray` refuses to hide when there is no tray, so a window that hid
 with the process still alive had one.
 
 The suite is slow — a release build, then an app launch per file — so it is a CI job of its own,

@@ -12,7 +12,8 @@
  * when `tray_by_id` finds nothing, and a refused hide is a close that closes.
  * So a window that is hidden with the process still alive is a window with a
  * tray behind it — the two are the same fact. What this does *not* cover is
- * the menu on that icon; see `e2e/README.md`.
+ * the menu on that icon, which is `tray-menu.e2e.ts` and a harness of its own
+ * (ADR-0013).
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";

@@ -80,16 +80,27 @@ export function dragMouse(
   ]);
 }
 
-/** Polls until `read` returns something truthy, or gives up saying what it wanted. */
+/** Something read either straight away or a round trip later. */
+type Awaitable<T> = T | Promise<T>;
+
+/**
+ * Polls until `read` returns something truthy, or gives up saying what it
+ * wanted.
+ *
+ * The reading may be asynchronous — some of what is waited for is behind
+ * WebDriver — and is awaited before it is judged. A promise is truthy, so a
+ * condition that was merely returned rather than awaited would be met on the
+ * first attempt whatever it said.
+ */
 export async function waitFor<T>(
   what: string,
-  read: () => T | null | undefined | false,
+  read: () => Awaitable<T | null | undefined | false>,
   { timeout = 10_000, interval = 250 } = {},
 ): Promise<T> {
   const deadline = Date.now() + timeout;
 
   for (;;) {
-    const value = read();
+    const value = await read();
     if (value) return value;
     if (Date.now() > deadline) throw new Error(`timed out waiting for ${what}`);
     await new Promise((resolve) => setTimeout(resolve, interval));
