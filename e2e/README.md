@@ -19,8 +19,13 @@ npm run test:e2e
 Needs, on Windows:
 
 - **msedgedriver**, matching the installed **WebView2 runtime** version — not
-  the Edge version, though they usually agree. Put it on the `PATH` or point
-  `MSEDGEDRIVER` at it.
+  the Edge version, and not whichever msedgedriver happens to be lying around:
+  a driver a major ahead refuses the session instead of driving the app, which
+  is how CI first failed. The runtime's own version is in the registry, under
+  `HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}`,
+  and drivers are at `https://msedgedriver.microsoft.com/<version>/edgedriver_win64.zip`.
+  Put it on the `PATH` or point `MSEDGEDRIVER` at it. The CI job does exactly
+  this, in `.github/workflows/e2e.yml`.
 - **A desktop that is logged in and unlocked.** The drag test moves the real
   mouse pointer, because nothing else moves a window (below). Do not type
   during a run.
@@ -83,7 +88,7 @@ the third test #33 asked for, and it is not here. Reaching it means finding a
 tray icon's screen rect and right-clicking it: WebDriver cannot see the
 notification area at all, and Windows 11 moved the icons behind an overflow
 flyout that has to be driven through UI Automation. That is a different
-harness, not another test in this one, and it is still owed.
+harness, not another test in this one — #43.
 
 What is asserted instead, in unit tests, is that both halves agree on the
 event: `src-tauri/src/tray.rs` reads `src/tray/use-tray.ts` and fails if the

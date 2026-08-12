@@ -40,16 +40,42 @@ jobs:
       # port to attach to.
       - run: npm run e2e:build
 
-      # msedgedriver is preinstalled, at the version matching the runner's own
-      # WebView2 — downloading one would sooner or later fetch a mismatched
-      # one. `EDGEWEBDRIVER` is a machine variable of the image, so it is read
-      # from the shell rather than from the `env` context, which only ever
-      # holds what the workflow itself set.
-      - name: Run the e2e suite
+      # The driver has to match the **WebView2 runtime**, which is not the same
+      # thing as Edge and, on this image, not the same thing as the
+      # preinstalled msedgedriver either: that one is a major ahead, and it
+      # refuses the session rather than driving the app.
+      #
+      # So the runtime is asked what version it is — its own registry key is
+      # the only side that knows — and the driver for that major is fetched.
+      # Exact build first; the major's latest if that build was never
+      # published, which is enough, because the version check is on the major.
+      - name: Fetch the msedgedriver the runtime matches
         shell: pwsh
         run: |
-          $env:MSEDGEDRIVER = "$env:EDGEWEBDRIVER\msedgedriver.exe"
-          npm run test:e2e
+          $key = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
+          $runtime = (Get-ItemProperty $key).pv
+          $major = $runtime.Split('.')[0]
+          Write-Host "WebView2 runtime is $runtime"
+
+          $dir = Join-Path $env:RUNNER_TEMP 'msedgedriver'
+          $zip = Join-Path $env:RUNNER_TEMP 'msedgedriver.zip'
+
+          $version = $runtime
+          try {
+            Invoke-WebRequest "https://msedgedriver.microsoft.com/$version/edgedriver_win64.zip" -OutFile $zip -UseBasicParsing
+          } catch {
+            # The published version strings are UTF-16 with a BOM, hence the strip.
+            $latest = (Invoke-WebRequest "https://msedgedriver.microsoft.com/LATEST_RELEASE_${major}_WINDOWS" -UseBasicParsing).Content
+            $version = ($latest -replace '[^\d\.]', '')
+            Write-Host "no driver for $runtime; using $version"
+            Invoke-WebRequest "https://msedgedriver.microsoft.com/$version/edgedriver_win64.zip" -OutFile $zip -UseBasicParsing
+          }
+
+          Expand-Archive -Path $zip -DestinationPath $dir -Force
+          "MSEDGEDRIVER=$dir\msedgedriver.exe" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Run the e2e suite
+        run: npm run test:e2e
 
       # A failed drag or a failed hide is a window that did something other
       # than what was asked, and there is nothing in a stack trace that says

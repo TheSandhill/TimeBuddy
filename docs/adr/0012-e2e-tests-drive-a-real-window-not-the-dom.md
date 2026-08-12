@@ -61,7 +61,7 @@ drag test fails and everything else still passes.
 **The tray menu is still not covered.** Clicking Start/Stop on the icon means finding a tray icon's
 screen rect and driving a native menu — WebDriver cannot see the notification area, and Windows 11
 put the icons behind an overflow flyout that only UI Automation reaches. That is a different harness,
-and it is still owed rather than a gap this ADR pretends to close. What the icon's *presence* is
+and it is #43 rather than a gap this ADR pretends to close. What the icon's *presence* is
 covered by is implication: `hide_to_tray` refuses to hide when there is no tray, so a window that hid
 with the process still alive had one.
 
