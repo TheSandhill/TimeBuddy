@@ -91,6 +91,64 @@ async function waitUntilListening(port: number, what: string, timeout = 30_000) 
   }
 }
 
+/** The page the app serves itself from. Anything else is not the app. */
+const APP_URL = "http://tauri.localhost/";
+
+/**
+ * Waits until the app's own page exists, and answers what is there instead.
+ *
+ * A webview that is listening is not yet a webview showing the app: WebView2
+ * opens with a blank target and creates the page a moment later. Attaching in
+ * that moment binds the session to the blank one for good — the app renders,
+ * and the driver goes on looking at `about:blank` until every selector has
+ * timed out. That is a slow machine's failure, so it appears in CI and not on
+ * the desk of whoever wrote the test.
+ */
+async function waitForAppPage(timeout = 30_000): Promise<void> {
+  const deadline = Date.now() + timeout;
+  let seen = "nothing at all";
+
+  for (;;) {
+    try {
+      const targets = (await (
+        await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/list`)
+      ).json()) as { type: string; url: string }[];
+
+      if (targets.some((target) => target.url.startsWith(APP_URL))) return;
+      seen = targets.map((target) => `${target.type} ${target.url}`).join(", ");
+    } catch {
+      // The port is up but the endpoint is not answering yet.
+    }
+
+    if (Date.now() > deadline) {
+      throw new Error(`the app never opened ${APP_URL} — the webview has ${seen}`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+}
+
+/**
+ * Puts the app back in the webview the session just blanked.
+ *
+ * Starting a session navigates the page it attached to — the same CDP target
+ * comes back `about:blank`, app and all. Whether that matters was a race, and
+ * the race was being won: attach before the app has loaded and it loads
+ * afterwards over the top; attach after, and the app is what gets thrown away.
+ * A slower machine picks the second, which is why CI failed on a suite that
+ * had passed here a dozen times.
+ *
+ * So the page is navigated back deliberately rather than hoped for. The app
+ * reloads from nothing, which is the state these tests wanted anyway.
+ */
+async function reloadApp(browser: Browser): Promise<void> {
+  await browser.url(APP_URL);
+
+  const url = await browser.getUrl();
+  if (!url.startsWith(APP_URL)) {
+    throw new Error(`the webview is showing ${url} rather than ${APP_URL}`);
+  }
+}
+
 /**
  * Kills a process and everything it started.
  *
@@ -165,12 +223,21 @@ export async function launchApp(): Promise<LaunchedApp> {
     killTree(processId);
     driver.kill();
     rmSync(dataDir, { recursive: true, force: true });
+
+    // The port is the one thing the next file cannot start without, and a
+    // killed process gives it up on Windows' schedule rather than on ours.
+    const deadline = Date.now() + 10_000;
+    while ((await listening(DEBUG_PORT)) && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
   };
 
   try {
-    // The window before the driver: attaching to a webview that has not been
-    // created yet is the failure this whole file exists because of.
+    // The app's own page before the driver, not merely the port: attaching to
+    // a webview that has not put the app in it yet binds the session to a
+    // blank page it never leaves.
     await waitUntilListening(DEBUG_PORT, "the app's webview");
+    await waitForAppPage();
     await waitUntilListening(DRIVER_PORT, "msedgedriver");
 
     browser = await remote({
@@ -189,6 +256,8 @@ export async function launchApp(): Promise<LaunchedApp> {
       () => listWindows(PROCESS_NAME).windows.find((w) => w.processId === processId),
       { timeout: 30_000 },
     );
+
+    await reloadApp(browser);
 
     // The frame, not a screen: it is what every test presses or reads, and it
     // is up behind the lock screen as much as behind an unlocked app.
