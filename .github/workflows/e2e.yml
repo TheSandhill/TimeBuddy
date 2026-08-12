@@ -1,0 +1,98 @@
+# The tests that need a window, a webview and a desktop (#33).
+#
+# A job of its own rather than steps on another, because it is the slow one: a
+# release build of the Rust side plus a real app launch per test file. The unit
+# suite stays what a push waits for.
+#
+# Windows-only, which costs nothing — TimeBuddy is Windows-only.
+name: e2e
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # The drag test drives the real mouse pointer, so a run that misbehaves is
+  # worth being able to start by hand rather than by pushing.
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: ./src-tauri -> target
+
+      - run: npm ci
+
+      # A release build with a debugging port on the webview (ADR-0012). Not
+      # the binary a tag ships, and deliberately so: the shipped one has no
+      # port to attach to.
+      - run: npm run e2e:build
+
+      # The driver has to match the **WebView2 runtime**, which is not the same
+      # thing as Edge and, on this image, not the same thing as the
+      # preinstalled msedgedriver either: that one is a major ahead, and it
+      # refuses the session rather than driving the app.
+      #
+      # So the runtime is asked what version it is — its own registry key is
+      # the only side that knows — and the driver for that major is fetched.
+      # Exact build first; the major's latest if that build was never
+      # published, which is enough, because the version check is on the major.
+      - name: Fetch the msedgedriver the runtime matches
+        shell: pwsh
+        run: |
+          $key = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
+          $runtime = (Get-ItemProperty $key).pv
+          $major = $runtime.Split('.')[0]
+          Write-Host "WebView2 runtime is $runtime"
+
+          $dir = Join-Path $env:RUNNER_TEMP 'msedgedriver'
+          $zip = Join-Path $env:RUNNER_TEMP 'msedgedriver.zip'
+
+          $version = $runtime
+          try {
+            Invoke-WebRequest "https://msedgedriver.microsoft.com/$version/edgedriver_win64.zip" -OutFile $zip -UseBasicParsing
+          } catch {
+            # The published version strings are UTF-16 with a BOM, hence the strip.
+            $latest = (Invoke-WebRequest "https://msedgedriver.microsoft.com/LATEST_RELEASE_${major}_WINDOWS" -UseBasicParsing).Content
+            $version = ($latest -replace '[^\d\.]', '')
+            Write-Host "no driver for $runtime; using $version"
+            Invoke-WebRequest "https://msedgedriver.microsoft.com/$version/edgedriver_win64.zip" -OutFile $zip -UseBasicParsing
+          }
+
+          Expand-Archive -Path $zip -DestinationPath $dir -Force
+          "MSEDGEDRIVER=$dir\msedgedriver.exe" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Run the e2e suite
+        run: npm run test:e2e
+
+      # A failed drag or a failed hide is a window that did something other
+      # than what was asked, and there is nothing in a stack trace that says
+      # what. This is the only look anyone gets at a headless run.
+      - name: Screenshot the desktop if something failed
+        if: failure()
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $bitmap = New-Object System.Drawing.Bitmap $screen.Width, $screen.Height
+          $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+          $graphics.CopyFromScreen($screen.Location, [System.Drawing.Point]::Empty, $screen.Size)
+          $bitmap.Save("$env:GITHUB_WORKSPACE\e2e-failure.png")
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-failure
+          path: e2e-failure.png
