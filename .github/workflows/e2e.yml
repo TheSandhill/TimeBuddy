@@ -75,12 +75,10 @@ jobs:
           "MSEDGEDRIVER=$dir\msedgedriver.exe" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
 
       # `tray-menu` needs one thing more than the others: a notification area
-      # to press. It skips, loudly, on a session that has none — a runner with
-      # no desktop cannot be asked whether the tray menu works, and reporting
-      # that as a failure would be this suite's own sin in reverse. If it runs
-      # here at all it will be against the classic notification area rather
-      # than the Windows 11 flyout, which is the shape `tray.ps1` handles and
-      # has never been run against (ADR-0013).
+      # to press. This image has one — #43 doubted it would — so the file runs
+      # here rather than skipping. It skips, loudly, on a session with none: a
+      # runner with no desktop cannot be asked whether the tray menu works, and
+      # reporting that as a failure would be this suite's own sin in reverse.
       - name: Run the e2e suite
         run: npm run test:e2e
 

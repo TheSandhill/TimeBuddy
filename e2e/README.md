@@ -110,9 +110,6 @@ block length is. The same minute buys the other half — a block stopped from th
 menu logs the minute actually worked, not the twenty-five it was going to run
 for (ADR-0010).
 
-## What is not covered
-
-**The classic notification area.** `tray.ps1` handles the pre-Windows-11 shell
-as well as the flyout, but only the flyout has been run against. The CI
-runners are Server images and are the other one, so a red tray job there is as
-likely to be this as the app.
+Both shells are handled and both have been run against: the Windows 11 flyout
+on a desk, and whichever one `windows-latest` has in CI. #43 doubted a runner
+would offer a desktop real enough for a flyout, and it does.
