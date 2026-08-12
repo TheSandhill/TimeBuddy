@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
 import type { Project, RunningTimer, Settings, TimeEntry } from "../data/types";
 
@@ -25,6 +25,7 @@ vi.mock("../timer/notify", () => notify);
 
 const { Timer } = await import("./timer");
 const { TimerLifecycleProvider } = await import("../timer/lifecycle");
+const { UNDO_WINDOW_MS } = await import("../entries/use-undoable-delete");
 const { clearTimerToggle, requestTimerToggle } = await import(
   "../tray/toggle-request"
 );
@@ -90,8 +91,13 @@ async function clickStart() {
   fireEvent.click(screen.getByRole("button", { name: "Start" }));
 }
 
+/**
+ * Fake timers throughout, because a manual stop now waits five seconds before
+ * it is written (#34) and no test should sit through them.
+ */
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.useFakeTimers({ shouldAdvanceTime: true });
   clearTimerToggle();
   commands.getSettings.mockResolvedValue(settings);
   commands.listProjects.mockResolvedValue([website]);
@@ -109,6 +115,10 @@ beforeEach(() => {
     return Promise.resolve(next);
   });
   notify.notify.mockResolvedValue(undefined);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("the idle Timer screen", () => {
@@ -328,6 +338,8 @@ describe("a block this session started", () => {
     await clickStart();
 
     fireEvent.click(await screen.findByRole("button", { name: "Stop" }));
+    // Deferred for five seconds, in which it is still a question (#34).
+    await act(() => vi.advanceTimersByTimeAsync(6000));
 
     await waitFor(() =>
       expect(commands.stopRunningTimer).toHaveBeenCalledWith(
@@ -374,6 +386,7 @@ describe("Start/Stop pressed in the tray menu", () => {
     await screen.findByRole("button", { name: "Stop" });
 
     clickMenuItem();
+    await act(() => vi.advanceTimersByTimeAsync(6000));
 
     await waitFor(() =>
       expect(commands.stopRunningTimer).toHaveBeenCalledWith(
@@ -404,6 +417,95 @@ describe("Start/Stop pressed in the tray menu", () => {
     clickMenuItem();
 
     expect(commands.startRunningTimer).not.toHaveBeenCalled();
+  });
+});
+
+describe("stopping a block by hand", () => {
+  /** Runs out the five seconds in which the stop is still a question. */
+  const letTheWindowClose = () =>
+    act(() => vi.advanceTimersByTimeAsync(UNDO_WINDOW_MS + 100));
+
+  async function stopAfter(minutes: number) {
+    appearsAfterStart(inFlight(minutes));
+    renderTimer();
+    await clickStart();
+    fireEvent.click(await screen.findByRole("button", { name: "Stop" }));
+  }
+
+  it("says what it is about to log, and has not logged it yet", async () => {
+    await stopAfter(10);
+
+    expect(await screen.findByText("10 min geregistreerd.")).toBeInTheDocument();
+    expect(commands.stopRunningTimer).not.toHaveBeenCalled();
+  });
+
+  it("presents the block as stopped while the question stands", async () => {
+    await stopAfter(10);
+
+    await screen.findByText("10 min geregistreerd.");
+    expect(screen.getByRole("button", { name: "Start" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Stop" })).toBeNull();
+  });
+
+  it("writes nothing at all when the stop is undone", async () => {
+    await stopAfter(10);
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Ongedaan maken" }),
+    );
+    await letTheWindowClose();
+
+    expect(commands.stopRunningTimer).not.toHaveBeenCalled();
+    expect(commands.discardRunningTimer).not.toHaveBeenCalled();
+  });
+
+  it("leaves the block running when the stop is undone", async () => {
+    await stopAfter(10);
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Ongedaan maken" }),
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "Stop" }),
+    ).toBeInTheDocument();
+  });
+
+  it("logs it once the five seconds are up", async () => {
+    await stopAfter(10);
+    await screen.findByText("10 min geregistreerd.");
+
+    await letTheWindowClose();
+
+    await waitFor(() =>
+      expect(commands.stopRunningTimer).toHaveBeenCalledWith(
+        expect.objectContaining({ durationMinutes: 10 }),
+      ),
+    );
+  });
+
+  it("logs what was true when Stop was pressed, not when the toast expired", async () => {
+    // The five seconds are the app's hesitation, not the user's work.
+    await stopAfter(10);
+    await screen.findByText("10 min geregistreerd.");
+
+    await act(() => vi.advanceTimersByTimeAsync(120_000));
+
+    await waitFor(() =>
+      expect(commands.stopRunningTimer).toHaveBeenCalledWith(
+        expect.objectContaining({ durationMinutes: 10 }),
+      ),
+    );
+  });
+
+  it("offers nothing back for a block that barely ran", async () => {
+    // Nothing is written, so there is nothing to undo, and a toast saying so
+    // would be noise.
+    await stopAfter(0);
+
+    await waitFor(() => expect(commands.discardRunningTimer).toHaveBeenCalled());
+    expect(screen.queryByRole("button", { name: "Ongedaan maken" })).toBeNull();
+    expect(commands.stopRunningTimer).not.toHaveBeenCalled();
   });
 });
 

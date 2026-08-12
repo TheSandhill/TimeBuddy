@@ -35,7 +35,9 @@
     "preset": "{{minutes}} min",
     "presetLabel": "Blok van {{minutes}} minuten",
     "presetGroup": "Bloklengte",
-    "presetFailed": "Die bloklengte kon niet worden opgeslagen."
+    "presetFailed": "Die bloklengte kon niet worden opgeslagen.",
+    "stopped": "{{minutes}} min geregistreerd.",
+    "undoStop": "Ongedaan maken"
   },
   "entries": {
     "total": "Totaal",

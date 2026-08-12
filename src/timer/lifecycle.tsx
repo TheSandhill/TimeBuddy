@@ -18,6 +18,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -36,6 +37,7 @@ import {
 } from "../data/commands";
 import { settingsKey, useSettings } from "../data/use-settings";
 import type { Instant, RunningTimer, StopTimer } from "../data/types";
+import { UNDO_WINDOW_MS } from "../entries/use-undoable-delete";
 import { useTimerToggle } from "../tray/toggle-request";
 import { outcomeAt, type BlockOutcome } from "./block";
 import { playChime } from "./chime";
@@ -59,6 +61,18 @@ export interface RunningBlock {
 
 /** What failed to be written. Each has its own sentence on the screen. */
 export type TimerFault = "block" | "blockLength";
+
+/**
+ * A stop that has been asked for and not yet written.
+ *
+ * Both halves are frozen at the click. The five seconds are the app's hesitation,
+ * not the user's work — a block held open for them would log the reading of a
+ * toast as time spent on a project.
+ */
+interface PendingStop {
+  source: RunningTimer;
+  outcome: BlockOutcome;
+}
 
 export interface TimerLifecycle extends RunningBlock {
   /**
@@ -91,8 +105,22 @@ export interface TimerLifecycle extends RunningBlock {
   busy: boolean;
   canStart: boolean;
   start: () => void;
-  /** Ends the block now — logging the elapsed time, or the full length if it ran out. */
+  /**
+   * Ends the block now — logging the elapsed time, or the full length if it ran
+   * out. Nothing is written for five seconds; see `pendingStop`.
+   */
   stop: () => void;
+  /**
+   * What a hand-stopped block is about to be logged as, while that is still a
+   * question. `null` at every other moment.
+   *
+   * The block is presented as already stopped while this is set: the countdown
+   * is gone and the dial is idle, because the screen must not offer to stop
+   * something it has just said it stopped.
+   */
+  pendingStop: BlockOutcome | null;
+  /** Cancels a stop that has not been written yet. The block simply carries on. */
+  undoStop: () => void;
   /** Logs the frozen worth of an Orphaned Block. */
   keepOrphan: () => void;
   /** Throws the block away without logging anything. */
@@ -148,6 +176,8 @@ export function TimerLifecycleProvider({
   const [projectId, setProjectId] = useState<number | null>(null);
   const [breakEndsAt, setBreakEndsAt] = useState<Instant | null>(null);
   const [fault, setFault] = useState<TimerFault | null>(null);
+  /** A hand-stopped block and what it is worth, waiting out the undo window. */
+  const [pendingStop, setPendingStop] = useState<PendingStop | null>(null);
 
   /**
    * Whether the block in flight is one this *process* started.
@@ -163,7 +193,18 @@ export function TimerLifecycleProvider({
   /** Stops the completion effect firing twice while the write is in flight. */
   const finishing = useRef(false);
 
-  const block = watching ? running.data ?? null : null;
+  /**
+   * The row as it actually is, which is not always what is shown.
+   *
+   * While a stop is waiting out its five seconds the block is still in flight —
+   * that is the whole point, nothing has been written — but it is presented as
+   * stopped. The effects below watch this rather than the masked version, or
+   * clearing `startedHere` mid-window would turn an undone stop into an
+   * Orphaned Block.
+   */
+  const liveBlock = watching ? running.data ?? null : null;
+  const stopping = pendingStop !== null;
+  const block = stopping ? null : liveBlock;
   const orphaned = block !== null && !startedHere.current;
 
   const now = useNow(block !== null || breakEndsAt !== null);
@@ -293,7 +334,7 @@ export function TimerLifecycleProvider({
   // Auto-stop at zero: a block can never be left running overnight, and no
   // longer needs the Timer screen to be open to be noticed.
   useEffect(() => {
-    if (!block || orphaned || finishing.current) {
+    if (!block || orphaned || stopping || finishing.current) {
       return;
     }
     const outcome = outcomeAt(block, now);
@@ -305,16 +346,19 @@ export function TimerLifecycleProvider({
     announce(t("timer.blockEnded", { minutes: outcome.durationMinutes }));
     setBreakEndsAt(plusMinutes(now, settings.data?.breakMinutes ?? 0));
     settle(block, outcome);
-  }, [block, orphaned, now, settings.data]);
+  }, [block, orphaned, stopping, now, settings.data]);
 
   // Once nothing is in flight, the next block found on launch is a crash
   // again — and a failed stop deliberately leaves the block, and the prompt.
+  // Keyed on the live row: a block waiting out its undo window has not gone
+  // anywhere, and forgetting that this process started it would offer an undone
+  // stop back as an Orphaned Block.
   useEffect(() => {
-    if (!block) {
+    if (!liveBlock) {
       finishing.current = false;
       startedHere.current = false;
     }
-  }, [block]);
+  }, [liveBlock]);
 
   // The Break ends the same way it started: a chime and nothing written.
   useEffect(() => {
@@ -326,13 +370,70 @@ export function TimerLifecycleProvider({
 
   const busy =
     startBlock.isPending || stopBlock.isPending || discardBlock.isPending;
-  const canStart = projectId !== null && plannedMinutes > 0 && !busy;
+  // Not while a stop is pending: the row is still there, so starting would be
+  // refused by Rust, and the honest thing to offer is the undo already on screen.
+  const canStart =
+    projectId !== null && plannedMinutes > 0 && !busy && !stopping;
 
-  const stop = () => {
-    if (block) {
-      settle(block, outcomeAt(block, currentInstant()));
+  /**
+   * The pending stop as the timeout sees it, beside the state the screen sees.
+   *
+   * Two copies because they answer different questions: the render needs to know
+   * *that* a stop is pending, and the callback needs the stop itself without
+   * being rebuilt — and a cleanup keyed on the state could not tell an expiry
+   * apart from an undo, so undoing would commit the very thing it cancelled.
+   */
+  const waiting = useRef<PendingStop | null>(null);
+  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestSettle = useRef(settle);
+  latestSettle.current = settle;
+
+  const forget = useCallback(() => {
+    if (timeout.current !== null) {
+      clearTimeout(timeout.current);
+      timeout.current = null;
     }
+    waiting.current = null;
+  }, []);
+
+  const commitStop = useCallback(() => {
+    const pending = waiting.current;
+    forget();
+    setPendingStop(null);
+    if (pending) {
+      latestSettle.current(pending.source, pending.outcome);
+    }
+  }, [forget]);
+
+  /**
+   * Ends the block, five seconds from now.
+   *
+   * Deferred rather than written-then-undone, which is the choice
+   * `use-undoable-delete` already makes and for the same reason: getting the
+   * block back must not depend on a second write landing.
+   *
+   * A block that ran less than a minute is not deferred at all. Nothing is
+   * written for it either way, so there is nothing to take back, and a toast
+   * offering to undo the logging of nothing would be noise.
+   */
+  const stop = () => {
+    if (!liveBlock || stopping) {
+      return;
+    }
+    const outcome = outcomeAt(liveBlock, currentInstant());
+    if (outcome.kind === "tooShort" || outcome.kind === "tooLong") {
+      settle(liveBlock, outcome);
+      return;
+    }
+    const pending = { source: liveBlock, outcome };
+    waiting.current = pending;
+    setPendingStop(pending);
+    timeout.current = setTimeout(commitStop, UNDO_WINDOW_MS);
   };
+
+  // Going away is not an answer to the question, so the stop goes through —
+  // cancelling it would leave running a block the user asked to end.
+  useEffect(() => () => commitStop(), [commitStop]);
 
   // Start/Stop from the tray lands here rather than on the Timer screen: this
   // is where what a stopped block is worth is decided, and it is answered
@@ -374,6 +475,11 @@ export function TimerLifecycleProvider({
       }
     },
     stop,
+    pendingStop: pendingStop?.outcome ?? null,
+    undoStop: () => {
+      forget();
+      setPendingStop(null);
+    },
     keepOrphan: () => {
       if (block) {
         settle(block, outcomeAt(block, discoveredAt));

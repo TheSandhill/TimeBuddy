@@ -58,6 +58,12 @@ than change something the user cannot see.
 A completed block logs its full length. A block stopped early logs the **actual elapsed time**,
 never the nominal length.
 
+Stopping one by hand is **deferred five seconds**, not undone afterwards: the block is presented as
+stopped and the row is left alone until the window closes, so taking it back costs nothing and needs
+no second write to succeed. What it is worth is fixed the moment Stop is pressed — those five seconds
+are the app hesitating, not work. A block that ran less than a whole minute skips the window
+entirely: nothing is written for it either way, so there is nothing to offer back.
+
 A Pomodoro Block is not a separate entity. When it ends, it becomes a TimeEntry with
 `source = 'timer'`.
 
