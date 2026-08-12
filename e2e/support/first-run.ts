@@ -25,10 +25,27 @@ const PATIENCE = 30_000;
  * front because the total is a number in the same line.
  */
 async function onStep(browser: Browser, step: number): Promise<void> {
-  await browser.waitUntil(
-    async () => new RegExp(`^\\D*${step}\\b`).test(await browser.$("section header p").getText()),
-    { timeout: PATIENCE, timeoutMsg: `the wizard never reached step ${step}` },
-  );
+  try {
+    await browser.waitUntil(
+      async () =>
+        new RegExp(`^\\D*${step}\\b`).test(await browser.$("section header p").getText()),
+      { timeout: PATIENCE },
+    );
+  } catch {
+    // A step that does not advance has usually been refused, and the form says
+    // so on screen. Without this the report is "never reached step 3" and the
+    // reason is in a screenshot nobody took.
+    throw new Error(`the wizard never reached step ${step}${await refusal(browser)}`);
+  }
+}
+
+/** Whatever the form is complaining about, if it is complaining. */
+async function refusal(browser: Browser): Promise<string> {
+  const alerts = await browser.$$("[role=alert]").getElements();
+  if (alerts.length === 0) {
+    return "";
+  }
+  return ` — the form says "${await alerts[0].getText()}"`;
 }
 
 /** Fills the step's fields in the order they are asked for. */
@@ -39,8 +56,24 @@ async function fill(browser: Browser, values: string[]): Promise<void> {
   }
 }
 
+/**
+ * Presses the step's own button, once it will take a press.
+ *
+ * Waiting for it to be enabled is the whole of this function's reason to
+ * exist. Next is `disabled` while a write is in flight, and the write that
+ * moves the wizard on is still in flight in the render that moves it: the step
+ * changes in the mutation's `onSuccess`, and `isPending` does not clear until
+ * it settles. So the step after can be on screen with its button briefly dead
+ * — and a WebDriver click on a disabled button is not an error, it is nothing
+ * at all, which then reads as a step that would not advance.
+ *
+ * Rare enough to pass locally a dozen times and fail on a CI runner, which is
+ * exactly how it did.
+ */
 async function next(browser: Browser): Promise<void> {
-  await browser.$("section form button[type=submit]").click();
+  const button = browser.$("section form button[type=submit]");
+  await button.waitForEnabled({ timeout: PATIENCE });
+  await button.click();
 }
 
 /**

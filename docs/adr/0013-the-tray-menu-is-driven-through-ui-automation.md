@@ -78,6 +78,13 @@ from the menu being broken, and reporting it as one would be the failure this su
 in the other direction. Every other absence fails loudly, including a notification area with no
 TimeBuddy in it.
 
-**Whether CI has one is not yet known.** The e2e job's runners are Windows Server images, whose shell
-is the classic notification area rather than the Windows 11 flyout. Both shapes are handled and only
-the second is tested, because that is the one on the desk this was written at.
+**CI has one, which was the open question.** #43 doubted a runner would offer a real enough desktop
+for a flyout, and it does: the whole file passes on `windows-latest`, right-click and menu and
+countdown. Both shell shapes are handled, and both have now been run against — the Windows 11 flyout
+here, whichever one the runner image has there.
+
+**What the first CI run did catch was the wizard walk, not the tray.** Next is `disabled` while a
+write is in flight, and the write that moves the wizard on is still in flight in the render that
+moves it — so the next step can be on screen with its button briefly dead, and a WebDriver click on a
+disabled button is not an error but nothing at all. `first-run.ts` waits for the button rather than
+for the step, and says what the form was complaining about when a step does not advance.
