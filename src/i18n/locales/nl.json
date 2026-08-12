@@ -37,7 +37,10 @@
     "presetGroup": "Bloklengte",
     "presetFailed": "Die bloklengte kon niet worden opgeslagen.",
     "stopped": "{{minutes}} min geregistreerd.",
-    "undoStop": "Ongedaan maken"
+    "undoStop": "Ongedaan maken",
+    "pause": "Pauzeer",
+    "resume": "Doorgaan",
+    "paused": "Gepauzeerd"
   },
   "entries": {
     "total": "Totaal",
@@ -221,7 +224,8 @@
   },
   "titlebar": {
     "minimize": "Minimaliseren",
-    "close": "Sluiten"
+    "close": "Sluiten",
+    "paused": "{{countdown}} — gepauzeerd"
   },
   "tray": {
     "show": "TimeBuddy tonen",
@@ -229,7 +233,8 @@
     "stop": "Timer stoppen",
     "quit": "Afsluiten",
     "remaining": "Nog {{minutes}} min",
-    "hiddenNotice": "TimeBuddy draait door in het systeemvak. Afsluiten kan via het pictogram."
+    "hiddenNotice": "TimeBuddy draait door in het systeemvak. Afsluiten kan via het pictogram.",
+    "paused": "Gepauzeerd — {{minutes}} min over"
   },
   "unlock": {
     "title": "TimeBuddy ontgrendelen",

@@ -51,6 +51,9 @@ export function Timer() {
     canStart,
     start,
     stop,
+    paused,
+    pause,
+    resume,
     pendingStop,
     undoStop,
     keepOrphan,
@@ -110,8 +113,11 @@ export function Timer() {
             <PomodoroDial
               countdown={countdown}
               running={block !== null}
+              paused={paused}
               canStart={canStart}
               onStart={start}
+              onPause={pause}
+              onResume={resume}
               onStop={stop}
             />
 

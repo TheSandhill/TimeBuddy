@@ -13,6 +13,8 @@ const block: RunningTimer = {
   projectId: 1,
   startAt: "2026-08-05T09:00:00Z",
   plannedMinutes: 25,
+  pausedAt: null,
+  pausedSeconds: 0,
 };
 
 describe("elapsed time comes from the wall clock", () => {

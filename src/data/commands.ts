@@ -63,6 +63,8 @@ export const commandNames = [
   "get_running_timer",
   "start_running_timer",
   "stop_running_timer",
+  "pause_running_timer",
+  "resume_running_timer",
   "discard_running_timer",
   "report_by_client",
   "report_by_project",
@@ -243,6 +245,16 @@ export function startRunningTimer(
 /** Logs the block and clears it, in one transaction on the Rust side. */
 export function stopRunningTimer(stop: StopTimer): Promise<TimeEntry> {
   return call("stop_running_timer", { stop });
+}
+
+/** Holds the block where it is. Forgiving about one already paused. */
+export function pauseRunningTimer(): Promise<RunningTimer> {
+  return call("pause_running_timer");
+}
+
+/** Lets it carry on, banking the pause that just ended. */
+export function resumeRunningTimer(): Promise<RunningTimer> {
+  return call("resume_running_timer");
 }
 
 /** Throws the block away. Nothing is written — the answer to "discard". */

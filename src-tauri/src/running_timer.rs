@@ -28,9 +28,17 @@ pub struct RunningTimer {
     /// The block's nominal length, frozen at start. Raising the default in
     /// Settings must not move the finish line of a block already under way.
     pub planned_minutes: i64,
+    /// When the pause in progress began, or `None` while running.
+    ///
+    /// `start_at` is never moved to account for a pause: it is what the logged
+    /// entry reports as the moment work began, and that has to stay true
+    /// (ADR-0011). So elapsed is measured to here instead of to now.
+    pub paused_at: Option<DateTime<Utc>>,
+    /// Every pause already finished, totalled. Subtracted from elapsed.
+    pub paused_seconds: i64,
 }
 
-const SELECT: &str = "SELECT project_id, start_at, planned_minutes \
+const SELECT: &str = "SELECT project_id, start_at, planned_minutes, paused_at, paused_seconds \
                       FROM running_timer WHERE id = 1";
 
 /// What the caller decided a stopped block is worth.
@@ -129,6 +137,59 @@ pub async fn stop(
     time_entries::get(pool, id).await
 }
 
+/// Holds the block where it is.
+///
+/// Forgiving about a block that is already paused, and it has to be: writing
+/// `paused_at` a second time would swallow the interval between the two writes,
+/// and elapsed would count idle minutes as work. Doing nothing is both the safe
+/// answer and the true one.
+pub async fn pause(pool: &SqlitePool, now: DateTime<Utc>) -> Result<RunningTimer> {
+    let running = get(pool)
+        .await?
+        .ok_or_else(|| Error::not_found("runningTimer", 1))?;
+
+    if running.paused_at.is_none() {
+        sqlx::query("UPDATE running_timer SET paused_at = ? WHERE id = 1")
+            .bind(now)
+            .execute(pool)
+            .await?;
+    }
+
+    get(pool)
+        .await?
+        .ok_or_else(|| Error::not_found("runningTimer", 1))
+}
+
+/// Lets the block carry on, banking the pause that just ended.
+///
+/// Equally forgiving about a block that was never paused: there is nothing to
+/// bank, and `paused_at` is already null.
+pub async fn resume(pool: &SqlitePool, now: DateTime<Utc>) -> Result<RunningTimer> {
+    let running = get(pool)
+        .await?
+        .ok_or_else(|| Error::not_found("runningTimer", 1))?;
+
+    if let Some(paused_at) = running.paused_at {
+        // Clamped at zero, for the same reason the frontend clamps elapsed: a
+        // clock dragged backwards should cost the block nothing, not hand it
+        // minutes it never ran.
+        let held = (now - paused_at).num_seconds().max(0);
+
+        sqlx::query(
+            "UPDATE running_timer
+             SET paused_at = NULL, paused_seconds = paused_seconds + ?
+             WHERE id = 1",
+        )
+        .bind(held)
+        .execute(pool)
+        .await?;
+    }
+
+    get(pool)
+        .await?
+        .ok_or_else(|| Error::not_found("runningTimer", 1))
+}
+
 /// Throws the block away without logging anything.
 ///
 /// Deliberately forgiving about there being nothing to discard: this is what
@@ -160,6 +221,16 @@ pub async fn start_running_timer(
 #[tauri::command]
 pub async fn stop_running_timer(db: State<'_, Db>, stop: StopTimer) -> Result<TimeEntry> {
     self::stop(&db.0, stop, time_entries::today(), Utc::now()).await
+}
+
+#[tauri::command]
+pub async fn pause_running_timer(db: State<'_, Db>) -> Result<RunningTimer> {
+    pause(&db.0, Utc::now()).await
+}
+
+#[tauri::command]
+pub async fn resume_running_timer(db: State<'_, Db>) -> Result<RunningTimer> {
+    resume(&db.0, Utc::now()).await
 }
 
 #[tauri::command]
@@ -396,6 +467,153 @@ mod tests {
 
         assert_eq!(relaunched.start_at, now());
         assert_eq!(relaunched.planned_minutes, 25);
+    }
+
+    #[tokio::test]
+    async fn a_fresh_block_is_not_paused() {
+        let pool = test_pool().await;
+        let project_id = a_project(&pool).await;
+
+        let running = start(&pool, project_id, 25, now()).await.unwrap();
+
+        assert_eq!(running.paused_at, None);
+        assert_eq!(running.paused_seconds, 0);
+    }
+
+    #[tokio::test]
+    async fn pausing_records_when_it_was_held_without_moving_the_start() {
+        let pool = test_pool().await;
+        let project_id = a_project(&pool).await;
+        start(&pool, project_id, 25, now()).await.unwrap();
+
+        let paused = pause(&pool, at("2026-08-05T12:10:00Z")).await.unwrap();
+
+        assert_eq!(paused.paused_at, Some(at("2026-08-05T12:10:00Z")));
+        assert_eq!(paused.paused_seconds, 0, "nothing banked until it resumes");
+        assert_eq!(
+            paused.start_at,
+            now(),
+            "the instant work began is not up for revision"
+        );
+    }
+
+    #[tokio::test]
+    async fn resuming_banks_the_pause_and_leaves_the_start_alone() {
+        let pool = test_pool().await;
+        let project_id = a_project(&pool).await;
+        start(&pool, project_id, 25, now()).await.unwrap();
+        pause(&pool, at("2026-08-05T12:10:00Z")).await.unwrap();
+
+        let resumed = resume(&pool, at("2026-08-05T12:13:00Z")).await.unwrap();
+
+        assert_eq!(resumed.paused_at, None);
+        assert_eq!(resumed.paused_seconds, 180);
+        assert_eq!(resumed.start_at, now());
+    }
+
+    #[tokio::test]
+    async fn pauses_add_up_across_a_block() {
+        let pool = test_pool().await;
+        let project_id = a_project(&pool).await;
+        start(&pool, project_id, 25, now()).await.unwrap();
+
+        pause(&pool, at("2026-08-05T12:05:00Z")).await.unwrap();
+        resume(&pool, at("2026-08-05T12:06:00Z")).await.unwrap();
+        pause(&pool, at("2026-08-05T12:10:00Z")).await.unwrap();
+        let resumed = resume(&pool, at("2026-08-05T12:12:30Z")).await.unwrap();
+
+        assert_eq!(resumed.paused_seconds, 60 + 150);
+    }
+
+    #[tokio::test]
+    async fn pausing_twice_does_not_swallow_the_time_between() {
+        // Overwriting `paused_at` would move the point elapsed is measured to,
+        // and hand the block minutes nobody worked.
+        let pool = test_pool().await;
+        let project_id = a_project(&pool).await;
+        start(&pool, project_id, 25, now()).await.unwrap();
+        pause(&pool, at("2026-08-05T12:05:00Z")).await.unwrap();
+
+        let again = pause(&pool, at("2026-08-05T12:09:00Z")).await.unwrap();
+
+        assert_eq!(again.paused_at, Some(at("2026-08-05T12:05:00Z")));
+    }
+
+    #[tokio::test]
+    async fn resuming_a_block_that_was_never_paused_changes_nothing() {
+        let pool = test_pool().await;
+        let project_id = a_project(&pool).await;
+        start(&pool, project_id, 25, now()).await.unwrap();
+
+        let resumed = resume(&pool, at("2026-08-05T12:10:00Z")).await.unwrap();
+
+        assert_eq!(resumed.paused_at, None);
+        assert_eq!(resumed.paused_seconds, 0);
+    }
+
+    #[tokio::test]
+    async fn a_clock_dragged_backwards_costs_the_block_nothing() {
+        let pool = test_pool().await;
+        let project_id = a_project(&pool).await;
+        start(&pool, project_id, 25, now()).await.unwrap();
+        pause(&pool, at("2026-08-05T12:10:00Z")).await.unwrap();
+
+        let resumed = resume(&pool, at("2026-08-05T12:09:00Z")).await.unwrap();
+
+        assert_eq!(resumed.paused_seconds, 0, "clamped, never negative");
+    }
+
+    #[tokio::test]
+    async fn there_is_nothing_to_pause_when_nothing_runs() {
+        let pool = test_pool().await;
+
+        let error = pause(&pool, now()).await.unwrap_err();
+
+        assert!(matches!(
+            error,
+            Error::NotFound {
+                entity: "runningTimer",
+                ..
+            }
+        ));
+    }
+
+    #[tokio::test]
+    async fn a_paused_block_survives_the_process_that_paused_it() {
+        // The whole point of storing the pause rather than holding it in memory.
+        let pool = test_pool().await;
+        let project_id = a_project(&pool).await;
+        start(&pool, project_id, 25, now()).await.unwrap();
+        pause(&pool, at("2026-08-05T12:10:00Z")).await.unwrap();
+
+        let relaunched = get(&pool).await.unwrap().unwrap();
+
+        assert_eq!(relaunched.paused_at, Some(at("2026-08-05T12:10:00Z")));
+    }
+
+    #[tokio::test]
+    async fn stopping_a_paused_block_still_logs_the_true_start() {
+        let pool = test_pool().await;
+        let project_id = a_project(&pool).await;
+        start(&pool, project_id, 25, now()).await.unwrap();
+        pause(&pool, at("2026-08-05T12:05:00Z")).await.unwrap();
+        resume(&pool, at("2026-08-05T12:25:00Z")).await.unwrap();
+
+        // Five minutes worked, twenty held, so the window spans forty-five
+        // minutes for twenty-five minutes of work. The window is descriptive;
+        // the duration is what reports add up.
+        let entry = stop(
+            &pool,
+            stopped(25, "2026-08-05T12:45:00Z"),
+            fixed_today(),
+            now(),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(entry.start_at, Some(now()));
+        assert_eq!(entry.end_at, Some(at("2026-08-05T12:45:00Z")));
+        assert_eq!(entry.duration_minutes, 25);
     }
 
     #[tokio::test]

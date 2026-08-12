@@ -45,6 +45,12 @@ A TimeEntry **is** hard-deletable, behind a 5-second undo.
 A timed working interval — default 25 minutes, configurable — that stops itself. The user restarts
 it deliberately, which is the point: a timer that ends on its own can't be left running overnight.
 
+It can also be **held**. Pausing stops the countdown without ending the block, for the interruption
+that is neither work nor a reason to throw the block away. A held block is the one exception to
+"ends on its own": it waits indefinitely, so the pill and the tray tooltip say *paused* rather than
+showing a clock that has stopped — a still countdown is the one thing here that reads as a crash.
+Held time is never work, and never logged. See ADR-0011.
+
 Its length is offered as four **presets** on the Timer screen — 15, 25, 45, 60 — because "a
 quarter of an hour, now" should not be a trip to Settings. Picking one saves it as the block length
 from then on; there is no one-off override. A fixed four, not an editable set: an editable one would
@@ -82,6 +88,16 @@ that acts on the timer belongs on the timer's screen.
 
 The at-most-one in-flight Pomodoro Block. Its start instant is persisted, and elapsed time is
 derived from wall clock — not from a counting interval — so laptop sleep is a non-event.
+
+A pause is stored too, as the instant the current one began plus the total of those already finished.
+The **start instant is never moved** to account for one: it is what the logged entry reports as the
+moment work began, and that has to stay true. So a held block's entry spans longer than it lasted —
+`09:00–09:45` for 25 minutes — and that is honest rather than a rounding error. Durations are what
+reports add up; the window only describes.
+
+Asking twice is harmless in both directions. Pausing a held block does nothing at all, because
+rewriting the instant would move what elapsed is measured to and hand the block minutes nobody
+worked.
 
 If the app dies with a Running Timer present, the next launch **asks** whether to keep the elapsed
 time. Silently discarding loses real work; silently logging invents it.
