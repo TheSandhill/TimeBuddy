@@ -31,7 +31,11 @@
     "recoveryNothing": "Er was te weinig tijd verstreken om te bewaren.",
     "recoveryKeep": "Bewaren",
     "recoveryDiscard": "Weggooien",
-    "failed": "Dat lukte niet. Probeer het opnieuw."
+    "failed": "Dat lukte niet. Probeer het opnieuw.",
+    "preset": "{{minutes}} min",
+    "presetLabel": "Blok van {{minutes}} minuten",
+    "presetGroup": "Bloklengte",
+    "presetFailed": "Die bloklengte kon niet worden opgeslagen."
   },
   "entries": {
     "total": "Totaal",

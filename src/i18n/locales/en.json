@@ -31,7 +31,11 @@
     "recoveryNothing": "Too little time had passed to be worth keeping.",
     "recoveryKeep": "Keep",
     "recoveryDiscard": "Discard",
-    "failed": "That didn't work. Please try again."
+    "failed": "That didn't work. Please try again.",
+    "preset": "{{minutes}} min",
+    "presetLabel": "{{minutes}}-minute block",
+    "presetGroup": "Block length",
+    "presetFailed": "That block length could not be saved."
   },
   "entries": {
     "total": "Total",

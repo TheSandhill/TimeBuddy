@@ -13,6 +13,7 @@ const commands = vi.hoisted(() => ({
   startRunningTimer: vi.fn(),
   stopRunningTimer: vi.fn(),
   discardRunningTimer: vi.fn(),
+  updateSettings: vi.fn(),
 }));
 vi.mock("../data/commands", () => commands);
 
@@ -99,6 +100,14 @@ beforeEach(() => {
   commands.startRunningTimer.mockResolvedValue(inFlight(0));
   commands.stopRunningTimer.mockResolvedValue({} as TimeEntry);
   commands.discardRunningTimer.mockResolvedValue(undefined);
+  // The settings row remembers what was written to it, so that a preset can be
+  // observed to stick rather than only to have been sent.
+  let stored: Settings = settings;
+  commands.getSettings.mockImplementation(() => Promise.resolve(stored));
+  commands.updateSettings.mockImplementation((next: Settings) => {
+    stored = next;
+    return Promise.resolve(next);
+  });
   notify.notify.mockResolvedValue(undefined);
 });
 
@@ -395,6 +404,104 @@ describe("Start/Stop pressed in the tray menu", () => {
     clickMenuItem();
 
     expect(commands.startRunningTimer).not.toHaveBeenCalled();
+  });
+});
+
+describe("the duration presets", () => {
+  const preset = (minutes: number) =>
+    screen.getByRole("button", { name: `Blok van ${minutes} minuten` });
+
+  it("offers the four lengths, and marks the one in force", async () => {
+    renderTimer();
+
+    await waitFor(() => expect(preset(25)).toHaveAttribute("aria-pressed", "true"));
+    for (const minutes of [15, 45, 60]) {
+      expect(preset(minutes)).toHaveAttribute("aria-pressed", "false");
+    }
+  });
+
+  it("marks none of them when the saved length is not one of the four", async () => {
+    commands.getSettings.mockResolvedValue({ ...settings, pomodoroMinutes: 50 });
+    renderTimer();
+
+    await screen.findByText("50:00");
+    for (const minutes of [15, 25, 45, 60]) {
+      expect(preset(minutes)).toHaveAttribute("aria-pressed", "false");
+    }
+  });
+
+  it("saves the picked length as the block length from now on", async () => {
+    // Settings is still written as one row (CONTEXT.md) — a preset changes one
+    // field of it, it does not invent a second way to store a duration.
+    renderTimer();
+    await waitFor(() => expect(preset(15)).toBeEnabled());
+
+    fireEvent.click(preset(15));
+
+    await waitFor(() =>
+      expect(commands.updateSettings).toHaveBeenCalledWith({
+        ...settings,
+        pomodoroMinutes: 15,
+      }),
+    );
+  });
+
+  it("shows the picked length on the dial straight away", async () => {
+    renderTimer();
+    await waitFor(() => expect(preset(45)).toBeEnabled());
+
+    fireEvent.click(preset(45));
+
+    expect(await screen.findByText("45:00")).toBeInTheDocument();
+  });
+
+  it("starts the next block at the picked length", async () => {
+    renderTimer();
+    await waitFor(() => expect(preset(15)).toBeEnabled());
+    fireEvent.click(preset(15));
+    await screen.findByText("15:00");
+
+    await clickStart();
+
+    await waitFor(() =>
+      expect(commands.startRunningTimer).toHaveBeenCalledWith(7, 15),
+    );
+  });
+
+  it("cannot move the finish line of a block already under way", async () => {
+    // `planned_minutes` is frozen at start, so a live preset would be a control
+    // whose effect cannot be seen until the next block.
+    appearsAfterStart(inFlight(1));
+    renderTimer();
+    await clickStart();
+    await screen.findByRole("button", { name: "Stop" });
+
+    expect(preset(15)).toBeDisabled();
+    expect(preset(60)).toBeDisabled();
+    expect(commands.updateSettings).not.toHaveBeenCalled();
+  });
+
+  it("is absent while an orphaned block is being asked about", async () => {
+    commands.getRunningTimer.mockResolvedValue(inFlight(10));
+    renderTimer();
+    await screen.findByText("Er liep nog een blok");
+
+    expect(
+      screen.queryByRole("button", { name: "Blok van 15 minuten" }),
+    ).toBeNull();
+  });
+
+  it("says so when the length could not be saved", async () => {
+    // Silence would leave the dial saying 15 while the next block ran 25.
+    commands.updateSettings.mockRejectedValue(new Error("nope"));
+    renderTimer();
+    await waitFor(() => expect(preset(15)).toBeEnabled());
+
+    fireEvent.click(preset(15));
+
+    expect(
+      await screen.findByText("Die bloklengte kon niet worden opgeslagen."),
+    ).toBeInTheDocument();
   });
 });
 
