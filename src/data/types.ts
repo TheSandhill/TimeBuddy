@@ -94,6 +94,16 @@ export interface RunningTimer {
    * under way.
    */
   plannedMinutes: number;
+  /**
+   * When the pause in progress began, or `null` while running.
+   *
+   * `startAt` is never moved to account for a pause — it is what the logged
+   * entry reports as the moment work began (ADR-0011) — so elapsed time is
+   * measured to here instead of to now.
+   */
+  pausedAt: Instant | null;
+  /** Every pause already finished, totalled in seconds. */
+  pausedSeconds: number;
 }
 
 /**

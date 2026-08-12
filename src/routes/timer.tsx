@@ -10,10 +10,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { BreakBanner } from "../components/break-banner";
+import { DurationPresets } from "../components/duration-presets";
 import { PomodoroDial } from "../components/pomodoro-dial";
 import { ProjectPicker } from "../components/project-picker";
 import { RecoveryPrompt } from "../components/recovery-prompt";
 import { TodayEntries } from "../components/today-entries";
+import { UndoToast } from "../components/undo-toast";
 import { listProjects, listTimeEntries } from "../data/commands";
 import {
   formatCountdown,
@@ -22,7 +24,6 @@ import {
 } from "../timer/block";
 import { currentInstant, localDay, SECONDS_PER_MINUTE } from "../timer/clock";
 import { useTimerLifecycle, type TimerFault } from "../timer/lifecycle";
-import { DurationPresets } from "../components/duration-presets";
 
 /**
  * One alert slot, two things that can have gone wrong in it. A length that
@@ -50,6 +51,11 @@ export function Timer() {
     canStart,
     start,
     stop,
+    paused,
+    pause,
+    resume,
+    pendingStop,
+    undoStop,
     keepOrphan,
     discard,
     endBreak,
@@ -107,8 +113,11 @@ export function Timer() {
             <PomodoroDial
               countdown={countdown}
               running={block !== null}
+              paused={paused}
               canStart={canStart}
               onStart={start}
+              onPause={pause}
+              onResume={resume}
               onStop={stop}
             />
 
@@ -117,11 +126,10 @@ export function Timer() {
              * how long → what for. It also puts the two controls that go dead
              * while a block runs next to each other, which makes that one rule
              * rather than two coincidences.
-             */}
-            {/*
-             * Dead until the settings row has arrived: the new length is that
-             * row with one field changed, so there is nothing to change yet —
-             * and none of the four could be shown as the one in force either.
+             *
+             * Dead until the settings row has arrived, too: the new length is
+             * that row with one field changed, so there is nothing yet to change
+             * — and none of the four could be shown as the one in force either.
              */}
             <DurationPresets
               value={plannedMinutes}
@@ -140,6 +148,20 @@ export function Timer() {
       )}
 
       <TodayEntries entries={entries.data ?? []} projects={named.data ?? []} />
+
+      {/*
+        * The five seconds in which stopping is still a question. Nothing has
+        * been written yet, so undoing costs the block nothing at all.
+        */}
+      {pendingStop !== null && pendingStop.kind !== "tooShort" ? (
+        <UndoToast
+          message={t("timer.stopped", {
+            minutes: pendingStop.durationMinutes,
+          })}
+          actionLabel={t("timer.undoStop")}
+          onUndo={undoStop}
+        />
+      ) : null}
     </section>
   );
 }

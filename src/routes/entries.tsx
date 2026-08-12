@@ -173,7 +173,13 @@ export function Entries() {
         }}
       />
 
-      {deletion.pending ? <UndoToast onUndo={deletion.undo} /> : null}
+      {deletion.pending ? (
+        <UndoToast
+          message={t("entries.deleted")}
+          actionLabel={t("entries.undo")}
+          onUndo={deletion.undo}
+        />
+      ) : null}
     </section>
   );
 }

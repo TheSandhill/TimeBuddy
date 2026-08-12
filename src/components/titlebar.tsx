@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { formatCountdown, remainingSeconds } from "../timer/block";
+import { formatCountdown, isPaused, remainingSeconds } from "../timer/block";
 import type { RunningBlock } from "../timer/lifecycle";
 import { closeWindow, minimizeWindow } from "../tray/window-buttons";
 
@@ -53,7 +53,11 @@ export function Titlebar({ block, now }: RunningBlock) {
             role="timer"
             className="rounded-full bg-surface px-3 py-0.5 text-xs font-medium tabular-nums text-accent"
           >
-            {formatCountdown(remainingSeconds(block, now))}
+            {isPaused(block)
+              ? t("titlebar.paused", {
+                  countdown: formatCountdown(remainingSeconds(block, now)),
+                })
+              : formatCountdown(remainingSeconds(block, now))}
           </span>
         ) : null}
       </div>

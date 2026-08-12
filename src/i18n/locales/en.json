@@ -35,7 +35,12 @@
     "preset": "{{minutes}} min",
     "presetLabel": "{{minutes}}-minute block",
     "presetGroup": "Block length",
-    "presetFailed": "That block length could not be saved."
+    "presetFailed": "That block length could not be saved.",
+    "stopped": "{{minutes}} min logged.",
+    "undoStop": "Undo",
+    "pause": "Pause",
+    "resume": "Resume",
+    "paused": "Paused"
   },
   "entries": {
     "total": "Total",
@@ -219,7 +224,8 @@
   },
   "titlebar": {
     "minimize": "Minimize",
-    "close": "Close"
+    "close": "Close",
+    "paused": "{{countdown}} — paused"
   },
   "tray": {
     "show": "Show TimeBuddy",
@@ -227,7 +233,8 @@
     "stop": "Stop timer",
     "quit": "Quit",
     "remaining": "{{minutes}} min left",
-    "hiddenNotice": "TimeBuddy is still running in the system tray. Quit from the tray icon."
+    "hiddenNotice": "TimeBuddy is still running in the system tray. Quit from the tray icon.",
+    "paused": "Paused — {{minutes}} min left"
   },
   "unlock": {
     "title": "Unlock TimeBuddy",

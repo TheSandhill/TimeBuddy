@@ -25,15 +25,26 @@ export type BlockOutcome =
   /** Longer than a day, which no TimeEntry may hold. */
   | { kind: "tooLong"; durationMinutes: number };
 
+/** Whether the block is being held rather than running. */
+export function isPaused(block: RunningTimer): boolean {
+  return block.pausedAt !== null;
+}
+
 /**
- * How long the block has been running.
+ * How long the block has been *worked*.
+ *
+ * Two subtractions rather than one. A paused block is measured to the instant it
+ * was paused, so the countdown stands still while it is held; and every pause
+ * already finished comes off the total. `startAt` itself is never moved, because
+ * it is what the logged entry reports as the moment work began (ADR-0011).
  *
  * Clamped at zero: a clock that jumps backwards — a timezone fix, an NTP
  * correction — should make the timer stand still, not run in reverse.
  */
 export function elapsedSeconds(block: RunningTimer, now: Instant): number {
+  const until = Date.parse(block.pausedAt ?? now);
   const seconds =
-    (Date.parse(now) - Date.parse(block.startAt)) / MS_PER_SECOND;
+    (until - Date.parse(block.startAt)) / MS_PER_SECOND - block.pausedSeconds;
   return Math.max(0, Math.floor(seconds));
 }
 
@@ -71,10 +82,14 @@ export function outcomeAt(block: RunningTimer, now: Instant): BlockOutcome {
     return { kind: "tooShort" };
   }
 
+  // A completed block ran out `planned` minutes of *work* after it began, which
+  // is that many minutes plus however long it spent held. A paused block can
+  // never be complete, so `pausedSeconds` is the whole of it by now.
   const endAt = completed
     ? instantAt(
         Date.parse(block.startAt) +
-          block.plannedMinutes * SECONDS_PER_MINUTE * MS_PER_SECOND,
+          (block.plannedMinutes * SECONDS_PER_MINUTE + block.pausedSeconds) *
+            MS_PER_SECOND,
       )
     : instantAt(Date.parse(now));
 

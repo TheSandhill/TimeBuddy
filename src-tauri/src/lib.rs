@@ -152,6 +152,8 @@ pub fn run() {
             running_timer::get_running_timer,
             running_timer::start_running_timer,
             running_timer::stop_running_timer,
+            running_timer::pause_running_timer,
+            running_timer::resume_running_timer,
             running_timer::discard_running_timer,
             reports::report_by_client,
             reports::report_by_project,

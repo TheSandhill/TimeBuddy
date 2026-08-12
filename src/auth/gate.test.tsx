@@ -15,6 +15,8 @@ const commands = vi.hoisted(() => ({
   listProjects: vi.fn(),
   startRunningTimer: vi.fn(),
   stopRunningTimer: vi.fn(),
+  pauseRunningTimer: vi.fn(),
+  resumeRunningTimer: vi.fn(),
   discardRunningTimer: vi.fn(),
   getSettings: vi.fn(),
   syncTray: vi.fn(),
