@@ -10,6 +10,12 @@ const commands = vi.hoisted(() => ({
   resumeSession: vi.fn(),
   listClients: vi.fn(),
   getRunningTimer: vi.fn(),
+  // The window frame carries the block's lifecycle now, lock screen included —
+  // it is watching nothing there, but it is still mounted (ADR-0010).
+  listProjects: vi.fn(),
+  startRunningTimer: vi.fn(),
+  stopRunningTimer: vi.fn(),
+  discardRunningTimer: vi.fn(),
   getSettings: vi.fn(),
   syncTray: vi.fn(),
   createAccount: vi.fn(),
@@ -75,6 +81,7 @@ beforeEach(() => {
   commands.claimRestoreRelock.mockResolvedValue(false);
   commands.listClients.mockResolvedValue([acme]);
   commands.getRunningTimer.mockResolvedValue(null);
+  commands.listProjects.mockResolvedValue([]);
   commands.getSettings.mockResolvedValue(settings);
   commands.syncTray.mockResolvedValue(undefined);
   commands.createAccount.mockResolvedValue(undefined);
