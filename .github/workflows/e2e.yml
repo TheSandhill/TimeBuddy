@@ -1,0 +1,72 @@
+# The tests that need a window, a webview and a desktop (#33).
+#
+# A job of its own rather than steps on another, because it is the slow one: a
+# release build of the Rust side plus a real app launch per test file. The unit
+# suite stays what a push waits for.
+#
+# Windows-only, which costs nothing — TimeBuddy is Windows-only.
+name: e2e
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # The drag test drives the real mouse pointer, so a run that misbehaves is
+  # worth being able to start by hand rather than by pushing.
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: ./src-tauri -> target
+
+      - run: npm ci
+
+      # A release build with a debugging port on the webview (ADR-0012). Not
+      # the binary a tag ships, and deliberately so: the shipped one has no
+      # port to attach to.
+      - run: npm run e2e:build
+
+      # msedgedriver is preinstalled, at the version matching the runner's own
+      # WebView2 — downloading one would sooner or later fetch a mismatched
+      # one. `EDGEWEBDRIVER` is a machine variable of the image, so it is read
+      # from the shell rather than from the `env` context, which only ever
+      # holds what the workflow itself set.
+      - name: Run the e2e suite
+        shell: pwsh
+        run: |
+          $env:MSEDGEDRIVER = "$env:EDGEWEBDRIVER\msedgedriver.exe"
+          npm run test:e2e
+
+      # A failed drag or a failed hide is a window that did something other
+      # than what was asked, and there is nothing in a stack trace that says
+      # what. This is the only look anyone gets at a headless run.
+      - name: Screenshot the desktop if something failed
+        if: failure()
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $bitmap = New-Object System.Drawing.Bitmap $screen.Width, $screen.Height
+          $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+          $graphics.CopyFromScreen($screen.Location, [System.Drawing.Point]::Empty, $screen.Size)
+          $bitmap.Save("$env:GITHUB_WORKSPACE\e2e-failure.png")
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-failure
+          path: e2e-failure.png

@@ -49,7 +49,16 @@ npm run tauri dev     # the app, with the frontend hot-reloading
 npm run typecheck     # tsc --noEmit
 npm test              # the frontend suite
 cargo test --manifest-path src-tauri/Cargo.toml
+
+npm run e2e:build     # a release build with a debugging port; minutes, not seconds
+npm run test:e2e      # the real window, driven through Windows
 ```
+
+The e2e suite is the one that can tell whether the window actually drags, closes and hides —
+everything jsdom has no answer for. It needs a built binary, msedgedriver, and a desktop that is
+logged in, so it is kept apart from `npm test` and runs as a CI job of its own. See
+[e2e/README.md](e2e/README.md) and
+[ADR-0012](docs/adr/0012-e2e-tests-drive-a-real-window-not-the-dom.md).
 
 The frontend is React 19 + TypeScript + Vite; the backend is Rust. All SQL lives in Rust behind typed
 commands ([ADR-0002](docs/adr/0002-sql-lives-in-rust.md)) and every UI string goes through i18next —

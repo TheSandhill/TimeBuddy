@@ -226,6 +226,56 @@ mod tests {
         assert!(window["minHeight"].as_i64().unwrap_or(0) > 0);
     }
 
+    /// `tauri.e2e.conf.json`, parsed. The overlay `npm run e2e:build` merges
+    /// over the shipped config so a WebDriver has something to attach to.
+    fn e2e_config() -> serde_json::Value {
+        serde_json::from_str(include_str!("../tauri.e2e.conf.json"))
+            .expect("tauri.e2e.conf.json is valid JSON")
+    }
+
+    /// A debugging port is a way to run anything at all inside the webview,
+    /// which is the window holding someone's hours. It belongs to the e2e
+    /// build and to no other, so the shipped config is checked for the
+    /// *absence* of the thing the overlay adds.
+    #[test]
+    fn the_shipped_window_opens_no_debugging_port() {
+        let window = &config()["app"]["windows"][0];
+
+        assert!(
+            window["additionalBrowserArgs"].is_null(),
+            "additionalBrowserArgs belongs to tauri.e2e.conf.json, got {:?}",
+            window["additionalBrowserArgs"]
+        );
+    }
+
+    /// The overlay replaces the whole window rather than adding a key to it —
+    /// that is what merging a JSON array does — so every setting the shipped
+    /// window has must be repeated there. Two window definitions can drift,
+    /// and a drifted one would have the e2e suite testing a window nobody
+    /// ships: a decorated one has a titlebar of its own to drag.
+    #[test]
+    fn the_e2e_window_is_the_shipped_window_plus_the_port() {
+        let shipped = config()["app"]["windows"][0].clone();
+
+        let mut e2e = e2e_config()["app"]["windows"][0].clone();
+        let port = e2e
+            .as_object_mut()
+            .expect("the e2e window is an object")
+            .remove("additionalBrowserArgs")
+            .expect("the e2e window asks for a debugging port");
+
+        assert_eq!(
+            e2e, shipped,
+            "the e2e window has drifted from the one that ships"
+        );
+        assert!(
+            port.as_str()
+                .unwrap_or_default()
+                .contains("--remote-debugging-port="),
+            "the e2e window must ask for a debugging port, got {port:?}"
+        );
+    }
+
     /// Three files carry a version number and only one of them is the one the
     /// updater compares: `tauri.conf.json`'s. A release tagged off a
     /// `package.json` that was bumped alone would ship an installer that
