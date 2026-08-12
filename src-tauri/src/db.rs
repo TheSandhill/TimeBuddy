@@ -6,7 +6,7 @@
 use std::path::Path;
 
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
-use sqlx::SqlitePool;
+use sqlx::{Connection, SqliteConnection, SqlitePool};
 
 /// Managed Tauri state. A newtype so `State<'_, Db>` reads as intent rather
 /// than as "some pool that happens to be in scope".
@@ -28,6 +28,24 @@ pub async fn connect(path: &Path) -> Result<SqlitePool, sqlx::Error> {
         .max_connections(4)
         .connect_with(options(path))
         .await
+}
+
+/// Opens **one** connection, for work that has to know when the file is free
+/// again.
+///
+/// [`connect`] is the right thing for the app's own lifetime, but a pool cannot
+/// answer "has SQLite let go of this file yet". `SqlitePool::close` waits for the
+/// pool to be finished with its connections; closing the connections themselves
+/// is deferred to tasks sqlx spawns when a `PoolConnection` is dropped, and on a
+/// busy runtime those can still be pending when `close().await` returns. A
+/// single [`SqliteConnection`] has no such indirection: its `close()` waits for
+/// the worker thread to terminate, which is what actually releases the handle.
+///
+/// That distinction is invisible until something wants to *move* the file — the
+/// restore swap does, and Windows will not rename a file anything still has
+/// open. See ADR-0008 and `restore::copy_present_aside`.
+pub async fn connect_one(path: &Path) -> Result<SqliteConnection, sqlx::Error> {
+    SqliteConnection::connect_with(&options(path)).await
 }
 
 /// Runs every shipped migration, in order — so a table added in migration 2 is

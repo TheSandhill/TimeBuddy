@@ -14,7 +14,6 @@ use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use serde::Serialize;
-use sqlx::SqlitePool;
 use tauri::{AppHandle, Manager, Runtime, State};
 
 use crate::db::Db;
@@ -168,7 +167,14 @@ fn rotate(folder: &Path) {
 /// file: the database is open and being written to, and a byte-for-byte copy
 /// taken mid-transaction is a file that restores into a corrupt database. See
 /// ADR-0007.
-pub async fn run(pool: &SqlitePool, folder: &Path, now: DateTime<Utc>) -> Result<BackupStatus> {
+///
+/// Generic over the executor for the same reason [`settings::get`] is: the
+/// restore's safety copy is written over a single connection it can close
+/// deterministically, because it is about to move the file it just copied.
+pub async fn run<'e, E>(db: E, folder: &Path, now: DateTime<Utc>) -> Result<BackupStatus>
+where
+    E: sqlx::Executor<'e, Database = sqlx::Sqlite>,
+{
     // Creating the folder is also the check that it can be reached at all: a
     // path on a drive that has been unplugged fails here, which is where the
     // caller wants to hear about it.
@@ -182,7 +188,7 @@ pub async fn run(pool: &SqlitePool, folder: &Path, now: DateTime<Utc>) -> Result
     if !path.exists() {
         sqlx::query("VACUUM INTO ?")
             .bind(path.to_string_lossy().as_ref())
-            .execute(pool)
+            .execute(db)
             .await
             .map_err(Error::backup)?;
     }
@@ -224,6 +230,7 @@ mod tests {
     use crate::db::test_file_pool;
     use crate::test_support::{at, now};
     use sqlx::sqlite::SqliteConnectOptions;
+    use sqlx::SqlitePool;
     use std::collections::BTreeSet;
     use tempfile::TempDir;
 

@@ -432,9 +432,12 @@ pub async fn take_staged(data_dir: &Path, db_file: &Path) -> Outcome {
 /// appears in the same list everything else does — so undoing a restore is the
 /// same act as making one.
 ///
-/// The pool is short-lived and **closed before the swap**. The file about to be
-/// replaced must not be open at the moment it is replaced, and `VACUUM INTO` is
-/// the only way to copy one that might have a WAL beside it.
+/// One connection, not a pool, and **closed before the swap**. The file about to
+/// be replaced must not be open at the moment it is replaced, and `VACUUM INTO`
+/// is the only way to copy one that might have a WAL beside it.
+///
+/// A pool would not do: it cannot say when the file is free again, and the
+/// rename in [`swap`] is the next thing to happen. See [`db::connect_one`].
 async fn copy_present_aside(data_dir: &Path, db_file: &Path) -> Result<Option<String>> {
     // Nothing to save. A staged restore onto an install with no database is odd
     // but harmless, and refusing it would strand the restore.
@@ -442,9 +445,9 @@ async fn copy_present_aside(data_dir: &Path, db_file: &Path) -> Result<Option<St
         return Ok(None);
     }
 
-    let pool = db::connect(db_file).await?;
+    let mut connection = db::connect_one(db_file).await?;
 
-    let folder = settings::get(&pool)
+    let folder = settings::get(&mut connection)
         .await
         .map(|settings| backup::resolve_folder(settings.backup_folder.as_deref(), data_dir))
         // A database whose settings row cannot be read still deserves a copy —
@@ -452,11 +455,17 @@ async fn copy_present_aside(data_dir: &Path, db_file: &Path) -> Result<Option<St
         .unwrap_or_else(|_| backup::resolve_folder(None, data_dir));
 
     let now = Utc::now();
-    let written = backup::run(&pool, &folder, now).await;
+    let written = backup::run(&mut connection, &folder, now).await;
 
     // Closed whether or not the copy worked: the swap is next either way, and a
-    // pool left open would be a handle on the file it is about to move.
-    pool.close().await;
+    // connection left open would be a handle on the file it is about to move.
+    //
+    // A close that itself fails needs no handling here. It would mean the file
+    // may still be held, and the swap that follows is the thing that finds out —
+    // loudly, as `SwapFailed`, with the database untouched. Reporting it here
+    // would only be the same news under a name that says the copy failed, which
+    // it did not.
+    let _ = connection.close().await;
 
     written.map(|_| Some(backup::file_name(now)))
 }
@@ -629,13 +638,17 @@ mod tests {
     ///
     /// Opened rather than migrated: these files are already migrated, and
     /// `test_file_pool` would try to apply migration 1 to a database that has it.
+    ///
+    /// One connection rather than a pool, for the reason in [`db::connect_one`]:
+    /// several of these tests read the database and then expect the very next
+    /// step to move it, so a look at the file has to let go of it.
     async fn clients_in(path: &Path) -> Vec<String> {
-        let pool = db::connect(path).await.expect("a database is there");
+        let mut connection = db::connect_one(path).await.expect("a database is there");
         let names: Vec<(String,)> = sqlx::query_as("SELECT name FROM clients ORDER BY name")
-            .fetch_all(&pool)
+            .fetch_all(&mut connection)
             .await
             .expect("and it holds the schema");
-        pool.close().await;
+        connection.close().await.expect("and it lets go of the file");
         names.into_iter().map(|(name,)| name).collect()
     }
 
@@ -644,13 +657,13 @@ mod tests {
     /// The hours are what the whole feature is about, so a restore is judged on
     /// them directly rather than on a row count standing in for them.
     async fn minutes_in(path: &Path) -> i64 {
-        let pool = db::connect(path).await.expect("a database is there");
+        let mut connection = db::connect_one(path).await.expect("a database is there");
         let (total,): (i64,) =
             sqlx::query_as("SELECT COALESCE(SUM(duration_minutes), 0) FROM time_entries")
-                .fetch_one(&pool)
+                .fetch_one(&mut connection)
                 .await
                 .expect("and it holds the entries");
-        pool.close().await;
+        connection.close().await.expect("and it lets go of the file");
         total
     }
 
@@ -781,6 +794,29 @@ mod tests {
             vec!["Acme".to_string(), "Today's Client".to_string()],
             "and undoing a restore is just restoring the copy it made"
         );
+    }
+
+    #[tokio::test]
+    async fn the_database_is_let_go_of_before_the_swap_needs_to_move_it() {
+        // The invariant the swap rests on, asserted where it is established
+        // rather than three steps later: making the safety copy is the last
+        // thing to open the database being replaced, so by the time it returns
+        // the file has to be movable. Windows will not rename an open file, and
+        // a swap that cannot rename is a restore that does not happen.
+        let it = install().await;
+        log_an_hour(&it.pool, "Acme").await;
+        it.pool.close().await;
+
+        // Asserted before as well as after, so that a failure below can only be
+        // about the copy. Without it this test could accuse `copy_present_aside`
+        // of a handle the fixture's own pool had left behind.
+        let free = it.data_dir.join("proof.db");
+        std::fs::rename(&it.db_file, &free).expect("the fixture let go of it first");
+        std::fs::rename(&free, &it.db_file).unwrap();
+
+        copy_present_aside(&it.data_dir, &it.db_file).await.unwrap();
+
+        std::fs::rename(&it.db_file, &free).expect("and so did the copy");
     }
 
     #[tokio::test]
