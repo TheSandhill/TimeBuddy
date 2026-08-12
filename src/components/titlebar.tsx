@@ -7,7 +7,17 @@ import { closeWindow, minimizeWindow } from "../tray/window-buttons";
  * The window's own chrome (ADR-0004).
  *
  * `decorations: false` is what makes the titlebar themeable, and what makes
- * dragging and the buttons ours to provide. There is no maximize button, and
+ * dragging and the buttons ours to provide — each of them an IPC call, so each
+ * of them a grant in `capabilities/default.json` that fails silently if it is
+ * missing.
+ *
+ * The drag region is `deep` rather than bare because a bare one is **self
+ * only**: it does not reach its own children, so a bar built out of nested
+ * divs would be mostly holes. `deep` hands the whole subtree over, and the
+ * buttons stay clickable regardless — Tauri stops at the first clickable
+ * element it meets on the way up and never consults an ancestor.
+ *
+ * There is no maximize button, and
  * that is the point: dropping native decorations forfeits Snap Layouts and
  * double-click-to-maximize, and offering no maximize at all sidesteps
  * reimplementing any of it.
@@ -22,13 +32,10 @@ export function Titlebar({ block, now }: RunningBlock) {
 
   return (
     <header
-      data-tauri-drag-region
+      data-tauri-drag-region="deep"
       className="grid h-10 shrink-0 grid-cols-3 items-center border-b border-border bg-surface-raised px-3"
     >
-      <span
-        data-tauri-drag-region
-        className="text-sm font-medium tracking-wide text-ink"
-      >
+      <span className="text-sm font-medium tracking-wide text-ink">
         {t("app.name")}
       </span>
 
@@ -40,7 +47,7 @@ export function Titlebar({ block, now }: RunningBlock) {
        * `role="timer"` rather than `status`: a live region would have a screen
        * reader announce every second of it.
        */}
-      <div data-tauri-drag-region className="flex justify-center">
+      <div className="flex justify-center">
         {block ? (
           <span
             role="timer"
