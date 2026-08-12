@@ -3,9 +3,10 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": ["main"],
-  "comment": "No sql: permissions — all SQL lives in Rust behind typed commands (ADR-0002). The plugin is present only for its migration runner. dialog:allow-save opens the native Save as… box for the xlsx export and dialog:allow-open picks the backup folder; both return a path, not a file handle — Rust writes the bytes. No autostart: permissions either: the checkbox goes through update_settings so the registry and the settings row are written together. updater:default lets the frontend ask whether there is a newer TimeBuddy and install it; process:allow-restart is the relaunch that finishes that, and is deliberately the only process: permission — process:allow-exit would be a second way out of the app, and the way out is the tray's Quit (ADR-0004).",
+  "comment": "No sql: permissions — all SQL lives in Rust behind typed commands (ADR-0002). The plugin is present only for its migration runner. dialog:allow-save opens the native Save as… box for the xlsx export and dialog:allow-open picks the backup folder; both return a path, not a file handle — Rust writes the bytes. No autostart: permissions either: the checkbox goes through update_settings so the registry and the settings row are written together. updater:default lets the frontend ask whether there is a newer TimeBuddy and install it; process:allow-restart is the relaunch that finishes that, and is deliberately the only process: permission — process:allow-exit would be a second way out of the app, and the way out is the tray's Quit (ADR-0004). The three core:window grants are the three things dropping native decorations made ours to provide (ADR-0004): dragging the window, and the two buttons. core:default does not supply them — core:window:default is introspection only — and a missing grant is refused in silence, which is why src/tray/capabilities.test.ts asserts they are here.",
   "permissions": [
     "core:default",
+    "core:window:allow-start-dragging",
     "core:window:allow-minimize",
     "core:window:allow-close",
     "dialog:allow-save",

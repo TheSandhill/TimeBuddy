@@ -27,6 +27,47 @@ const inFlight: RunningBlock = {
   now: "2026-08-05T12:10:00Z",
 };
 
+/**
+ * Whether Tauri would start a window drag from a mousedown on `element`.
+ *
+ * A transcription of the rule in `tauri/src/window/scripts/drag.js`, which the
+ * webview injects and jsdom therefore never sees. The rule is worth restating
+ * because it is not the one it looks like: a bare `data-tauri-drag-region` is
+ * **self only** — it does not reach the element's own children — so a bar built
+ * out of nested divs is full of holes unless the attribute says `deep`.
+ * Clickable elements stop the walk before any ancestor is consulted, which is
+ * what keeps the window buttons clickable inside a deep region.
+ */
+function wouldDrag(element: HTMLElement, root: HTMLElement): boolean {
+  const clickable = new Set(["A", "BUTTON", "INPUT", "SELECT", "TEXTAREA"]);
+  const interactiveRoles = new Set(["button", "link", "menuitem", "tab"]);
+
+  for (
+    let current: HTMLElement | null = element;
+    current !== null;
+    current = current === root ? null : current.parentElement
+  ) {
+    const attr = current.getAttribute("data-tauri-drag-region");
+    const isClickable =
+      clickable.has(current.tagName) ||
+      interactiveRoles.has(current.getAttribute("role") ?? "");
+
+    if (isClickable && attr === null) return false;
+    if (attr === null) continue;
+    if (attr === "false") return false;
+    if (attr === "deep") return true;
+    if (attr === "" || attr === "true") return current === element;
+  }
+
+  return false;
+}
+
+function describeElement(element: Element): string {
+  const tag = element.tagName.toLowerCase();
+  const role = element.getAttribute("role");
+  return role === null ? tag : `${tag}[role=${role}]`;
+}
+
 function renderTitlebar(running: RunningBlock = idle) {
   return render(
     <I18nextProvider i18n={createI18n("nl")}>
@@ -64,6 +105,31 @@ describe("the custom titlebar", () => {
     expect(container.querySelector("header")).toHaveAttribute(
       "data-tauri-drag-region",
     );
+  });
+
+  it("leaves no dead spot: every part of the bar but the buttons drags", () => {
+    const { container } = renderTitlebar(inFlight);
+    const header = container.querySelector("header") as HTMLElement;
+
+    // The buttons are the deliberate exception, and have their own test.
+    for (const element of [header, ...header.querySelectorAll("*")]) {
+      if (element.closest("button") !== null) {
+        continue;
+      }
+      expect(
+        wouldDrag(element as HTMLElement, header),
+        `${describeElement(element)} is a dead spot on the titlebar`,
+      ).toBe(true);
+    }
+  });
+
+  it("still lets the buttons be clicked rather than dragged", () => {
+    const { container } = renderTitlebar(inFlight);
+    const header = container.querySelector("header") as HTMLElement;
+
+    for (const button of header.querySelectorAll("button")) {
+      expect(wouldDrag(button, header), describeElement(button)).toBe(false);
+    }
   });
 
   it("minimizes when the small button is pressed", async () => {
