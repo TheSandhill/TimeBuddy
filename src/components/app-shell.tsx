@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useDailyBackup } from "../backup/use-daily-backup";
 import { useRestoreOutcome } from "../restore/use-restore";
-import { requestTimerToggle } from "../tray/toggle-request";
+import { requestTimerPause, requestTimerToggle } from "../tray/toggle-request";
 import { useUpdatePrompt } from "../update/use-update";
 import { BackupBanner } from "./backup-banner";
 import { RestoreBanner } from "./restore-banner";
@@ -35,16 +35,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   // whoever already got in.
   const update = useUpdatePrompt();
 
-  // The tray's Start/Stop item is answered by the Timer screen, which is the
-  // one place that knows what a stopped block is worth — so the request is
-  // latched and the Timer is navigated to, in that order, because the screen
-  // has to exist before it can pick anything up.
+  // Both tray items are answered by the block's lifecycle, which sits above
+  // every screen (ADR-0010), so the request is only latched and not routed
+  // anywhere. Start/Stop brings the Timer up on its way — the screen is where
+  // the undo for a stop appears, and it has to exist to show one. Pause has
+  // nothing to show, so it does not move anybody off the screen they are on.
   return (
     <WindowFrame
       onTrayToggle={() => {
         requestTimerToggle();
         void navigate({ to: "/" });
       }}
+      onTrayPause={requestTimerPause}
     >
       {restored.data?.status === "failed" ? (
         <RestoreBanner fault={restored.data.fault} />

@@ -35,6 +35,13 @@ const MAIN_WINDOW: &str = "main";
 /// decided in exactly one place, and that place is the Timer screen.
 pub const TOGGLE_TIMER_EVENT: &str = "tray://toggle-timer";
 
+/// Asks the frontend to hold the block, or to let it carry on.
+///
+/// One event for both, like `TOGGLE_TIMER_EVENT` is one for start and stop:
+/// which of the two a click means is known from the row, and the frontend is
+/// what has read it.
+pub const TOGGLE_PAUSE_EVENT: &str = "tray://toggle-pause";
+
 /// Says the window has just gone into the tray, so the frontend can explain
 /// itself the first time.
 ///
@@ -51,6 +58,15 @@ pub struct TrayLabels {
     /// "Start timer" or "Stop timer" — the frontend picks, because the
     /// frontend is what knows whether a block is in flight.
     pub toggle: String,
+    /// "Pause" or "Resume" — the frontend picks, for the same reason it picks
+    /// `toggle`: whether the block is held is something only it has read.
+    pub pause: String,
+    /// Whether there is a block to hold at all.
+    ///
+    /// A word rather than a hidden item, and greyed rather than clickable:
+    /// nothing is in flight for most of the day, and an item that answers a
+    /// click by doing nothing reads as a bug.
+    pub pause_enabled: bool,
     pub quit: String,
     /// What hovering the icon says, which while a block runs is how much of it
     /// is left.
@@ -64,6 +80,7 @@ pub struct TrayLabels {
 struct TrayMenuItems {
     show: MenuItem<Wry>,
     toggle: MenuItem<Wry>,
+    pause: MenuItem<Wry>,
     quit: MenuItem<Wry>,
 }
 
@@ -118,10 +135,21 @@ fn build(app: &AppHandle, labels: &TrayLabels) -> Result<TrayMenuItems> {
         .map_err(Error::tray)?;
     let toggle = MenuItem::with_id(app, "toggle", &labels.toggle, true, None::<&str>)
         .map_err(Error::tray)?;
+    let pause = MenuItem::with_id(
+        app,
+        "pause",
+        &labels.pause,
+        labels.pause_enabled,
+        None::<&str>,
+    )
+    .map_err(Error::tray)?;
     let quit_item = MenuItem::with_id(app, "quit", &labels.quit, true, None::<&str>)
         .map_err(Error::tray)?;
-    let menu =
-        Menu::with_items(app, &[&show, &toggle, &quit_item]).map_err(Error::tray)?;
+    // Pause after Start/Stop rather than before it: starting is what the menu is
+    // opened for, and holding a block is the rarer of the two things done to one
+    // that is already under way.
+    let menu = Menu::with_items(app, &[&show, &toggle, &pause, &quit_item])
+        .map_err(Error::tray)?;
 
     let mut tray = TrayIconBuilder::with_id(TRAY_ID)
         .menu(&menu)
@@ -152,6 +180,12 @@ fn build(app: &AppHandle, labels: &TrayLabels) -> Result<TrayMenuItems> {
         "toggle" => {
             let _ = app.emit(TOGGLE_TIMER_EVENT, ());
         }
+        // Nor for this one, and here there is nothing to navigate to either: the
+        // block's lifecycle sits above every screen (ADR-0010), so holding one
+        // needs no screen to be open at all.
+        "pause" => {
+            let _ = app.emit(TOGGLE_PAUSE_EVENT, ());
+        }
         "quit" => quit(app),
         _ => {}
     })
@@ -161,6 +195,7 @@ fn build(app: &AppHandle, labels: &TrayLabels) -> Result<TrayMenuItems> {
     Ok(TrayMenuItems {
         show,
         toggle,
+        pause,
         quit: quit_item,
     })
 }
@@ -191,6 +226,11 @@ pub async fn sync_tray(
         Some(existing) => {
             existing.show.set_text(&labels.show).map_err(Error::tray)?;
             existing.toggle.set_text(&labels.toggle).map_err(Error::tray)?;
+            existing.pause.set_text(&labels.pause).map_err(Error::tray)?;
+            existing
+                .pause
+                .set_enabled(labels.pause_enabled)
+                .map_err(Error::tray)?;
             existing.quit.set_text(&labels.quit).map_err(Error::tray)?;
         }
         None => *items = Some(build(&app, &labels)?),
@@ -220,6 +260,28 @@ mod tests {
             listener.contains(TOGGLE_TIMER_EVENT),
             "no listener for {TOGGLE_TIMER_EVENT} in src/tray/use-tray.ts"
         );
+    }
+
+    /// The same, for the item that holds a block: a rename on one side alone
+    /// would leave a menu entry that greys and ungreys and never pauses.
+    #[test]
+    fn the_pause_event_is_named_the_way_the_frontend_listens_for_it() {
+        let listener = include_str!("../../src/tray/use-tray.ts");
+
+        assert!(
+            listener.contains(TOGGLE_PAUSE_EVENT),
+            "no listener for {TOGGLE_PAUSE_EVENT} in src/tray/use-tray.ts"
+        );
+    }
+
+    /// One event per item. `tray://toggle-timer` is a prefix of nothing, but the
+    /// assertions above are `contains`, so two names where one contained the
+    /// other would both pass on a single listener.
+    #[test]
+    fn the_two_timer_events_are_told_apart_by_name() {
+        assert_ne!(TOGGLE_TIMER_EVENT, TOGGLE_PAUSE_EVENT);
+        assert!(!TOGGLE_PAUSE_EVENT.contains(TOGGLE_TIMER_EVENT));
+        assert!(!TOGGLE_TIMER_EVENT.contains(TOGGLE_PAUSE_EVENT));
     }
 
     /// The same, for the event that asks the frontend to explain itself.

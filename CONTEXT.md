@@ -316,7 +316,15 @@ The icon TimeBuddy leaves in the notification area. Its tooltip is the running b
 remaining time, in whole minutes.
 
 **Close minimises here and the block keeps running**, so the tray menu is the only place the app
-can be quit from: Show, Start/Stop timer, Quit. See ADR-0004.
+can be quit from: Show, Start/Stop timer, Pause/Resume timer, Quit. See ADR-0004.
+
+Pause is an item of its own rather than being folded into the first one the way the dial folds it
+into its big button. A menu has no sizes to say which act is the consequential one, so what it has
+instead is one line per act: Stop always says Stop, and the item beside it says either Pause or
+Resume. It is **greyed while there is nothing it may hold**, not removed — Quit staying where it was
+last time is worth more than a menu with no dead lines in it, and an item that answers a click by
+doing nothing reads as a bug. An Orphaned Block counts as nothing it may hold: the tooltip still
+counts that block down, but holding one would be a third answer to a question with two.
 
 Whether a close hides or closes is decided in **one place, in Rust** — every close arrives there,
 the titlebar button and Alt+F4 alike, or the two would mean different things. The first hide
@@ -327,10 +335,12 @@ If no tray icon can be created, close closes. A window hidden with nothing left 
 not minimised.
 
 Its words come from the catalogues like every other string, so the frontend hands them to Rust
-rather than Rust spelling them. Start/Stop is answered wherever the Running Timer's lifecycle lives,
+rather than Rust spelling them. Both items are answered wherever the Running Timer's lifecycle lives,
 which is above every screen (ADR-0010) — so the menu works whatever is open, and what a stopped block
-is worth is still decided once. It does not pull the window back up — acting without the window is
-the point, and the menu's own label and the tooltip are the answer.
+is worth is still decided once. Neither pulls the window back up — acting without the window is
+the point, and the menu's own label and the tooltip are the answer. Start/Stop still brings the Timer
+screen up behind the scenes, because a stop puts its undo there; **Pause brings up nothing at all**,
+having nothing to show.
 
 It never answers the Orphaned Block question. That is a question, and a menu item must not answer it
 on the user's behalf in either direction.

@@ -231,6 +231,8 @@
     "show": "TimeBuddy tonen",
     "start": "Timer starten",
     "stop": "Timer stoppen",
+    "pause": "Timer pauzeren",
+    "resume": "Timer hervatten",
     "quit": "Afsluiten",
     "remaining": "Nog {{minutes}} min",
     "hiddenNotice": "TimeBuddy draait door in het systeemvak. Afsluiten kan via het pictogram.",

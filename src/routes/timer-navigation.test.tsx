@@ -46,6 +46,9 @@ const notify = vi.hoisted(() => ({ notify: vi.fn(() => Promise.resolve()) }));
 vi.mock("../timer/notify", () => notify);
 
 const { routeTree } = await import("../router");
+const { clearTimerPause, requestTimerPause } = await import(
+  "../tray/toggle-request"
+);
 
 /**
  * A one-minute block, so that running one out costs the suite sixty ticks
@@ -185,6 +188,7 @@ beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
   running = null;
   stopped = null;
+  clearTimerPause();
   invoke.mockImplementation((name: string, args: unknown) => {
     const respond = responses[name];
     return respond
@@ -286,6 +290,22 @@ describe("a paused block", () => {
     expect(
       screen.getByRole("button", { name: "Doorgaan" }),
     ).toBeInTheDocument();
+  });
+
+  it("is held from the tray without moving the user off the screen they are on", async () => {
+    // The tray's Pause item asks nothing of any screen (ADR-0010), so unlike
+    // Start/Stop it does not bring the Timer up — and the pill, which is above
+    // the `<Outlet/>`, is what reports that it landed.
+    renderApp();
+    await startABlock();
+    await leaveTheTimer();
+
+    act(() => requestTimerPause());
+
+    await waitFor(() =>
+      expect(screen.getByRole("timer").textContent).toContain("gepauzeerd"),
+    );
+    expect(onTimerScreen()).toBeNull();
   });
 
   it("does not run out while it is held, wherever the user is", async () => {

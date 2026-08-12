@@ -61,8 +61,10 @@ death, offering only the minutes actually worked.
   to catch.
 - Two new commands, `pause_running_timer` and `resume_running_timer`, both returning the re-read row so
   the frontend never keeps its own idea of how long a pause has lasted.
-- The tray menu does **not** gain a Pause item here. That is #36: it means a fourth entry, a new event,
-  and the string assertions Rust makes against the catalogues.
+- The tray menu did **not** gain a Pause item here. That was #36: a fourth entry, a new event, and the
+  string assertions Rust makes against the catalogues. It went the other way from the dial — a menu has
+  no sizes, so Pause is its own line rather than sharing one with Start, and Stop keeps its own word
+  (`CONTEXT.md`, Tray).
 - Cost: `running_timer` is no longer readable at a glance. Two columns and a rule replace one column and
   none, and every place that measures a block has to go through `elapsedSeconds` rather than subtracting
   for itself. That was already the rule; it is now load-bearing.

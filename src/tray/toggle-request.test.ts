@@ -1,16 +1,21 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  clearTimerPause,
   clearTimerToggle,
+  requestTimerPause,
   requestTimerToggle,
+  useTimerPause,
   useTimerToggle,
 } from "./toggle-request";
 
 /** Clicking the menu item, from outside React's render pass. */
 const clickMenuItem = () => act(() => requestTimerToggle());
+const clickPause = () => act(() => requestTimerPause());
 
 afterEach(() => {
   clearTimerToggle();
+  clearTimerPause();
 });
 
 describe("a start/stop asked for from the tray", () => {
@@ -86,6 +91,34 @@ describe("a start/stop asked for from the tray", () => {
 
     renderHook(() => useTimerToggle(toggle));
 
+    expect(toggle).not.toHaveBeenCalled();
+  });
+});
+
+describe("a pause asked for from the tray", () => {
+  it("waits, and is acted on once", () => {
+    const hold = vi.fn();
+    clickPause();
+
+    const { rerender } = renderHook(() => useTimerPause(hold));
+    rerender();
+
+    expect(hold).toHaveBeenCalledTimes(1);
+  });
+
+  it("is not the same request as a start or a stop", () => {
+    // Both items are offered while a block runs, so one pending flag for the
+    // two of them would end a block that was only meant to be held.
+    const toggle = vi.fn();
+    const hold = vi.fn();
+    renderHook(() => {
+      useTimerToggle(toggle);
+      useTimerPause(hold);
+    });
+
+    clickPause();
+
+    expect(hold).toHaveBeenCalledTimes(1);
     expect(toggle).not.toHaveBeenCalled();
   });
 });

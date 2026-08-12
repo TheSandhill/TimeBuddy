@@ -231,6 +231,8 @@
     "show": "Show TimeBuddy",
     "start": "Start timer",
     "stop": "Stop timer",
+    "pause": "Pause timer",
+    "resume": "Resume timer",
     "quit": "Quit",
     "remaining": "{{minutes}} min left",
     "hiddenNotice": "TimeBuddy is still running in the system tray. Quit from the tray icon.",

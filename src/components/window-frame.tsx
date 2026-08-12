@@ -19,6 +19,7 @@ import { Titlebar } from "./titlebar";
 export function WindowFrame({
   children,
   onTrayToggle,
+  onTrayPause,
   revealsWork = true,
 }: {
   children: ReactNode;
@@ -27,6 +28,12 @@ export function WindowFrame({
    * where there is no work to act on — the tray is there for Show and Quit.
    */
   onTrayToggle?: () => void;
+  /**
+   * The same for its Pause/Resume item. Absent behind the lock screen for the
+   * same reason, where the item is greyed anyway: nothing is read while the
+   * door is shut, so as far as the frame is concerned no block is in flight.
+   */
+  onTrayPause?: () => void;
   /**
    * Whether the frame may say anything about the work being done. False
    * behind the lock screen: a block keeps running there, but a countdown on
@@ -38,7 +45,9 @@ export function WindowFrame({
 
   return (
     <TimerLifecycleProvider watching={revealsWork}>
-      <Chrome onTrayToggle={onTrayToggle}>{children}</Chrome>
+      <Chrome onTrayToggle={onTrayToggle} onTrayPause={onTrayPause}>
+        {children}
+      </Chrome>
     </TimerLifecycleProvider>
   );
 }
@@ -51,13 +60,22 @@ export function WindowFrame({
 function Chrome({
   children,
   onTrayToggle,
+  onTrayPause,
 }: {
   children: ReactNode;
   onTrayToggle?: () => void;
+  onTrayPause?: () => void;
 }) {
-  const { block, now } = useTimerLifecycle();
+  const { block, now, orphan } = useTimerLifecycle();
 
-  useTray({ block, now }, () => onTrayToggle?.());
+  useTray(
+    { block, now },
+    {
+      orphaned: orphan !== null,
+      onToggleRequested: () => onTrayToggle?.(),
+      onPauseRequested: () => onTrayPause?.(),
+    },
+  );
 
   return (
     <div className="flex h-full flex-col bg-surface text-ink">

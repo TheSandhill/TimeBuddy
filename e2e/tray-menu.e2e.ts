@@ -10,9 +10,11 @@
  *
  * What is asked of Windows, through `support/tray.ts`:
  *
- * - that the icon opens a menu of three at all;
- * - that the middle one starts and stops a Pomodoro Block, and that the label
+ * - that the icon opens a menu of four at all;
+ * - that the second one starts and stops a Pomodoro Block, and that the label
  *   flips between the two as it does;
+ * - that the third holds the block and lets it go again, and is greyed while
+ *   there is no block to hold;
  * - that the tooltip counts the block down, which takes the minute it takes;
  * - that a block stopped from here is worth the minutes actually elapsed and
  *   not the nominal length, which is ADR-0010's claim that the lifecycle is
@@ -33,6 +35,7 @@ import {
   findTrayIcons,
   hasNotificationArea,
   openTrayMenu,
+  PAUSE_ITEM,
   pressTrayItem,
   QUIT_ITEM,
   readTrayIcon,
@@ -72,9 +75,11 @@ describe.skipIf(!shell)("the tray menu", () => {
   let icon: TrayIcon;
   /** What the icon says with nothing running, which is the app's own name. */
   let idle: string;
-  /** The middle item's two labels, learnt rather than spelled out. */
+  /** The Start/Stop item's two labels, learnt rather than spelled out. */
   let startLabel: string;
   let stopLabel: string;
+  /** The Pause item's, learnt the same way. */
+  let pauseLabel: string;
 
   beforeAll(async () => {
     app = await launchApp();
@@ -105,18 +110,25 @@ describe.skipIf(!shell)("the tray menu", () => {
     await app?.close();
   });
 
-  it("offers Show, Start and Quit on a right-click", () => {
+  it("offers Show, Start, Pause and Quit on a right-click", () => {
     const items = openTrayMenu(icon.runtimeId);
 
-    expect(items).toHaveLength(3);
+    expect(items).toHaveLength(4);
     for (const item of items) {
       expect(item.name).not.toBe("");
     }
 
     // Read by position, not by label: the words come from the catalogues and a
-    // reworded Dutch string is not a regression. What the middle one says now
+    // reworded Dutch string is not a regression. What the second one says now
     // is what the next step expects it to stop saying.
     startLabel = items[TOGGLE_ITEM].name;
+    pauseLabel = items[PAUSE_ITEM].name;
+
+    // Nothing is running, so there is nothing to hold. Greyed rather than gone:
+    // Quit does not move about, and an item that answers a click by doing
+    // nothing reads as a bug.
+    expect(items[PAUSE_ITEM].enabled).toBe(false);
+    expect(items[TOGGLE_ITEM].enabled).toBe(true);
 
     // Opening the menu is not showing the app.
     expect(app.window().visible).toBe(false);
@@ -140,8 +152,13 @@ describe.skipIf(!shell)("the tray menu", () => {
     // the label and the tooltip are the only report there is.
     expect(app.window().visible).toBe(false);
 
-    stopLabel = openTrayMenu(icon.runtimeId)[TOGGLE_ITEM].name;
+    const items = openTrayMenu(icon.runtimeId);
+    stopLabel = items[TOGGLE_ITEM].name;
     expect(stopLabel).not.toBe(startLabel);
+
+    // And now there is something to hold.
+    expect(items[PAUSE_ITEM].enabled).toBe(true);
+    expect(items[PAUSE_ITEM].name).toBe(pauseLabel);
   });
 
   it("counts the block down in the tooltip", async () => {
@@ -162,6 +179,44 @@ describe.skipIf(!shell)("the tray menu", () => {
     expect(later).toBe(started - 1);
     expect(app.window().visible).toBe(false);
   }, 120_000);
+
+  it("holds the block from the menu, and lets it go again", async () => {
+    const running = readTrayIcon(icon.runtimeId).name;
+
+    expect(pressTrayItem(icon.runtimeId, PAUSE_ITEM)).toBe(pauseLabel);
+
+    // The tooltip is the report, because there is no window to be one. It says
+    // *paused* rather than showing a countdown that has stopped moving
+    // (`CONTEXT.md`, Pomodoro Block), so the words change and the minutes stay.
+    const paused = await waitFor(
+      "the tooltip to say the block is held",
+      () => {
+        const now = readTrayIcon(icon.runtimeId).name;
+        return now === running ? null : now;
+      },
+      { timeout: 30_000, interval: 1_000 },
+    );
+    expect(paused).not.toBe(idle);
+    expect(minutesIn(paused)).toBe(minutesIn(running));
+
+    // The item is the other half of the report: it now offers the way back.
+    const resumeLabel = openTrayMenu(icon.runtimeId)[PAUSE_ITEM].name;
+    expect(resumeLabel).not.toBe(pauseLabel);
+    expect(app.window().visible).toBe(false);
+
+    // How long a held block stays held is `timer.test.tsx`'s question, and one
+    // it answers in fake time. What is only answerable here is that the menu
+    // item reaches the block at all — so the block is let go again and the next
+    // step stops it, rather than a minute being spent watching it not move.
+    expect(pressTrayItem(icon.runtimeId, PAUSE_ITEM)).toBe(resumeLabel);
+    await waitFor(
+      "the tooltip to go back to counting down",
+      () => readTrayIcon(icon.runtimeId).name !== paused || null,
+      { timeout: 30_000, interval: 1_000 },
+    );
+
+    expect(app.window().visible).toBe(false);
+  });
 
   it("stops the block from the menu, and logs the minutes actually worked", async () => {
     expect(pressTrayItem(icon.runtimeId, TOGGLE_ITEM)).toBe(stopLabel);
@@ -198,10 +253,19 @@ describe.skipIf(!shell)("the tray menu", () => {
 
     expect(entry).toContain(PROJECT);
 
-    // The clock window, which is not a catalogue string: an early stop logs
-    // the elapsed time and never the nominal length, so a block waited out for
-    // a minute and a bit logs one minute — and nothing like the 25 a completed
-    // one would claim (ADR-0010).
+    // What it is worth: an early stop logs the elapsed time and never the
+    // nominal length, so a block waited out for a minute and a bit logs one or
+    // two minutes — and nothing like the 25 a completed one would claim
+    // (ADR-0010). The held stretch is not in it either (ADR-0011).
+    const logged = entry.match(/(\d+)\s*min/);
+    expect(logged).not.toBeNull();
+    expect(Number(logged![1])).toBeGreaterThanOrEqual(1);
+    expect(Number(logged![1])).toBeLessThanOrEqual(2);
+
+    // The clock window, which is not a catalogue string. It may span *longer*
+    // than the minutes logged, because this block was held partway through and
+    // `start_at` is never moved to account for one — the window describes and
+    // the duration is what counts (ADR-0011).
     const window24h = entry.match(/(\d{2}):(\d{2})[^\d]+(\d{2}):(\d{2})/);
     expect(window24h).not.toBeNull();
 
@@ -209,8 +273,7 @@ describe.skipIf(!shell)("the tray menu", () => {
     const spanned =
       (Number(toHour) * 60 + Number(toMinute)) -
       (Number(fromHour) * 60 + Number(fromMinute));
-    expect(spanned).toBeGreaterThanOrEqual(1);
-    expect(spanned).toBeLessThanOrEqual(2);
+    expect(spanned).toBeGreaterThanOrEqual(Number(logged![1]));
   });
 
   it("quits the app, which nothing else can do", async () => {

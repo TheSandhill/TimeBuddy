@@ -40,7 +40,7 @@ import {
 import { settingsKey, useSettings } from "../data/use-settings";
 import type { Instant, RunningTimer, StopTimer } from "../data/types";
 import { UNDO_WINDOW_MS } from "../entries/use-undoable-delete";
-import { useTimerToggle } from "../tray/toggle-request";
+import { useTimerPause, useTimerToggle } from "../tray/toggle-request";
 import { isPaused, outcomeAt, type BlockOutcome } from "./block";
 import { playChime } from "./chime";
 import { currentInstant, localDay, plusMinutes } from "./clock";
@@ -486,6 +486,21 @@ export function TimerLifecycleProvider({
   // cancelling it would leave running a block the user asked to end.
   useEffect(() => () => commitStop(), [commitStop]);
 
+  // No second request for a row already in the state being asked for.
+  const pause = () => {
+    if (block !== null && !paused && !busy && !holding.current) {
+      holding.current = true;
+      pauseBlock.mutate();
+    }
+  };
+
+  const resume = () => {
+    if (block !== null && paused && !busy && !holding.current) {
+      holding.current = true;
+      resumeBlock.mutate();
+    }
+  };
+
   // Start/Stop from the tray lands here rather than on the Timer screen: this
   // is where what a stopped block is worth is decided, and it is answered
   // whether or not that screen happens to be open. A block found on launch is
@@ -499,6 +514,22 @@ export function TimerLifecycleProvider({
       stop();
     } else if (canStart) {
       startBlock.mutate(projectId as number);
+    }
+  });
+
+  // Pause from the tray lands here too, and here that is all it takes: nothing
+  // is navigated to, because holding a block asks nothing of any screen. An
+  // Orphaned Block is left alone for the reason Start/Stop leaves it alone —
+  // there is no third answer to the recovery question, and resuming one would
+  // be vouching for minutes nobody watched.
+  useTimerPause(() => {
+    if (!watching || orphaned || block === null) {
+      return;
+    }
+    if (paused) {
+      resume();
+    } else {
+      pause();
     }
   });
 
@@ -528,19 +559,8 @@ export function TimerLifecycleProvider({
     stop,
     pendingStop: pendingStop?.outcome ?? null,
     paused,
-    // No second request for a row already in the state being asked for.
-    pause: () => {
-      if (block !== null && !paused && !busy && !holding.current) {
-        holding.current = true;
-        pauseBlock.mutate();
-      }
-    },
-    resume: () => {
-      if (block !== null && paused && !busy && !holding.current) {
-        holding.current = true;
-        resumeBlock.mutate();
-      }
-    },
+    pause,
+    resume,
     undoStop: () => {
       forget();
       setPendingStop(null);

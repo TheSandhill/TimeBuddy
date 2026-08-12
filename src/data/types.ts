@@ -204,6 +204,10 @@ export interface TrayLabels {
   show: string;
   /** "Start timer" or "Stop timer" — only the UI knows which applies. */
   toggle: string;
+  /** "Pause" or "Resume", picked the same way and from the same row. */
+  pause: string;
+  /** Whether there is a block to hold; the item is greyed rather than gone. */
+  pauseEnabled: boolean;
   quit: string;
   /** What hovering says, which while a block runs is the time left in it. */
   tooltip: string;
