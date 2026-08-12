@@ -39,7 +39,13 @@ const idle: RunningBlock = { block: null, now: "2026-08-05T12:00:00Z" };
 
 /** A block ten minutes into its twenty-five. */
 const inFlight: RunningBlock = {
-  block: { projectId: 7, startAt: "2026-08-05T12:00:00Z", plannedMinutes: 25 },
+  block: {
+    projectId: 7,
+    startAt: "2026-08-05T12:00:00Z",
+    plannedMinutes: 25,
+    pausedAt: null,
+    pausedSeconds: 0,
+  },
   now: "2026-08-05T12:10:00Z",
 };
 

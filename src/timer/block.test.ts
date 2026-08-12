@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { RunningTimer } from "../data/types";
 import {
   elapsedSeconds,
+  isPaused,
   formatCountdown,
   isComplete,
   outcomeAt,
@@ -13,6 +14,8 @@ const block: RunningTimer = {
   projectId: 1,
   startAt: "2026-08-05T09:00:00Z",
   plannedMinutes: 25,
+  pausedAt: null,
+  pausedSeconds: 0,
 };
 
 describe("elapsed time comes from the wall clock", () => {
@@ -38,6 +41,64 @@ describe("elapsed time comes from the wall clock", () => {
   it("is complete only once the nominal length has passed", () => {
     expect(isComplete(block, "2026-08-05T09:24:59Z")).toBe(false);
     expect(isComplete(block, "2026-08-05T09:25:00Z")).toBe(true);
+  });
+});
+
+describe("a Pomodoro Block that has been held", () => {
+  /** Held right now, ten minutes after it began. */
+  const heldNow: RunningTimer = {
+    ...block,
+    pausedAt: "2026-08-05T09:10:00Z",
+  };
+
+  /** Ran ten minutes, was held for twenty, and is running again. */
+  const heldEarlier: RunningTimer = {
+    ...block,
+    pausedSeconds: 20 * 60,
+  };
+
+  it("knows which it is", () => {
+    expect(isPaused(block)).toBe(false);
+    expect(isPaused(heldNow)).toBe(true);
+  });
+
+  it("stands still, however long it is left held", () => {
+    expect(elapsedSeconds(heldNow, "2026-08-05T09:10:00Z")).toBe(600);
+    expect(elapsedSeconds(heldNow, "2026-08-05T09:40:00Z")).toBe(600);
+    expect(elapsedSeconds(heldNow, "2026-08-06T09:00:00Z")).toBe(600);
+  });
+
+  it("cannot run out while it is held", () => {
+    expect(isComplete(heldNow, "2026-08-06T09:00:00Z")).toBe(false);
+  });
+
+  it("does not count time it spent held once it carries on", () => {
+    // Half an hour after it began, twenty of it held: ten minutes of work.
+    expect(elapsedSeconds(heldEarlier, "2026-08-05T09:30:00Z")).toBe(600);
+    expect(remainingSeconds(heldEarlier, "2026-08-05T09:30:00Z")).toBe(900);
+  });
+
+  it("logs only the work when it is stopped by hand", () => {
+    expect(outcomeAt(heldEarlier, "2026-08-05T09:30:00Z")).toEqual({
+      kind: "stoppedEarly",
+      durationMinutes: 10,
+      endAt: "2026-08-05T09:30:00Z",
+    });
+  });
+
+  it("ends where it really ended, pauses and all", () => {
+    // Twenty-five minutes of work plus twenty held: it runs out at 09:45, and
+    // an end instant that ignored the pause would claim 09:25.
+    expect(outcomeAt(heldEarlier, "2026-08-05T09:45:00Z")).toEqual({
+      kind: "completed",
+      durationMinutes: 25,
+      endAt: "2026-08-05T09:45:00Z",
+    });
+  });
+
+  it("still reports the full nominal length when it completes", () => {
+    const outcome = outcomeAt(heldEarlier, "2026-08-05T10:30:00Z");
+    expect(outcome).toMatchObject({ kind: "completed", durationMinutes: 25 });
   });
 });
 

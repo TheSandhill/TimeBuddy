@@ -12,6 +12,8 @@ const commands = vi.hoisted(() => ({
   getRunningTimer: vi.fn(),
   startRunningTimer: vi.fn(),
   stopRunningTimer: vi.fn(),
+  pauseRunningTimer: vi.fn(),
+  resumeRunningTimer: vi.fn(),
   discardRunningTimer: vi.fn(),
   updateSettings: vi.fn(),
 }));
@@ -59,6 +61,8 @@ function inFlight(minutes: number): RunningTimer {
     projectId: website.id,
     startAt: new Date(Date.now() - minutes * 60_000).toISOString(),
     plannedMinutes: 25,
+    pausedAt: null,
+    pausedSeconds: 0,
   };
 }
 
@@ -506,6 +510,163 @@ describe("stopping a block by hand", () => {
     await waitFor(() => expect(commands.discardRunningTimer).toHaveBeenCalled());
     expect(screen.queryByRole("button", { name: "Ongedaan maken" })).toBeNull();
     expect(commands.stopRunningTimer).not.toHaveBeenCalled();
+  });
+});
+
+describe("pausing a block", () => {
+  /**
+   * A `running_timer` row that remembers what was done to it.
+   *
+   * The other tests here can answer `getRunningTimer` with a constant, because
+   * nothing they do changes the row. A pause is nothing *but* a change to the
+   * row, so it has to be observable.
+   */
+  function withRow(created: () => RunningTimer = () => inFlight(0)) {
+    let row: RunningTimer | null = null;
+
+    commands.getRunningTimer.mockImplementation(() => Promise.resolve(row));
+    commands.startRunningTimer.mockImplementation(() => {
+      row = created();
+      return Promise.resolve(row);
+    });
+    commands.pauseRunningTimer.mockImplementation(() => {
+      if (row && row.pausedAt === null) {
+        row = { ...row, pausedAt: new Date().toISOString() };
+      }
+      return Promise.resolve(row);
+    });
+    commands.resumeRunningTimer.mockImplementation(() => {
+      if (row?.pausedAt) {
+        row = {
+          ...row,
+          pausedSeconds:
+            row.pausedSeconds + (Date.now() - Date.parse(row.pausedAt)) / 1000,
+          pausedAt: null,
+        };
+      }
+      return Promise.resolve(row);
+    });
+
+  }
+
+  /** A block `worked` minutes in, held for `heldMinutes`, and still held. */
+  function heldBlock(worked: number, heldMinutes: number): RunningTimer {
+    const pausedAt = new Date();
+    return {
+      projectId: website.id,
+      startAt: new Date(
+        pausedAt.getTime() - (worked + heldMinutes) * 60_000,
+      ).toISOString(),
+      plannedMinutes: 25,
+      pausedAt: pausedAt.toISOString(),
+      pausedSeconds: heldMinutes * 60,
+    };
+  }
+
+  const held = () => screen.queryByText("Gepauzeerd");
+
+  async function startAndPause() {
+    withRow();
+    renderTimer();
+    await clickStart();
+    fireEvent.click(await screen.findByRole("button", { name: "Pauzeer" }));
+    await waitFor(() => expect(held()).not.toBeNull());
+  }
+
+  it("offers Pause on the big button while a block runs", async () => {
+    withRow();
+    renderTimer();
+    await clickStart();
+
+    expect(
+      await screen.findByRole("button", { name: "Pauzeer" }),
+    ).toBeInTheDocument();
+    expect(held()).toBeNull();
+  });
+
+  it("says so, because a countdown that stopped moving looks broken", async () => {
+    await startAndPause();
+
+    expect(held()).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Doorgaan" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Pauzeer" })).toBeNull();
+  });
+
+  it("still offers Stop, so a held block is not a trapped one", async () => {
+    await startAndPause();
+
+    expect(screen.getByRole("button", { name: "Stop" })).toBeInTheDocument();
+  });
+
+  it("holds the countdown where it was", async () => {
+    await startAndPause();
+    const frozen = screen.getByText(/^\d\d:\d\d$/).textContent;
+
+    await act(() => vi.advanceTimersByTimeAsync(30_000));
+
+    expect(screen.getByText(/^\d\d:\d\d$/).textContent).toBe(frozen);
+  });
+
+  it("does not run itself out while it is held", async () => {
+    // Twenty-four of its twenty-five minutes are behind it, and it is held.
+    // Five more minutes of wall clock must not finish it.
+    withRow(() => heldBlock(24, 0));
+    renderTimer();
+    await clickStart();
+    await waitFor(() => expect(held()).not.toBeNull());
+
+    await act(() => vi.advanceTimersByTimeAsync(5 * 60_000));
+
+    expect(commands.stopRunningTimer).not.toHaveBeenCalled();
+    expect(screen.getByText("01:00")).toBeInTheDocument();
+  });
+
+  it("carries on where it left off when resumed", async () => {
+    await startAndPause();
+
+    fireEvent.click(screen.getByRole("button", { name: "Doorgaan" }));
+
+    await waitFor(() => expect(held()).toBeNull());
+    expect(commands.resumeRunningTimer).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole("button", { name: "Pauzeer" }),
+    ).toBeInTheDocument();
+  });
+
+  it("asks to be held once, however many times the button is hit", async () => {
+    // A second write is refused by Rust rather than allowed to swallow the gap,
+    // but there is no reason to make the round trip.
+    // A second write would move the instant elapsed is measured to, and hand
+    // the block minutes nobody worked.
+    withRow();
+    renderTimer();
+    await clickStart();
+    const pause = await screen.findByRole("button", { name: "Pauzeer" });
+
+    fireEvent.click(pause);
+    fireEvent.click(pause);
+    await waitFor(() => expect(held()).not.toBeNull());
+
+    expect(commands.pauseRunningTimer).toHaveBeenCalledTimes(1);
+  });
+
+  it("logs only what was worked when a held block is stopped", async () => {
+    // Started half an hour ago, twenty of it held: ten minutes of work.
+    withRow(() => heldBlock(10, 20));
+    renderTimer();
+    await clickStart();
+    expect(await screen.findByText("15:00")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Stop" }));
+    await act(() => vi.advanceTimersByTimeAsync(6000));
+
+    await waitFor(() =>
+      expect(commands.stopRunningTimer).toHaveBeenCalledWith(
+        expect.objectContaining({ durationMinutes: 10 }),
+      ),
+    );
   });
 });
 

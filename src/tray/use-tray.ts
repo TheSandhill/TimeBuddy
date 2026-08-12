@@ -14,7 +14,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { syncTray } from "../data/commands";
 import type { TrayLabels } from "../data/types";
-import { remainingSeconds } from "../timer/block";
+import { isPaused, remainingSeconds } from "../timer/block";
 import { SECONDS_PER_MINUTE } from "../timer/clock";
 import type { RunningBlock } from "../timer/lifecycle";
 import { explainHiddenToTray } from "./hidden-notice";
@@ -94,7 +94,9 @@ export function useTray(
     tooltip:
       minutesLeft === null
         ? t("app.name")
-        : t("tray.remaining", { minutes: minutesLeft }),
+        : block !== null && isPaused(block)
+          ? t("tray.paused", { minutes: minutesLeft })
+          : t("tray.remaining", { minutes: minutesLeft }),
   };
 
   // One message per changed word rather than one per render: the language

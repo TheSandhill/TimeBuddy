@@ -31,6 +31,8 @@ import {
   discardRunningTimer,
   getRunningTimer,
   listProjects,
+  pauseRunningTimer,
+  resumeRunningTimer,
   startRunningTimer,
   stopRunningTimer,
   updateSettings,
@@ -39,7 +41,7 @@ import { settingsKey, useSettings } from "../data/use-settings";
 import type { Instant, RunningTimer, StopTimer } from "../data/types";
 import { UNDO_WINDOW_MS } from "../entries/use-undoable-delete";
 import { useTimerToggle } from "../tray/toggle-request";
-import { outcomeAt, type BlockOutcome } from "./block";
+import { isPaused, outcomeAt, type BlockOutcome } from "./block";
 import { playChime } from "./chime";
 import { currentInstant, localDay, plusMinutes } from "./clock";
 import { notify } from "./notify";
@@ -121,6 +123,11 @@ export interface TimerLifecycle extends RunningBlock {
   pendingStop: BlockOutcome | null;
   /** Cancels a stop that has not been written yet. The block simply carries on. */
   undoStop: () => void;
+  /** Whether the block is being held rather than running. */
+  paused: boolean;
+  /** Holds the block, or lets it carry on. Both no-ops without a block. */
+  pause: () => void;
+  resume: () => void;
   /** Logs the frozen worth of an Orphaned Block. */
   keepOrphan: () => void;
   /** Throws the block away without logging anything. */
@@ -276,6 +283,33 @@ export function TimerLifecycleProvider({
     onError: writeFailed,
   });
 
+  /**
+   * Holding the block, and letting it go again.
+   *
+   * Both write the row and re-read it, so the block the countdown is derived from
+   * is the one the database agrees with — nothing here keeps its own idea of how
+   * long a pause has lasted. A failure leaves the row exactly as it was, which
+   * for a pause is the harmless direction: the worst case is a block that carried
+   * on when it was asked to stop counting, and the countdown says so.
+   */
+  const pauseBlock = useMutation({
+    mutationFn: pauseRunningTimer,
+    onSuccess: () => {
+      setFault(null);
+      return queryClient.invalidateQueries({ queryKey: ["runningTimer"] });
+    },
+    onError: () => setFault("block"),
+  });
+
+  const resumeBlock = useMutation({
+    mutationFn: resumeRunningTimer,
+    onSuccess: () => {
+      setFault(null);
+      return queryClient.invalidateQueries({ queryKey: ["runningTimer"] });
+    },
+    onError: () => setFault("block"),
+  });
+
   const discardBlock = useMutation({
     mutationFn: discardRunningTimer,
     onSuccess: () => {
@@ -369,7 +403,24 @@ export function TimerLifecycleProvider({
   }, [breakEndsAt, now]);
 
   const busy =
-    startBlock.isPending || stopBlock.isPending || discardBlock.isPending;
+    startBlock.isPending ||
+    stopBlock.isPending ||
+    discardBlock.isPending ||
+    pauseBlock.isPending ||
+    resumeBlock.isPending;
+  const paused = block !== null && isPaused(block);
+  /**
+   * Whether a pause or resume has been asked for in this tick.
+   *
+   * `busy` cannot answer that: two clicks landing in one batch both read it
+   * before either mutation reports itself pending. Rust is forgiving about the
+   * second request — pausing a paused block deliberately changes nothing — so
+   * this saves a pointless round trip rather than preventing a wrong one.
+   */
+  const holding = useRef(false);
+  if (holding.current && !pauseBlock.isPending && !resumeBlock.isPending) {
+    holding.current = false;
+  }
   // Not while a stop is pending: the row is still there, so starting would be
   // refused by Rust, and the honest thing to offer is the undo already on screen.
   const canStart =
@@ -476,6 +527,20 @@ export function TimerLifecycleProvider({
     },
     stop,
     pendingStop: pendingStop?.outcome ?? null,
+    paused,
+    // No second request for a row already in the state being asked for.
+    pause: () => {
+      if (block !== null && !paused && !busy && !holding.current) {
+        holding.current = true;
+        pauseBlock.mutate();
+      }
+    },
+    resume: () => {
+      if (block !== null && paused && !busy && !holding.current) {
+        holding.current = true;
+        resumeBlock.mutate();
+      }
+    },
     undoStop: () => {
       forget();
       setPendingStop(null);

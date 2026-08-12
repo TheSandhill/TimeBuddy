@@ -129,6 +129,26 @@ CREATE TABLE account (
 );
 "#;
 
+/// Migration 5 — pausing a Pomodoro Block.
+///
+/// Two columns rather than one, and deliberately not the cheaper trick of
+/// shifting `start_at` forward on resume. The logged TimeEntry takes its
+/// `start_at` from this row, and that column exists because it is *true*:
+/// shifting it would report that the work began later than it did.
+///
+/// So elapsed becomes `(paused_at ?? now) - start_at - paused_seconds`, which is
+/// still two wall-clock readings and a stored total. Nothing ticks, and a laptop
+/// that slept through a pause is still a non-event.
+///
+/// `paused_at` is null while running, which is the normal state. `paused_seconds`
+/// defaults to zero, so every row migration 2 left behind is already complete
+/// and `get` still cannot miss (ADR-0011).
+pub const V5_PAUSE_RUNNING_TIMER: &str = r#"
+ALTER TABLE running_timer ADD COLUMN paused_at TEXT;
+ALTER TABLE running_timer ADD COLUMN paused_seconds INTEGER NOT NULL DEFAULT 0
+    CHECK (paused_seconds >= 0);
+"#;
+
 /// Every migration, in application order.
 pub fn migrations() -> Vec<Migration> {
     vec![
@@ -154,6 +174,12 @@ pub fn migrations() -> Vec<Migration> {
             version: 4,
             description: "account",
             sql: V4_ACCOUNT,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 5,
+            description: "pause running timer",
+            sql: V5_PAUSE_RUNNING_TIMER,
             kind: MigrationKind::Up,
         },
     ]

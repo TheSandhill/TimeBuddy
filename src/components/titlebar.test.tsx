@@ -23,6 +23,8 @@ const inFlight: RunningBlock = {
     projectId: 7,
     startAt: "2026-08-05T12:00:00Z",
     plannedMinutes: 25,
+    pausedAt: null,
+    pausedSeconds: 0,
   },
   now: "2026-08-05T12:10:00Z",
 };

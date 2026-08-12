@@ -91,7 +91,27 @@ const responses: Record<string, (args: any) => unknown> = {
       projectId,
       startAt: new Date().toISOString(),
       plannedMinutes,
+      pausedAt: null,
+      pausedSeconds: 0,
     };
+    return running;
+  },
+  pause_running_timer: () => {
+    if (running && running.pausedAt === null) {
+      running = { ...running, pausedAt: new Date().toISOString() };
+    }
+    return running;
+  },
+  resume_running_timer: () => {
+    if (running?.pausedAt) {
+      running = {
+        ...running,
+        pausedSeconds:
+          running.pausedSeconds +
+          Math.max(0, (Date.now() - Date.parse(running.pausedAt)) / 1000),
+        pausedAt: null,
+      };
+    }
     return running;
   },
   stop_running_timer: ({ stop }) => {
@@ -245,6 +265,40 @@ describe("a block that runs out while another screen is open", () => {
 
     await waitFor(() => expect(chime.playChime).toHaveBeenCalled());
     expect(notify.notify).toHaveBeenCalled();
+  });
+});
+
+describe("a paused block", () => {
+  it("is still paused after a walk around the app, and says so everywhere", async () => {
+    renderApp();
+    await startABlock();
+    fireEvent.click(screen.getByRole("button", { name: "Pauzeer" }));
+    await screen.findByText("Gepauzeerd");
+
+    await leaveTheTimer();
+    // The pill is above the `<Outlet/>`, so it is the one thing on screen while
+    // the Timer is not — and a still countdown there is what reads as a crash.
+    expect(screen.getByRole("timer").textContent).toContain("gepauzeerd");
+
+    await returnToTheTimer();
+
+    expect(await screen.findByText("Gepauzeerd")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Doorgaan" }),
+    ).toBeInTheDocument();
+  });
+
+  it("does not run out while it is held, wherever the user is", async () => {
+    renderApp();
+    await startABlock();
+    fireEvent.click(screen.getByRole("button", { name: "Pauzeer" }));
+    await screen.findByText("Gepauzeerd");
+    await leaveTheTimer();
+
+    await passes(BLOCK_MINUTES * 60 * 3);
+
+    expect(stopped).toBeNull();
+    expect(chime.playChime).not.toHaveBeenCalled();
   });
 });
 
