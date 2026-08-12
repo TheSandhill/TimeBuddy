@@ -56,6 +56,12 @@ A Pomodoro Block is not a separate entity. When it ends, it becomes a TimeEntry 
 The countdown between blocks. A Break is **never stored** — it produces a chime and a countdown,
 nothing else. Breaks are not work, so they are not hours.
 
+It belongs to the app rather than to a screen, like the Pomodoro Block it follows: walking off to
+another screen does not end one, and its chime still sounds wherever the user is. Never stored is
+about the database, not about how long it lives — a Break dies with the process, and a crash takes it
+with it. Only the **banner** is the Timer screen's, because the banner carries Skip and a control
+that acts on the timer belongs on the timer's screen.
+
 ### Running Timer
 
 The at-most-one in-flight Pomodoro Block. Its start instant is persisted, and elapsed time is
@@ -63,6 +69,22 @@ derived from wall clock — not from a counting interval — so laptop sleep is 
 
 If the app dies with a Running Timer present, the next launch **asks** whether to keep the elapsed
 time. Silently discarding loses real work; silently logging invents it.
+
+Its lifecycle belongs to the app and not to a screen — what a stopped block is worth, when one ends,
+and what follows it are decided in one place that no navigation can unmount. See ADR-0010.
+
+### Orphaned Block
+
+A Running Timer row that **the running process did not create**: the block a death left behind, and
+the only thing the recovery question is ever asked about.
+
+Worth its own word because two definitions of it once coexisted — "not started by this process" and
+"not started by this screen" — and the second one offered to throw away work that was still being
+done.
+
+What it is worth is **frozen at the instant it was found**, so the question cannot answer itself while
+it waits. The answer is keep or discard; there is no third answer that resumes it, because resuming
+would mean vouching for minutes nobody watched.
 
 ### Report
 
@@ -268,10 +290,13 @@ If no tray icon can be created, close closes. A window hidden with nothing left 
 not minimised.
 
 Its words come from the catalogues like every other string, so the frontend hands them to Rust
-rather than Rust spelling them. Start/Stop is answered by the Timer screen, for the same reason
-the Timer screen owns the arithmetic: what a stopped block is worth is decided once. It does not
-pull the window back up — acting without the window is the point, and the menu's own label and
-the tooltip are the answer.
+rather than Rust spelling them. Start/Stop is answered wherever the Running Timer's lifecycle lives,
+which is above every screen (ADR-0010) — so the menu works whatever is open, and what a stopped block
+is worth is still decided once. It does not pull the window back up — acting without the window is
+the point, and the menu's own label and the tooltip are the answer.
+
+It never answers the Orphaned Block question. That is a question, and a menu item must not answer it
+on the user's behalf in either direction.
 
 ## Deliberate non-goals (v1)
 

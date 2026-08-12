@@ -16,7 +16,7 @@ import { syncTray } from "../data/commands";
 import type { TrayLabels } from "../data/types";
 import { remainingSeconds } from "../timer/block";
 import { SECONDS_PER_MINUTE } from "../timer/clock";
-import type { RunningBlock } from "../timer/use-running-block";
+import type { RunningBlock } from "../timer/lifecycle";
 import { explainHiddenToTray } from "./hidden-notice";
 
 /**

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { formatCountdown, remainingSeconds } from "../timer/block";
-import type { RunningBlock } from "../timer/use-running-block";
+import type { RunningBlock } from "../timer/lifecycle";
 import { closeWindow, minimizeWindow } from "../tray/window-buttons";
 
 /**

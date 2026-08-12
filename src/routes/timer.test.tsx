@@ -23,6 +23,7 @@ const notify = vi.hoisted(() => ({ notify: vi.fn() }));
 vi.mock("../timer/notify", () => notify);
 
 const { Timer } = await import("./timer");
+const { TimerLifecycleProvider } = await import("../timer/lifecycle");
 const { clearTimerToggle, requestTimerToggle } = await import(
   "../tray/toggle-request"
 );
@@ -59,6 +60,12 @@ function inFlight(minutes: number): RunningTimer {
   };
 }
 
+/**
+ * The screen with the lifecycle it reads, which in the app is supplied by the
+ * window frame above the `<Outlet/>` (ADR-0010). Mounted together here because
+ * these tests are about what the screen does with a block, not about where the
+ * block lives — `timer-navigation.test.tsx` is the one that tests the boundary.
+ */
 function renderTimer(language: "nl" | "en" = "nl") {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -66,7 +73,9 @@ function renderTimer(language: "nl" | "en" = "nl") {
   return render(
     <QueryClientProvider client={client}>
       <I18nextProvider i18n={createI18n(language)}>
-        <Timer />
+        <TimerLifecycleProvider watching>
+          <Timer />
+        </TimerLifecycleProvider>
       </I18nextProvider>
     </QueryClientProvider>,
   );

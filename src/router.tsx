@@ -54,16 +54,21 @@ const settingsRoute = createRoute({
   component: Settings,
 });
 
-export const router = createRouter({
-  routeTree: rootRoute.addChildren([
-    timerRoute,
-    entriesRoute,
-    clientsRoute,
-    reportsRoute,
-    settingsRoute,
-  ]),
-  defaultPreload: "intent",
-});
+/**
+ * Exported so a test can put a memory history under the real tree. What lives
+ * above the `<Outlet/>` and what lives below it is the whole subject of
+ * ADR-0010, and a test that rebuilt the tree itself could not fail when the
+ * boundary moved.
+ */
+export const routeTree = rootRoute.addChildren([
+  timerRoute,
+  entriesRoute,
+  clientsRoute,
+  reportsRoute,
+  settingsRoute,
+]);
+
+export const router = createRouter({ routeTree, defaultPreload: "intent" });
 
 declare module "@tanstack/react-router" {
   interface Register {

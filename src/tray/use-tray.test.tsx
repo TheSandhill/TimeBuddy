@@ -4,7 +4,7 @@ import { I18nextProvider } from "react-i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
 import type { TrayLabels } from "../data/types";
-import type { RunningBlock } from "../timer/use-running-block";
+import type { RunningBlock } from "../timer/lifecycle";
 
 const commands = vi.hoisted(() => ({ syncTray: vi.fn() }));
 vi.mock("../data/commands", () => commands);

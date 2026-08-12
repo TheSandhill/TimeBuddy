@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
-import type { RunningBlock } from "../timer/use-running-block";
+import type { RunningBlock } from "../timer/lifecycle";
 
 /** The window, which in a test is the two things that were asked of it. */
 const tauriWindow = vi.hoisted(() => ({
