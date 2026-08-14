@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { Instant } from "../data/types";
+import { linkButtonClass } from "./button";
+import { quietLabelClass } from "./field";
 import { NameForm } from "./name-form";
 
 /**
@@ -62,9 +64,6 @@ interface ArchivableListProps<T extends Archivable> {
   rowError: string | null;
 }
 
-const rowButton =
-  "text-xs uppercase tracking-widest text-ink-muted transition-colors motion-quick hover:text-ink disabled:opacity-40";
-
 /**
  * One column of things that are archived, never deleted.
  *
@@ -94,11 +93,9 @@ export function ArchivableList<T extends Archivable>({
 
   return (
     <section aria-label={labels.title} className="flex min-w-0 flex-col gap-3">
-      <header className="flex items-baseline justify-between gap-4 border-b border-border pb-1">
-        <h2 className="text-xs uppercase tracking-widest text-ink-muted">
-          {labels.title}
-        </h2>
-        <button type="button" onClick={onAdd} className={rowButton}>
+      <header className="flex items-baseline justify-between gap-4 border-b border-hairline pb-1">
+        <h2 className={quietLabelClass}>{labels.title}</h2>
+        <button type="button" onClick={onAdd} className={linkButtonClass}>
           {labels.add}
         </button>
       </header>
@@ -123,7 +120,7 @@ export function ArchivableList<T extends Archivable>({
       {items.length === 0 ? (
         <p className="text-sm text-ink-muted">{labels.empty}</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-border">
+        <ul className="flex flex-col divide-y divide-hairline">
           {items.map((item) => {
             const archived = item.archivedAt !== null;
             const renaming = editing?.item?.id === item.id;
@@ -146,13 +143,15 @@ export function ArchivableList<T extends Archivable>({
                         {item.name}
                       </button>
                     ) : (
-                      <span className="truncate text-sm text-ink">{item.name}</span>
+                      <span className="truncate text-sm text-ink">
+                        {item.name}
+                      </span>
                     )}
 
                     {/* One badge, not two: being archived outranks
                         inheriting it from a client. */}
                     {archived || inheritedBadge ? (
-                      <span className="shrink-0 text-xs uppercase tracking-widest text-ink-muted">
+                      <span className={`shrink-0 ${quietLabelClass}`}>
                         {archived ? t("clients.archived") : inheritedBadge}
                       </span>
                     ) : null}
@@ -163,7 +162,7 @@ export function ArchivableList<T extends Archivable>({
                       type="button"
                       aria-label={t("clients.renameNamed", { name: item.name })}
                       onClick={() => onEdit(item)}
-                      className={rowButton}
+                      className={linkButtonClass}
                     >
                       {t("clients.rename")}
                     </button>
@@ -172,9 +171,11 @@ export function ArchivableList<T extends Archivable>({
                       <button
                         type="button"
                         disabled={moving}
-                        aria-label={t("clients.restoreNamed", { name: item.name })}
+                        aria-label={t("clients.restoreNamed", {
+                          name: item.name,
+                        })}
                         onClick={() => onRestore(item)}
-                        className={rowButton}
+                        className={linkButtonClass}
                       >
                         {t("clients.restore")}
                       </button>
@@ -182,9 +183,11 @@ export function ArchivableList<T extends Archivable>({
                       <button
                         type="button"
                         disabled={moving}
-                        aria-label={t("clients.archiveNamed", { name: item.name })}
+                        aria-label={t("clients.archiveNamed", {
+                          name: item.name,
+                        })}
                         onClick={() => onArchive(item)}
-                        className={rowButton}
+                        className={linkButtonClass}
                       >
                         {t("clients.archive")}
                       </button>

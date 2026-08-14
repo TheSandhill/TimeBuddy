@@ -76,7 +76,9 @@ describe("the updates section", () => {
       await screen.findByRole("button", { name: "Controleer op updates" }),
     );
 
-    await waitFor(() => expect(updater.checkForUpdate).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(updater.checkForUpdate).toHaveBeenCalledTimes(2),
+    );
   });
 
   it("does not offer to install — that lives on the bar, so there is one download", async () => {

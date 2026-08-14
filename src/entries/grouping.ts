@@ -30,12 +30,14 @@ export function groupByDay(entries: TimeEntry[]): EntryDay[] {
     }
   }
 
-  return [...days.entries()]
-    // `YYYY-MM-DD` sorts as text exactly as it sorts as a date.
-    .sort(([a], [b]) => b.localeCompare(a))
-    .map(([date, dayEntries]) => ({
-      date,
-      totalMinutes: sumMinutes(dayEntries),
-      entries: dayEntries,
-    }));
+  return (
+    [...days.entries()]
+      // `YYYY-MM-DD` sorts as text exactly as it sorts as a date.
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([date, dayEntries]) => ({
+        date,
+        totalMinutes: sumMinutes(dayEntries),
+        entries: dayEntries,
+      }))
+  );
 }

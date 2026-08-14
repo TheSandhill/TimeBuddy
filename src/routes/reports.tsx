@@ -11,8 +11,9 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { save } from "@tauri-apps/plugin-dialog";
-import { primaryButtonClass } from "../components/button";
+import { primaryButtonClass, toggleButtonClass } from "../components/button";
 import { DateRangeFilter } from "../components/date-range-filter";
+import { quietLabelClass } from "../components/field";
 import {
   exportReport,
   reportByClient,
@@ -39,13 +40,6 @@ const presets: PresetName[] = [
   "thisMonth",
   "lastMonth",
 ];
-
-const buttonClass =
-  "rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:text-ink";
-const chosenClass =
-  "rounded-md border border-accent px-3 py-1.5 text-sm text-accent";
-
-const chip = (chosen: boolean) => (chosen ? chosenClass : buttonClass);
 
 export function Reports() {
   const { t, i18n } = useTranslation();
@@ -115,7 +109,7 @@ export function Reports() {
               type="button"
               aria-pressed={period.preset === preset}
               onClick={() => setPeriod({ preset })}
-              className={chip(period.preset === preset)}
+              className={toggleButtonClass(period.preset === preset)}
             >
               {t(`reports.${preset}`)}
             </button>
@@ -127,7 +121,7 @@ export function Reports() {
             // one in JavaScript is the drift this screen exists to avoid.
             disabled={!shown}
             onClick={() => shown && pickCustom(shown.range)}
-            className={chip(custom !== null)}
+            className={toggleButtonClass(custom !== null)}
           >
             {t("reports.custom")}
           </button>
@@ -143,7 +137,7 @@ export function Reports() {
               {shown ? rangeLabel(shown.range, i18n.language) : null}
             </h2>
             {shown?.isoWeek ? (
-              <p className="text-xs uppercase tracking-widest text-ink-muted">
+              <p className={quietLabelClass}>
                 {t("reports.week", {
                   week: shown.isoWeek.week,
                   year: shown.isoWeek.year,
@@ -157,7 +151,7 @@ export function Reports() {
               type="button"
               aria-pressed={grouping === "client"}
               onClick={() => setGrouping("client")}
-              className={chip(grouping === "client")}
+              className={toggleButtonClass(grouping === "client")}
             >
               {t("reports.byClient")}
             </button>
@@ -165,7 +159,7 @@ export function Reports() {
               type="button"
               aria-pressed={grouping === "project"}
               onClick={() => setGrouping("project")}
-              className={chip(grouping === "project")}
+              className={toggleButtonClass(grouping === "project")}
             >
               {t("reports.byProject")}
             </button>
@@ -176,7 +170,9 @@ export function Reports() {
               onClick={() => shown && exporting.mutate(shown.range)}
               className={primaryButtonClass}
             >
-              {exporting.isPending ? t("reports.exporting") : t("reports.export")}
+              {exporting.isPending
+                ? t("reports.exporting")
+                : t("reports.export")}
             </button>
           </div>
         </div>
@@ -200,7 +196,7 @@ export function Reports() {
 
       {rows.length > 0 ? (
         <div className="flex flex-col gap-2">
-          <ul className="flex flex-col divide-y divide-border">
+          <ul className="flex flex-col divide-y divide-hairline">
             {rows.map((row) => (
               <li
                 key={row.key}
@@ -221,10 +217,8 @@ export function Reports() {
             ))}
           </ul>
 
-          <p className="flex items-baseline justify-between gap-4 border-t border-border pt-2">
-            <span className="text-xs uppercase tracking-widest text-ink-muted">
-              {t("reports.total")}
-            </span>
+          <p className="flex items-baseline justify-between gap-4 border-t border-hairline pt-2">
+            <span className={quietLabelClass}>{t("reports.total")}</span>
             <span className="text-lg tabular-nums text-ink">
               {formatDuration(shown?.totalMinutes ?? 0)}
             </span>

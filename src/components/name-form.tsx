@@ -38,7 +38,7 @@ export function NameForm({
         event.preventDefault();
         onSubmit(name);
       }}
-      className="flex flex-col gap-3 rounded-lg border border-border bg-surface-raised p-3"
+      className="flex flex-col gap-3 rounded-lg bg-surface-raised p-3"
     >
       <label className={labelClass}>
         {t("clients.name")}

@@ -29,7 +29,9 @@ export function RestoreBanner({ fault }: { fault: RestoreFault }) {
       className="flex shrink-0 items-center gap-4 border-b border-danger bg-surface-raised px-6 py-2"
     >
       <span className="text-sm text-danger">{t(faultLabels[fault])}</span>
-      <span className="text-sm text-ink-muted">{t("restore.dataUntouched")}</span>
+      <span className="text-sm text-ink-muted">
+        {t("restore.dataUntouched")}
+      </span>
     </div>
   );
 }

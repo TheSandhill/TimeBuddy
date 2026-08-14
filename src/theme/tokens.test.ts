@@ -11,10 +11,7 @@ import {
   themeTokens,
 } from "./tokens";
 
-const srcDir = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-);
+const srcDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const stylesheet = readFileSync(path.join(srcDir, "styles.css"), "utf8");
 
 describe("theme tokens", () => {
@@ -36,7 +33,10 @@ describe("theme tokens", () => {
 
     for (const theme of themeNames.filter((name) => name !== defaultTheme)) {
       const body = overrides.get(theme);
-      expect(body, `no [data-theme="${theme}"] block in styles.css`).toBeDefined();
+      expect(
+        body,
+        `no [data-theme="${theme}"] block in styles.css`,
+      ).toBeDefined();
 
       for (const token of themeTokens) {
         expect(body, `${token} missing from theme "${theme}"`).toContain(
@@ -52,10 +52,7 @@ describe("theme tokens", () => {
 
   it("gives every motion tier an @utility shorthand", () => {
     for (const tier of motionTiers) {
-      expect(
-        stylesheet,
-        `no @utility motion-${tier}`,
-      ).toMatch(
+      expect(stylesheet, `no @utility motion-${tier}`).toMatch(
         new RegExp(
           `@utility motion-${tier}\\s*\\{[^}]*var\\(--motion-${tier}\\)`,
         ),

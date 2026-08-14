@@ -17,7 +17,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { open as chooseDirectory } from "@tauri-apps/plugin-dialog";
 import { useTranslation } from "react-i18next";
 import { primaryButtonClass } from "../components/button";
-import { fieldClass, labelClass } from "../components/field";
+import { fieldClass, labelClass, quietLabelClass } from "../components/field";
 import { FormError } from "../components/form-error";
 import {
   createAccount,
@@ -117,13 +117,15 @@ export function Wizard({
   return (
     <section className="mx-auto flex max-w-sm flex-col gap-6 py-12">
       <header className="flex flex-col gap-1">
-        <p className="text-xs uppercase tracking-widest text-ink-muted">
+        <p className={quietLabelClass}>
           {t("wizard.step", {
             step: steps.indexOf(step) + 1,
             total: steps.length,
           })}
         </p>
-        <h1 className="text-lg font-medium text-ink">{t(`wizard.${step}Title`)}</h1>
+        <h1 className="text-lg font-medium text-ink">
+          {t(`wizard.${step}Title`)}
+        </h1>
       </header>
 
       {step === "password" ? (

@@ -188,6 +188,8 @@ describe("countdown formatting", () => {
     expect(secondsUntil("2026-08-05T09:05:00Z", "2026-08-05T09:00:00Z")).toBe(
       300,
     );
-    expect(secondsUntil("2026-08-05T09:05:00Z", "2026-08-05T09:06:00Z")).toBe(0);
+    expect(secondsUntil("2026-08-05T09:05:00Z", "2026-08-05T09:06:00Z")).toBe(
+      0,
+    );
   });
 });

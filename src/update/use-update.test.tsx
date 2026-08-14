@@ -9,9 +9,8 @@ const updater = vi.hoisted(() => ({
 }));
 vi.mock("./updater", () => updater);
 
-const { useCurrentVersion, useUpdateCheck, useUpdatePrompt } = await import(
-  "./use-update"
-);
+const { useCurrentVersion, useUpdateCheck, useUpdatePrompt } =
+  await import("./use-update");
 
 /** What `checkForUpdate` answers with when GitHub has a newer TimeBuddy. */
 const newer = (version = "0.2.0") => ({ version, install: vi.fn() });

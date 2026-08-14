@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { Project } from "../data/types";
+import { fieldClass, quietLabelClass } from "./field";
 
 interface ProjectPickerProps {
   projects: Project[];
@@ -28,14 +29,12 @@ export function ProjectPicker({
 
   return (
     <label className="flex flex-col items-center gap-2">
-      <span className="text-xs uppercase tracking-widest text-ink-muted">
-        {t("timer.project")}
-      </span>
+      <span className={quietLabelClass}>{t("timer.project")}</span>
       <select
         value={value ?? ""}
         disabled={disabled}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="rounded-md border border-border bg-surface-raised px-3 py-2 text-sm text-ink disabled:opacity-50"
+        className={fieldClass}
       >
         {projects.map((project) => (
           <option key={project.id} value={project.id}>

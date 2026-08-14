@@ -11,7 +11,11 @@ function report<Row>(rows: Row[]): Report<Row> {
   };
 }
 
-const acme: ClientTotal = { clientId: 1, clientName: "Acme", totalMinutes: 150 };
+const acme: ClientTotal = {
+  clientId: 1,
+  clientName: "Acme",
+  totalMinutes: 150,
+};
 
 const website: ProjectTotal = {
   projectId: 7,

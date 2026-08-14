@@ -111,7 +111,10 @@ describe("reading a period back", () => {
 
   it("totals the rows without leaving the reader to add them up", async () => {
     commands.reportByClient.mockResolvedValue(
-      clientReport([acme, { clientId: 2, clientName: "Other", totalMinutes: 30 }]),
+      clientReport([
+        acme,
+        { clientId: 2, clientName: "Other", totalMinutes: 30 },
+      ]),
     );
     renderReports();
 
@@ -208,7 +211,9 @@ describe("exporting to Excel", () => {
 
     await waitFor(() => expect(dialog.save).toHaveBeenCalled());
     expect(dialog.save.mock.calls[0][0].defaultPath).toContain("2026-08-03");
-    expect(dialog.save.mock.calls[0][0].filters[0].extensions).toEqual(["xlsx"]);
+    expect(dialog.save.mock.calls[0][0].filters[0].extensions).toEqual([
+      "xlsx",
+    ]);
   });
 
   it("writes the days on screen, with headings in the app's language", async () => {

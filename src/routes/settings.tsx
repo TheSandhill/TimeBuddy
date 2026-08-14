@@ -16,8 +16,13 @@ import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
 import { momentLabel } from "../backup/moment-label";
 import { useBackupStatus, useRunBackup } from "../backup/use-backup";
-import { primaryButtonClass } from "../components/button";
-import { fieldClass, labelClass } from "../components/field";
+import { primaryButtonClass, quietButtonClass } from "../components/button";
+import {
+  checkboxLabelClass,
+  fieldClass,
+  labelClass,
+  quietLabelClass,
+} from "../components/field";
 import { updateSettings } from "../data/commands";
 import { errorKey } from "../data/error-message";
 import type { Settings as StoredSettings } from "../data/types";
@@ -39,11 +44,8 @@ const languageLabels = {
   en: "settings.languageEn",
 } as const satisfies Record<Language, string>;
 
-const sectionClass = "flex flex-col gap-4 border-t border-border pt-4";
-const legendClass = "text-xs uppercase tracking-widest text-ink-muted";
-const checkboxClass = "flex items-center gap-2 text-sm text-ink";
-const quietButtonClass =
-  "rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:text-ink";
+/** A group of settings, divided from the last by a hairline rather than a rule. */
+const sectionClass = "flex flex-col gap-4 border-t border-hairline pt-4";
 
 export function Settings() {
   const { t, i18n } = useTranslation();
@@ -113,12 +115,12 @@ export function Settings() {
       }}
     >
       <fieldset className={sectionClass}>
-        <legend className={legendClass}>{t("settings.appearance")}</legend>
+        <legend className={quietLabelClass}>{t("settings.appearance")}</legend>
 
         <fieldset className="flex flex-col gap-2">
-          <legend className={legendClass}>{t("settings.theme")}</legend>
+          <legend className={quietLabelClass}>{t("settings.theme")}</legend>
           {themeNames.map((theme) => (
-            <label key={theme} className={checkboxClass}>
+            <label key={theme} className={checkboxLabelClass}>
               <input
                 type="radio"
                 name="theme"
@@ -134,7 +136,7 @@ export function Settings() {
           ))}
         </fieldset>
 
-        <label className={checkboxClass}>
+        <label className={checkboxLabelClass}>
           <input
             type="checkbox"
             checked={shown.followSystem}
@@ -142,7 +144,9 @@ export function Settings() {
           />
           {t("settings.followSystem")}
         </label>
-        <p className="text-xs text-ink-muted">{t("settings.followSystemHint")}</p>
+        <p className="text-xs text-ink-muted">
+          {t("settings.followSystemHint")}
+        </p>
 
         <label className={labelClass}>
           {t("settings.language")}
@@ -163,7 +167,7 @@ export function Settings() {
       </fieldset>
 
       <fieldset className={sectionClass}>
-        <legend className={legendClass}>{t("settings.timer")}</legend>
+        <legend className={quietLabelClass}>{t("settings.timer")}</legend>
 
         <div className="grid grid-cols-2 gap-4">
           <label className={labelClass}>
@@ -193,7 +197,7 @@ export function Settings() {
           </label>
         </div>
 
-        <label className={checkboxClass}>
+        <label className={checkboxLabelClass}>
           <input
             type="checkbox"
             checked={shown.chimeEnabled}
@@ -202,7 +206,7 @@ export function Settings() {
           {t("settings.chime")}
         </label>
 
-        <label className={checkboxClass}>
+        <label className={checkboxLabelClass}>
           <input
             type="checkbox"
             checked={shown.notificationsEnabled}
@@ -215,9 +219,9 @@ export function Settings() {
       </fieldset>
 
       <fieldset className={sectionClass}>
-        <legend className={legendClass}>{t("settings.system")}</legend>
+        <legend className={quietLabelClass}>{t("settings.system")}</legend>
 
-        <label className={checkboxClass}>
+        <label className={checkboxLabelClass}>
           <input
             type="checkbox"
             checked={shown.autostart}
@@ -228,12 +232,12 @@ export function Settings() {
       </fieldset>
 
       <fieldset className={sectionClass}>
-        <legend className={legendClass}>{t("backup.title")}</legend>
+        <legend className={quietLabelClass}>{t("backup.title")}</legend>
 
         <p className="text-xs text-ink-muted">{t("backup.hint")}</p>
 
         <div className="flex flex-col gap-2">
-          <span className={legendClass}>{t("settings.backupFolder")}</span>
+          <span className={quietLabelClass}>{t("settings.backupFolder")}</span>
           <p className="break-all text-sm text-ink">
             {shown.backupFolder ?? t("settings.backupFolderDefault")}
           </p>

@@ -28,9 +28,9 @@ describe("naming the days a report covers", () => {
   it("holds the day the range names, whatever the timezone", () => {
     // `new Date("2026-08-01")` is midnight UTC, which is 31 July for anyone
     // west of Greenwich — the wrong month for a month report.
-    expect(rangeLabel({ from: "2026-08-01", to: "2026-08-31" }, "nl")).toContain(
-      "augustus",
-    );
+    expect(
+      rangeLabel({ from: "2026-08-01", to: "2026-08-31" }, "nl"),
+    ).toContain("augustus");
   });
 
   it("follows the language the app is in", () => {

@@ -31,7 +31,11 @@ describe("grouping entries into days", () => {
         totalMinutes: 120,
         entries: [entry(1, "2026-08-05", 90), entry(2, "2026-08-05", 30)],
       },
-      { date: "2026-08-03", totalMinutes: 60, entries: [entry(3, "2026-08-03", 60)] },
+      {
+        date: "2026-08-03",
+        totalMinutes: 60,
+        entries: [entry(3, "2026-08-03", 60)],
+      },
     ]);
   });
 

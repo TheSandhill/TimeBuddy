@@ -88,10 +88,17 @@ describe("every shipped theme is readable", () => {
     const tokens = tokensOf(theme);
 
     // Muted text carries dates, totals and hints — smaller and quieter, but
-    // still text someone has to read, so it is held to the same bar.
-    expect(
-      contrastRatio(tokens["--color-ink-muted"], tokens["--color-surface"]),
-      `--color-ink-muted in "${theme}"`,
-    ).toBeGreaterThanOrEqual(AA_BODY_TEXT);
+    // still text someone has to read, so it is held to the same bar. Quiet
+    // buttons and labels sit on the soft fill, which is why it is in the list.
+    for (const background of [
+      "--color-surface",
+      "--color-surface-raised",
+      "--color-surface-soft",
+    ]) {
+      expect(
+        contrastRatio(tokens["--color-ink-muted"], tokens[background]),
+        `--color-ink-muted on ${background} in "${theme}"`,
+      ).toBeGreaterThanOrEqual(AA_BODY_TEXT);
+    }
   });
 });

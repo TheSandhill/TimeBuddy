@@ -15,10 +15,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import {
-  ArchivableList,
-  type Archivable,
-} from "../components/archivable-list";
+import { ArchivableList, type Archivable } from "../components/archivable-list";
+import { checkboxLabelClass } from "../components/field";
 import {
   archiveClient,
   archiveProject,
@@ -161,7 +159,7 @@ export function Clients() {
   return (
     <section className="flex flex-col gap-6">
       <header className="flex items-center justify-end">
-        <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink-muted">
+        <label className={checkboxLabelClass}>
           <input
             type="checkbox"
             checked={showArchived}

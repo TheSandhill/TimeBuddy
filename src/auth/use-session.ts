@@ -51,7 +51,9 @@ export function useSession(): Session {
       // restored database had just issued — a box that could never stay ticked.
       if (await claimRestoreRelock()) {
         clearToken();
-        return (await accountExists()) ? ("locked" as const) : ("setup" as const);
+        return (await accountExists())
+          ? ("locked" as const)
+          : ("setup" as const);
       }
 
       if (!(await accountExists())) {

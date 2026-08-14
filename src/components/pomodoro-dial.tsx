@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { quietDangerButtonClass } from "./button";
 
 interface PomodoroDialProps {
   /** `MM:SS` — the block's nominal length when idle, what is left when not. */
@@ -50,7 +51,7 @@ export function PomodoroDial({
        * moving is the one state of this screen that reads as a broken app.
        */}
       {paused ? (
-        <p role="status" className="text-xs uppercase tracking-widest text-accent">
+        <p role="status" className="text-xs font-medium text-accent">
           {t("timer.paused")}
         </p>
       ) : null}
@@ -69,7 +70,7 @@ export function PomodoroDial({
           <button
             type="button"
             onClick={onStop}
-            className="rounded-md border border-border px-4 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:border-danger hover:text-ink"
+            className={quietDangerButtonClass}
           >
             {t("timer.stop")}
           </button>

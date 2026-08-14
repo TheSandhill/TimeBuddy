@@ -19,13 +19,10 @@
 
 /** Why an input could not become minutes. A code — the sentence is i18n's. */
 export type DurationProblem =
-  | "durationUnreadable"
-  | "durationNotPositive"
-  | "durationExceedsDay";
+  "durationUnreadable" | "durationNotPositive" | "durationExceedsDay";
 
 export type ParsedDuration =
-  | { ok: true; minutes: number }
-  | { ok: false; problem: DurationProblem };
+  { ok: true; minutes: number } | { ok: false; problem: DurationProblem };
 
 const MINUTES_PER_HOUR = 60;
 const MAX_DURATION_MINUTES = 1440;

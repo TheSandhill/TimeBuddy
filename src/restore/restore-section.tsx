@@ -14,7 +14,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { momentLabel } from "../backup/moment-label";
-import { fieldClass, labelClass } from "../components/field";
+import { quietButtonClass } from "../components/button";
+import { fieldClass, labelClass, quietLabelClass } from "../components/field";
 import { errorKey } from "../data/error-message";
 import { formatDuration } from "../entries/duration";
 import {
@@ -26,10 +27,7 @@ import {
   useStageRestore,
 } from "./use-restore";
 
-const sectionClass = "flex flex-col gap-4 border-t border-border pt-4";
-const legendClass = "text-xs uppercase tracking-widest text-ink-muted";
-const quietButtonClass =
-  "rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:text-ink";
+const sectionClass = "flex flex-col gap-4 border-t border-hairline pt-4";
 
 export function RestoreSection() {
   const { t, i18n } = useTranslation();
@@ -48,7 +46,7 @@ export function RestoreSection() {
 
   return (
     <section className={sectionClass} aria-label={t("restore.title")}>
-      <h2 className={legendClass}>{t("restore.title")}</h2>
+      <h2 className={quietLabelClass}>{t("restore.title")}</h2>
 
       {/*
         Read rather than announced, like backup staleness: a restore that worked
@@ -96,7 +94,9 @@ export function RestoreSection() {
           <p className="text-xs text-ink-muted">{t("restore.hint")}</p>
 
           {backups.data?.length === 0 ? (
-            <p className="text-sm text-ink-muted">{t("restore.noneToRestore")}</p>
+            <p className="text-sm text-ink-muted">
+              {t("restore.noneToRestore")}
+            </p>
           ) : (
             <label className={labelClass}>
               {t("restore.choose")}
@@ -140,7 +140,9 @@ export function RestoreSection() {
                 disabled={stage.isPending || preview.data === undefined}
                 onClick={() => stage.mutate(chosen)}
               >
-                {stage.isPending ? t("restore.preparing") : t("restore.prepare")}
+                {stage.isPending
+                  ? t("restore.preparing")
+                  : t("restore.prepare")}
               </button>
               {stage.isError ? (
                 <span role="alert" className="text-sm text-danger">

@@ -47,7 +47,10 @@ describe("the lock screen", () => {
     press("Ontgrendelen");
 
     await waitFor(() =>
-      expect(commands.unlockAccount).toHaveBeenCalledWith("correct horse", false),
+      expect(commands.unlockAccount).toHaveBeenCalledWith(
+        "correct horse",
+        false,
+      ),
     );
     await waitFor(() => expect(onOpen).toHaveBeenCalledWith(null));
   });
@@ -61,7 +64,10 @@ describe("the lock screen", () => {
     press("Ontgrendelen");
 
     await waitFor(() =>
-      expect(commands.unlockAccount).toHaveBeenCalledWith("correct horse", true),
+      expect(commands.unlockAccount).toHaveBeenCalledWith(
+        "correct horse",
+        true,
+      ),
     );
     await waitFor(() => expect(onOpen).toHaveBeenCalledWith("a-token"));
   });

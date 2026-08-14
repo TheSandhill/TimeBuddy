@@ -93,7 +93,11 @@ export function outcomeAt(block: RunningTimer, now: Instant): BlockOutcome {
       )
     : instantAt(Date.parse(now));
 
-  return { kind: completed ? "completed" : "stoppedEarly", durationMinutes, endAt };
+  return {
+    kind: completed ? "completed" : "stoppedEarly",
+    durationMinutes,
+    endAt,
+  };
 }
 
 /**

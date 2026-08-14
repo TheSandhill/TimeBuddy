@@ -13,7 +13,5 @@ export function projectName(
   projectId: number,
   fallback: string,
 ): string {
-  return (
-    projects.find((project) => project.id === projectId)?.name ?? fallback
-  );
+  return projects.find((project) => project.id === projectId)?.name ?? fallback;
 }

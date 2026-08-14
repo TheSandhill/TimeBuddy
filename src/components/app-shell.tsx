@@ -10,7 +10,8 @@ import { RestoreBanner } from "./restore-banner";
 import { UpdateBanner } from "./update-banner";
 import { WindowFrame } from "./window-frame";
 
-const linkClass = "text-sm text-ink-muted transition-colors motion-quick hover:text-ink";
+const linkClass =
+  "text-sm text-ink-muted transition-colors motion-quick hover:text-ink";
 /** The active screen is named in the accent colour, nowhere else. */
 const activeClass = "text-sm text-accent";
 
@@ -73,7 +74,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
 
       <nav className="flex shrink-0 items-center gap-4 border-b border-border px-6 py-2">
-        <Link to="/" className={linkClass} activeProps={{ className: activeClass }}>
+        <Link
+          to="/"
+          className={linkClass}
+          activeProps={{ className: activeClass }}
+        >
           {t("nav.timer")}
         </Link>
         <Link

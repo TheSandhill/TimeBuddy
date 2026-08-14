@@ -23,6 +23,9 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import en from "../i18n/locales/en.json";
 import nl from "../i18n/locales/nl.json";
+// A constant string, so the crash screen still dresses its button the way the
+// rest of the app does without depending on anything that can fail.
+import { quietButtonClass } from "./button";
 
 interface Props {
   children: ReactNode;
@@ -95,7 +98,7 @@ export class RootBoundary extends Component<Props, State> {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="self-start rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:text-ink"
+              className={`self-start ${quietButtonClass}`}
             >
               {words.reload}
             </button>
