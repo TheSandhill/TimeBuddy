@@ -12,6 +12,16 @@ A person or organisation the work is done for. Has a name and optional contact n
 A Client is **never deleted** — only archived. Once hours exist against a Client's Projects,
 deleting it would silently rewrite history. Archiving hides it from pickers and keeps it in reports.
 
+On screen, Clients are an **exclusive accordion**: one row per Client, and opening one closes the
+last. Its Projects live inside it. This replaces a master list beside a detail pane, which asked a
+420px-wide window to hold two columns and got two unreadable ones — names truncated and the actions
+on every row spent what was left. Containment says what the pane was there to say, so the layout is
+now the sentence "a Project only means anything under a Client" rather than a caption under it.
+
+**Nothing is open on arrival**, and which row was open is forgotten on the way out. The screen's
+first answer is the list of names, and a Client picked for you is a claim the screen has no way to
+make honestly.
+
 ### Project
 
 A named piece of work belonging to exactly one Client. Carries an optional `hourly_rate` that
@@ -20,6 +30,12 @@ nothing reads yet — it exists so billing can be added without a migration.
 Like Client, a Project is **archived, never deleted**. Archiving a Client also takes its Projects
 out of the pickers without touching their own `archived_at` — the work is unofferable because the
 Client is gone, so restoring the Client is what brings them back. See ADR-0005.
+
+A Project under an archived Client therefore wears **no badge of its own**. It used to: with the two
+lists side by side there was nothing on a Project's row to say why it was out of the pickers, so each
+one carried the reason. Inside the accordion the Client's own row is directly above it wearing
+ARCHIVED, and repeating that on every child is the same wall of small grey capitals the redesign
+exists to remove. The containment is the explanation.
 
 ### TimeEntry
 
@@ -59,7 +75,13 @@ reason these are here.
 
 A block's length is **frozen when it starts**. Raising the default — from either screen — must never
 move the finish line of a block already under way, so the presets go dead while one is running rather
-than change something the user cannot see.
+than change something the user cannot see. Dead **and saying why**: a control that stops answering
+without explaining itself is indistinguishable from a broken one.
+
+The Timer screen carries five things — the dial, the presets, the Break banner, the Project picker and
+today's entries — and the **dial owns it**. Flat, they read as a settings page with a large circle on
+it. So the dial and its Mug take the top of the screen and everything else is visibly secondary: the
+presets are the second thing touched, not the second thing seen.
 
 A completed block logs its full length. A block stopped early logs the **actual elapsed time**,
 never the nominal length.
@@ -233,6 +255,17 @@ A named set of design tokens (`--color-surface`, `--color-ink`, `--color-accent`
 reference tokens, **never raw hex** — that is what makes user-authored themes a later addition
 rather than a rewrite.
 
+A Theme covers **colour and Motion**. A duration written into a component is the same defect as a hex
+written into one, and if motion lived outside the Theme then two documents would answer the question
+"what is a theme made of". So the durations, the easings and the two looping animations are token sets
+a Theme carries, and a Theme is allowed to vary any of them — High-contrast turns the motion down,
+which is the concrete reason this had to be one decision rather than two.
+
+A Theme may also change an asset's **fidelity and not only its hue**, which is why a themed asset is
+a token set rather than a file: High-contrast wants an outline where Walnut wants something soft, and
+recolouring a soft thing to yellow would honour the token while breaking the promise. Nothing
+exercises that yet — see [Mug](#mug).
+
 Shipped: **Walnut** (dark, default), **Sand** (light), **High-contrast**, plus an opt-in
 "follow system".
 
@@ -242,6 +275,84 @@ fails is not a matter of taste.
 While "follow system" is on it is the **only** thing choosing, so the picker is disabled rather
 than left showing a choice nothing acts on. The chosen theme is kept in the row regardless, so
 turning "follow system" back off restores it.
+
+### Tab bar
+
+How the five screens are reached: a **floating pill**, bottom centre, with the content scrolling
+underneath it. Bottom rather than top because the top of the window is already spoken for — the
+titlebar, and the three banners a failed backup, a failed restore or an offered update put across
+every screen. A bar floating up there would collide with all three.
+
+Its order is fixed — Timer, Entries, Clients, Reports, Settings — and that order is what gives a route
+change a direction.
+
+Only the **active tab wears its label**; the rest are their icons. The pill widens to fit the label
+and its neighbours slide aside, so the one animation the bar has is driven by which screen is open
+rather than added on top of it. It also settles the language: "Tijdregistratie" and "Instellingen"
+never have to fit beside each other, because only one label is ever on screen.
+
+### Motion
+
+How the app moves between one state and the next. Part of the Theme, for the reason above.
+
+Four **durations**, and a fifth is a sign one of these should have been reused: `quick` for hover,
+colour and focus; `base` for disclosure — the accordion, a form opening, the tab indicator; `page`
+for a route change; `deliberate` for the one animation allowed to be slow enough to notice, the
+Mug pouring out when a block is stopped by hand. Three **easings** — soft out for arrivals, quick in
+for departures, soft in-out for the breath.
+
+The **spring is not a token**. The floating tab bar's active pill widens to fit its label and its
+neighbours slide aside, and that is a spring, which is not a cubic-bézier and cannot be a CSS
+variable. It is one config in TypeScript, imported wherever it is needed. Two motion systems, named
+as two: CSS for state transitions, springs for layout. A token only one library can read would be a
+token in name.
+
+Two **loops**, and only two: the Mug's steam, and the dial ring's breath. They run at deliberately
+different periods — two things breathing in step read as machinery. The breath is slow, near four and
+a half seconds, because a heartbeat cadence means urgency and this is a tool for twenty-five
+uninterrupted minutes.
+
+**Nothing is on the titlebar.** The countdown pill is on every screen, so an animation there would be
+in the corner of the eye permanently and become the thing the app is remembered for.
+
+**No state is ever signalled by motion alone.** This is the rule that makes the rest safe. Reduced
+motion — the operating system's, or High-contrast's own token values — sets the loops to `none` and
+collapses the durations to a millisecond, and *nothing is lost*, because the digits, the Mug's coffee
+level and the word *paused* each say it without moving. The loops go to `none` rather than to a
+millisecond: a breath that fast is a flicker, which is worse than stillness. Enforced by a test, the
+way the string catalogues are — a rule about what may not appear in a component is worth exactly what
+it costs to break it.
+
+Route changes move **along the tab bar's order**: leftward for a leftward tab, a short distance
+rather than a full page turn, because a screen crossed five times a minute should not feel crossed. A
+navigation nobody walked — the tray's Start/Stop pulling the Timer up — gets the neutral crossfade
+instead. It has no direction, so it is not given one.
+
+### Mug
+
+The app's intended face: a smiling coffee mug. **Deferred, not abandoned** — three prototype attempts
+at drawing one as hand-authored SVG were all rejected, the last because the mouth ellipse was nearly
+as wide as the body and the thing read as a bowl of coffee with a face on it. Getting a mark that
+carries the app's name needs a different method than an agent drawing paths blind, so nothing about it
+is settled and the app currently ships no mark at all.
+
+What survives the deferral, because it was never really about the mug:
+
+- The **titlebar's left cell** is the wordmark alone. A mark joins it when there is one worth having.
+- The **dial's centre** is the digits, and whatever goes under them must never grow enough to compete
+  with them. That was the rule that killed the largest of the prototype variants.
+- A **held** block is currently the word *paused* in the pill and the tray tooltip, plus a flat muted
+  ring. That is enough, and the word is not motion — but it is two signals where there were five, so
+  there is no spare. Whatever replaces the mug should carry one.
+- The **tray icon is fixed** whatever it becomes. A live one would mean redrawing and re-registering a
+  bitmap on a timer, for sixteen pixels, and the tooltip already carries the minutes.
+
+The idea worth keeping from the attempts: the mug's **coffee level** as a static state indicator —
+static being the point, since a level survives reduced motion where a movement does not. It was never
+a gauge, only something a glance gets, and the ring and the digits carried the truth throughout.
+
+The tagline — *good time, great work* — appears **once**, on the first step of the first-run wizard.
+That is the only moment the app is introducing itself; anywhere else it is a slogan in the way.
 
 ### Account
 
@@ -298,6 +409,16 @@ The Settings screen is where it is *edited*, but not the only screen that writes
 duration presets save `pomodoro_minutes` the same way, by sending the whole row with that one field
 different. Which is the point — a preset is not a second place a block length can live, so the dial
 and the number on the Settings screen cannot come to disagree.
+
+The screen holds twelve controls, so it is read in **four named groups** rather than as one scroll:
+*Appearance* (theme, follow system, language), *Timer* (block and break length, chime, OS
+notifications), *System* (autostart), and *Data & version* (backup folder, staleness, Restore,
+version, the button that checks again). The split is not tidiness — the last group is the only one
+whose contents can **fail**, and everything else on the screen is a preference that cannot.
+
+**Restore is set apart inside its group**, bordered and stated plainly. It is the only control here
+that replaces the database, re-locks the app and needs a relaunch, and giving it the same weight as a
+language dropdown would be lying about that.
 
 A blank backup folder is stored as **absent**, not as `""`, and absent means `backups` under the
 app's own data directory — a path resolved at runtime rather than frozen into a row on whichever
