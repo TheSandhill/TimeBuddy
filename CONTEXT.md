@@ -322,6 +322,25 @@ variable. It is one config in TypeScript, imported wherever it is needed. Two mo
 as two: CSS for state transitions, springs for layout. A token only one library can read would be a
 token in name.
 
+**Transient UI arrives and leaves.** The undo toast and the three banners across the top — a failed
+Backup, a failed staged Restore, an offered Update — animate on the way out as well as in, which is
+the thing plain CSS cannot do: an element that animates as it goes has to outlive the condition that
+raised it. That is what the motion library is for, and those four are its first consumers. Banners
+open and close on their height, the toast on an overshoot, because five seconds is not long to be
+noticed in.
+
+A **departure never delays what it describes.** The delete still commits on its own schedule and the
+undo window is still five seconds; the element is only seeing itself out. Nothing waits for it — and
+what is leaving is a *picture* of itself: out of the accessibility tree and out of reach the moment
+it starts to go, because the condition is already over. Undo pressed on a toast that has run out
+would do nothing, and a control that quietly does nothing is worse than one that is plainly gone.
+
+The library **reads the tokens at runtime** rather than restating them in TypeScript — a transition
+in JavaScript wants seconds and four control points, and `var(--motion-base)` means nothing to it.
+Restating them would give High-contrast and reduced motion a second place to be turned down, and a
+second place to be forgotten. So there is no reduced-motion branch in any component: the cascade has
+already answered by the time the value is read.
+
 Two **loops**, and only two: the Mug's steam, and the dial ring's breath. They run at deliberately
 different periods — two things breathing in step read as machinery. The breath is slow, near four and
 a half seconds, because a heartbeat cadence means urgency and this is a tool for twenty-five

@@ -14,12 +14,16 @@ interface UndoToastProps {
  *
  * The words come from whoever raised it. A deleted entry and a stopped block are
  * different news, and one sentence for both would say neither.
+ *
+ * Where it floats and how it arrives belong to `TransientToast`, which is what
+ * wraps it — this is the bar itself, so that the same bar can be given to
+ * anything that needs one.
  */
 export function UndoToast({ message, actionLabel, onUndo }: UndoToastProps) {
   return (
     <div
       role="status"
-      className="fixed inset-x-0 bottom-6 mx-auto flex w-fit items-center gap-4 rounded-full bg-surface-raised px-5 py-2 text-sm text-ink shadow-lg"
+      className="flex w-fit items-center gap-4 rounded-full bg-surface-raised px-5 py-2 text-sm text-ink shadow-lg"
     >
       <span>{message}</span>
       <button

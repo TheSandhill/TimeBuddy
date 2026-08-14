@@ -7,6 +7,7 @@ import { requestTimerPause, requestTimerToggle } from "../tray/toggle-request";
 import { useUpdatePrompt } from "../update/use-update";
 import { BackupBanner } from "./backup-banner";
 import { RestoreBanner } from "./restore-banner";
+import { TransientBanner } from "./transient";
 import { UpdateBanner } from "./update-banner";
 import { WindowFrame } from "./window-frame";
 
@@ -49,29 +50,38 @@ export function AppShell({ children }: { children: ReactNode }) {
       }}
       onTrayPause={requestTimerPause}
     >
-      {restored.data?.status === "failed" ? (
-        <RestoreBanner fault={restored.data.fault} />
-      ) : null}
+      {/* Each banner arrives and leaves on the shared vocabulary rather than
+          appearing and vanishing. The order is unchanged, and so is what puts
+          each one on screen: nothing waits for an animation. */}
+      <TransientBanner>
+        {restored.data?.status === "failed" ? (
+          <RestoreBanner fault={restored.data.fault} />
+        ) : null}
+      </TransientBanner>
 
-      {backup.failure === null ? null : (
-        <BackupBanner
-          lastBackupAt={backup.failure.lastBackupAt}
-          onRetry={backup.retry}
-          retrying={backup.retrying}
-        />
-      )}
+      <TransientBanner>
+        {backup.failure === null ? null : (
+          <BackupBanner
+            lastBackupAt={backup.failure.lastBackupAt}
+            onRetry={backup.retry}
+            retrying={backup.retrying}
+          />
+        )}
+      </TransientBanner>
 
       {/* Last of the three, nearest the app: the other two are things that went
           wrong, and this one is only an offer. */}
-      {update.offered === null ? null : (
-        <UpdateBanner
-          version={update.offered.version}
-          onInstall={update.install}
-          onDismiss={update.dismiss}
-          installing={update.installing}
-          failed={update.installFailed}
-        />
-      )}
+      <TransientBanner>
+        {update.offered === null ? null : (
+          <UpdateBanner
+            version={update.offered.version}
+            onInstall={update.install}
+            onDismiss={update.dismiss}
+            installing={update.installing}
+            failed={update.installFailed}
+          />
+        )}
+      </TransientBanner>
 
       <nav className="flex shrink-0 items-center gap-4 border-b border-border px-6 py-2">
         <Link

@@ -15,6 +15,7 @@ import { PomodoroDial } from "../components/pomodoro-dial";
 import { ProjectPicker } from "../components/project-picker";
 import { RecoveryPrompt } from "../components/recovery-prompt";
 import { TodayEntries } from "../components/today-entries";
+import { TransientToast } from "../components/transient";
 import { UndoToast } from "../components/undo-toast";
 import { listProjects, listTimeEntries } from "../data/commands";
 import {
@@ -153,15 +154,17 @@ export function Timer() {
        * The five seconds in which stopping is still a question. Nothing has
        * been written yet, so undoing costs the block nothing at all.
        */}
-      {pendingStop !== null && pendingStop.kind !== "tooShort" ? (
-        <UndoToast
-          message={t("timer.stopped", {
-            minutes: pendingStop.durationMinutes,
-          })}
-          actionLabel={t("timer.undoStop")}
-          onUndo={undoStop}
-        />
-      ) : null}
+      <TransientToast>
+        {pendingStop !== null && pendingStop.kind !== "tooShort" ? (
+          <UndoToast
+            message={t("timer.stopped", {
+              minutes: pendingStop.durationMinutes,
+            })}
+            actionLabel={t("timer.undoStop")}
+            onUndo={undoStop}
+          />
+        ) : null}
+      </TransientToast>
     </section>
   );
 }
