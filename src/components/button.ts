@@ -46,6 +46,28 @@ export const linkButtonClass = `${linkClass} hover:text-ink`;
 export const linkDangerButtonClass = `${linkClass} hover:text-danger`;
 
 /**
+ * The window's own minimize and close (ADR-0004).
+ *
+ * 28x28 with a glyph in it, rather than the 12px bare circles it replaces: a
+ * target that small is hard to hit, and a circle with nothing in it does not say
+ * which one it is. Transparent until pointed at, because the chrome is not the
+ * subject of any screen.
+ */
+const windowButtonClass =
+  "grid size-7 place-items-center rounded-md text-ink-muted " +
+  "transition motion-quick active:scale-95";
+
+export const minimizeButtonClass = `${windowButtonClass} hover:soft-fill hover:text-ink`;
+
+/**
+ * Close hovers terracotta rather than the usual harsh red, and wears the fill
+ * rather than tinting its glyph: this button is a step away, not a destruction —
+ * it does not even end a running block — but it is also the one on the corner,
+ * and the fill is what a hand aiming at it expects to light up.
+ */
+export const closeButtonClass = `${windowButtonClass} hover:bg-danger hover:text-surface`;
+
+/**
  * Tabular figures because half of these are numbers — a preset length, a week —
  * and digits that change width make a set of them twitch.
  */
