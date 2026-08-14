@@ -67,7 +67,7 @@ export function Titlebar({ block, now }: RunningBlock) {
           type="button"
           aria-label={t("titlebar.minimize")}
           onClick={() => void minimizeWindow()}
-          className="size-3 rounded-full bg-border transition-colors hover:bg-accent"
+          className="size-3 rounded-full bg-border transition-colors motion-quick hover:bg-accent"
         />
         {/*
          * Terracotta, not the usual harsh red: this button is a step away, not
@@ -77,7 +77,7 @@ export function Titlebar({ block, now }: RunningBlock) {
           type="button"
           aria-label={t("titlebar.close")}
           onClick={() => void closeWindow()}
-          className="size-3 rounded-full bg-border transition-colors hover:bg-danger"
+          className="size-3 rounded-full bg-border transition-colors motion-quick hover:bg-danger"
         />
       </div>
     </header>

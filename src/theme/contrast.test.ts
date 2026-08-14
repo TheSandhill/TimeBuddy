@@ -70,7 +70,13 @@ describe("every shipped theme is readable", () => {
   it.each(themeNames)("%s puts body text well clear of AA", (theme) => {
     const tokens = tokensOf(theme);
 
-    for (const background of ["--color-surface", "--color-surface-raised"]) {
+    for (const background of [
+      "--color-surface",
+      "--color-surface-raised",
+      // A soft fill is still a fill text sits on, so it is held to the same bar
+      // as the surface it replaced a border on.
+      "--color-surface-soft",
+    ]) {
       expect(
         contrastRatio(tokens["--color-ink"], tokens[background]),
         `--color-ink on ${background} in "${theme}"`,

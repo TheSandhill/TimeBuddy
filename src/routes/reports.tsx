@@ -41,7 +41,7 @@ const presets: PresetName[] = [
 ];
 
 const buttonClass =
-  "rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors hover:text-ink";
+  "rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:text-ink";
 const chosenClass =
   "rounded-md border border-accent px-3 py-1.5 text-sm text-accent";
 

@@ -1,15 +1,76 @@
 /**
  * The theme contract (ADR-0004). Every shipped theme defines all of these, and
- * components reference them through Tailwind utilities — never a raw colour.
+ * components reference them through Tailwind utilities — never a raw value.
+ *
+ * A Theme is colour, shape, type and motion, not colour alone: a duration
+ * written into a component is the same defect as a hex written into one, and
+ * High-contrast has to be able to turn the motion down. So the contract is one
+ * list and a theme either satisfies all of it or is not a theme.
  */
-export const themeTokens = [
+
+export const colourTokens = [
   "--color-surface",
   "--color-surface-raised",
+  // The two that let content be grouped without a line drawn round it: a card
+  // is a soft raised fill, and where a line is unavoidable it is a hairline.
+  "--color-surface-soft",
+  "--color-hairline",
   "--color-ink",
   "--color-ink-muted",
   "--color-border",
   "--color-accent",
   "--color-danger",
+] as const;
+
+/** Raised radii, so `corner-shape: squircle` has something to round. */
+export const shapeTokens = [
+  "--radius-sm",
+  "--radius-md",
+  "--radius-lg",
+  "--radius-xl",
+] as const;
+
+export const typeTokens = ["--font-sans"] as const;
+
+/**
+ * The motion tiers a component may name. `bounce` is its own tier rather than
+ * a use of `base`: an overshoot inside 220ms has no room for its return leg and
+ * reads as a glitch rather than as spring.
+ */
+export const motionTiers = [
+  "quick",
+  "base",
+  "bounce",
+  "page",
+  "deliberate",
+] as const;
+
+export type MotionTier = (typeof motionTiers)[number];
+
+export const motionTokens = [
+  "--motion-quick",
+  "--motion-base",
+  "--motion-bounce",
+  "--motion-page",
+  "--motion-deliberate",
+  // How far a route change travels along the tab bar's order. A length rather
+  // than a duration, but it is turned down by the same hands.
+  "--motion-page-travel",
+  "--ease-out-soft",
+  "--ease-in-quick",
+  "--ease-in-out-soft",
+  "--ease-bounce-soft",
+  "--ease-bounce-snap",
+  // The two loops, and only two: the Mug's steam and the dial ring's breath.
+  "--animate-steam",
+  "--animate-breath",
+] as const;
+
+export const themeTokens = [
+  ...colourTokens,
+  ...shapeTokens,
+  ...typeTokens,
+  ...motionTokens,
 ] as const;
 
 export type ThemeToken = (typeof themeTokens)[number];

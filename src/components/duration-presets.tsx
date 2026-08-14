@@ -46,7 +46,7 @@ export function DurationPresets({
             aria-label={t("timer.presetLabel", { minutes })}
             disabled={disabled}
             onClick={() => onChange(minutes)}
-            className={`rounded-full border px-3 py-1 text-xs tabular-nums transition-colors disabled:opacity-40 ${
+            className={`rounded-full border px-3 py-1 text-xs tabular-nums transition-colors motion-quick disabled:opacity-40 ${
               chosen
                 ? "border-accent text-accent"
                 : "border-border text-ink-muted hover:border-accent hover:text-ink"

@@ -60,7 +60,7 @@ export function PomodoroDial({
           type="button"
           disabled={!running && !canStart}
           onClick={primary.act}
-          className="size-32 rounded-full bg-accent text-lg font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-40"
+          className="size-32 rounded-full bg-accent text-lg font-medium text-surface transition-opacity motion-quick hover:opacity-90 disabled:opacity-40"
         >
           {primary.label}
         </button>
@@ -69,7 +69,7 @@ export function PomodoroDial({
           <button
             type="button"
             onClick={onStop}
-            className="rounded-md border border-border px-4 py-1.5 text-sm text-ink-muted transition-colors hover:border-danger hover:text-ink"
+            className="rounded-md border border-border px-4 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:border-danger hover:text-ink"
           >
             {t("timer.stop")}
           </button>

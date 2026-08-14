@@ -95,7 +95,7 @@ export class RootBoundary extends Component<Props, State> {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="self-start rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors hover:text-ink"
+              className="self-start rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:text-ink"
             >
               {words.reload}
             </button>

@@ -43,7 +43,7 @@ const sectionClass = "flex flex-col gap-4 border-t border-border pt-4";
 const legendClass = "text-xs uppercase tracking-widest text-ink-muted";
 const checkboxClass = "flex items-center gap-2 text-sm text-ink";
 const quietButtonClass =
-  "rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors hover:text-ink";
+  "rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:text-ink";
 
 export function Settings() {
   const { t, i18n } = useTranslation();

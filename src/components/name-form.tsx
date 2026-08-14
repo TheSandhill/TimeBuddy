@@ -60,14 +60,14 @@ export function NameForm({
         <button
           type="submit"
           disabled={busy}
-          className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-40"
+          className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-surface transition-opacity motion-quick hover:opacity-90 disabled:opacity-40"
         >
           {t("clients.save")}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md px-3 py-1.5 text-sm text-ink-muted transition-colors hover:text-ink"
+          className="rounded-md px-3 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:text-ink"
         >
           {t("clients.cancel")}
         </button>

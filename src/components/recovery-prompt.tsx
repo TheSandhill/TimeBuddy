@@ -51,7 +51,7 @@ export function RecoveryPrompt({
           type="button"
           disabled={busy}
           onClick={onDiscard}
-          className="rounded-md border border-border px-4 py-2 text-sm text-ink-muted transition-colors hover:border-danger hover:text-ink disabled:opacity-40"
+          className="rounded-md border border-border px-4 py-2 text-sm text-ink-muted transition-colors motion-quick hover:border-danger hover:text-ink disabled:opacity-40"
         >
           {t("timer.recoveryDiscard")}
         </button>

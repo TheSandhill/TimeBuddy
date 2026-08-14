@@ -75,7 +75,7 @@ export function EntryList({ days, projects, onEdit, onDelete }: EntryListProps) 
                       type="button"
                       aria-label={t("entries.editEntry", { project })}
                       onClick={() => onEdit(entry)}
-                      className="text-xs uppercase tracking-widest transition-colors hover:text-ink"
+                      className="text-xs uppercase tracking-widest transition-colors motion-quick hover:text-ink"
                     >
                       {t("entries.edit")}
                     </button>
@@ -83,7 +83,7 @@ export function EntryList({ days, projects, onEdit, onDelete }: EntryListProps) 
                       type="button"
                       aria-label={t("entries.deleteEntry", { project })}
                       onClick={() => onDelete(entry)}
-                      className="text-xs uppercase tracking-widest transition-colors hover:text-danger"
+                      className="text-xs uppercase tracking-widest transition-colors motion-quick hover:text-danger"
                     >
                       {t("entries.delete")}
                     </button>
