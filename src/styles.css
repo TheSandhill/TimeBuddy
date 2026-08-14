@@ -125,7 +125,10 @@
   background-color: var(--color-surface-soft);
 }
 
-[data-theme="high-contrast"] .soft-fill {
+/* The hovered variant needs saying separately — it is a different class name —
+ * and needs it for the same reason: #0a0a0a arriving on #101010 is not a hover
+ * anyone can see. */
+[data-theme="high-contrast"] :is(.soft-fill, .hover\:soft-fill:hover) {
   outline: 1px solid var(--color-border);
 }
 

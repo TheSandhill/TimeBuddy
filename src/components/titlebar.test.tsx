@@ -29,6 +29,12 @@ const inFlight: RunningBlock = {
   now: "2026-08-05T12:10:00Z",
 };
 
+/** The same block, held at the ten-minute mark and five minutes ago. */
+const held: RunningBlock = {
+  block: { ...inFlight.block!, pausedAt: "2026-08-05T12:10:00Z" },
+  now: "2026-08-05T12:15:00Z",
+};
+
 /**
  * Whether Tauri would start a window drag from a mousedown on `element`.
  *
@@ -164,5 +170,13 @@ describe("the timer pill", () => {
     renderTitlebar();
 
     expect(screen.queryByRole("timer")).toBeNull();
+  });
+
+  it("says a held block is held, so a stopped countdown is not a crash", () => {
+    renderTitlebar(held);
+
+    // Frozen where it was held, and the word carries the state — the pill is
+    // read on every screen, so it cannot rely on the dial's muted ring.
+    expect(screen.getByRole("timer")).toHaveTextContent("15:00 — gepauzeerd");
   });
 });
