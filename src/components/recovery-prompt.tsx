@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { BlockOutcome } from "../timer/block";
-import { primaryButtonClass } from "./button";
+import { primaryButtonClass, quietDangerButtonClass } from "./button";
 
 interface RecoveryPromptProps {
   outcome: BlockOutcome;
@@ -26,7 +26,7 @@ export function RecoveryPrompt({
     outcome.kind === "completed" || outcome.kind === "stoppedEarly";
 
   return (
-    <section className="flex flex-col gap-4 rounded-md border border-border bg-surface-raised p-6">
+    <section className="flex flex-col gap-4 rounded-lg bg-surface-raised p-6">
       <h2 className="text-lg font-medium text-ink">{t("timer.recoveryTitle")}</h2>
 
       <p className="text-sm text-ink-muted">
@@ -51,7 +51,7 @@ export function RecoveryPrompt({
           type="button"
           disabled={busy}
           onClick={onDiscard}
-          className="rounded-md border border-border px-4 py-2 text-sm text-ink-muted transition-colors motion-quick hover:border-danger hover:text-ink disabled:opacity-40"
+          className={quietDangerButtonClass}
         >
           {t("timer.recoveryDiscard")}
         </button>

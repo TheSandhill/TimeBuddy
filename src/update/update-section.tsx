@@ -13,12 +13,11 @@
  */
 
 import { useTranslation } from "react-i18next";
+import { quietButtonClass } from "../components/button";
+import { quietLabelClass } from "../components/field";
 import { useCurrentVersion, useUpdateCheck } from "./use-update";
 
-const sectionClass = "flex flex-col gap-4 border-t border-border pt-4";
-const legendClass = "text-xs uppercase tracking-widest text-ink-muted";
-const quietButtonClass =
-  "rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:text-ink";
+const sectionClass = "flex flex-col gap-4 border-t border-hairline pt-4";
 
 export function UpdateSection() {
   const { t } = useTranslation();
@@ -28,7 +27,7 @@ export function UpdateSection() {
 
   return (
     <section className={sectionClass} aria-label={t("update.title")}>
-      <h2 className={legendClass}>{t("update.title")}</h2>
+      <h2 className={quietLabelClass}>{t("update.title")}</h2>
 
       {version.data === undefined ? null : (
         <p className="text-sm text-ink">

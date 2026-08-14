@@ -16,7 +16,7 @@ export function BreakBanner({ countdown, onSkip }: BreakBannerProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="flex items-center justify-between rounded-md border border-border bg-surface-raised px-4 py-3">
+    <div className="flex items-center justify-between rounded-md bg-surface-raised px-4 py-3">
       <span className="text-sm text-ink-muted">{t("timer.breakTitle")}</span>
       <span className="text-sm tabular-nums text-ink">{countdown}</span>
       <button

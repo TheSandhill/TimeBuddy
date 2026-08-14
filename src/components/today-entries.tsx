@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { projectName } from "../data/project-name";
 import type { Project, TimeEntry } from "../data/types";
 import { formatClock } from "../timer/clock";
+import { quietLabelClass } from "./field";
 
 interface TodayEntriesProps {
   entries: TimeEntry[];
@@ -21,14 +22,12 @@ export function TodayEntries({ entries, projects }: TodayEntriesProps) {
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="text-xs uppercase tracking-widest text-ink-muted">
-        {t("timer.today")}
-      </h2>
+      <h2 className={quietLabelClass}>{t("timer.today")}</h2>
 
       {entries.length === 0 ? (
         <p className="text-sm text-ink-muted">{t("timer.noEntries")}</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-border">
+        <ul className="flex flex-col divide-y divide-hairline">
           {entries.map((entry) => (
             <li
               key={entry.id}

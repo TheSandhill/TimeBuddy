@@ -80,6 +80,25 @@ Two colour tokens exist purely to *remove* lines: `--color-surface-soft` and `--
 is a soft raised fill, not an outlined box — outlining every card, field, well and control at once is
 what made the first prototype read as chaotic.
 
+### One control vocabulary, in two files
+
+Buttons live in `src/components/button.ts` and fields, labels and quiet headings in
+`src/components/field.ts`. A screen imports from them and never dresses its own control: the commit
+button had already been copied into four screens and the quiet one into four more, and by then the
+copies disagreed. Reshaping the strings once is what let the whole app turn cosy without a screen-level
+override anywhere.
+
+`src/components/vocabulary.test.ts` guards it, next to the raw-hex and raw-duration guards and modelled
+on them. It fails three things: a class list pairing `uppercase` with `tracking-*`, because a label is
+sentence case and quiet rather than a wall of tracked capitals; a rounded box outlined in the neutral
+`--color-border`, because a soft raised fill needs no line round it; and any file outside those two
+declaring a constant named like a button, field or label treatment.
+
+**A hard border survives only where a line carries meaning.** `border-danger` on a failure and
+`border-hairline` on a division are left alone by the guard, and the frame of the app — the titlebar and
+the banners across the top — keeps `--color-border`. Nothing inside a screen outlines a card, a field
+and a control all at once.
+
 ### Themed assets vary fidelity
 
 A Theme may vary an asset's **fidelity, not only its hue**: High-contrast wants an outline where Walnut

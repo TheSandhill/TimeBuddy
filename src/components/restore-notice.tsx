@@ -17,7 +17,7 @@ export function RestoreNotice({ restoredFrom }: { restoredFrom: Instant }) {
   return (
     <div
       role="status"
-      className="mx-auto mb-6 max-w-sm rounded-lg border border-border bg-surface-raised px-4 py-3"
+      className="mx-auto mb-6 max-w-sm rounded-lg bg-surface-raised px-4 py-3"
     >
       <p className="text-sm text-ink">
         {t("restore.doneFrom", {

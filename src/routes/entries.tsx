@@ -14,6 +14,7 @@ import { primaryButtonClass } from "../components/button";
 import { DateRangeFilter } from "../components/date-range-filter";
 import { EntryForm, type EntryFormValues } from "../components/entry-form";
 import { EntryList } from "../components/entry-list";
+import { labelClass } from "../components/field";
 import { UndoToast } from "../components/undo-toast";
 import {
   createTimeEntry,
@@ -109,7 +110,7 @@ export function Entries() {
         <DateRangeFilter range={range} onChange={setRange} />
 
         <div className="flex items-center gap-6">
-          <p className="flex flex-col text-xs uppercase tracking-widest text-ink-muted">
+          <p className={labelClass}>
             {t("entries.total")}
             <span className="text-lg tabular-nums text-ink">
               {formatDuration(sumMinutes(visible))}

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { toggleButtonClass } from "./button";
 
 /**
  * The lengths a block can be started at, one click away.
@@ -46,11 +47,7 @@ export function DurationPresets({
             aria-label={t("timer.presetLabel", { minutes })}
             disabled={disabled}
             onClick={() => onChange(minutes)}
-            className={`rounded-full border px-3 py-1 text-xs tabular-nums transition-colors motion-quick disabled:opacity-40 ${
-              chosen
-                ? "border-accent text-accent"
-                : "border-border text-ink-muted hover:border-accent hover:text-ink"
-            }`}
+            className={`${toggleButtonClass(chosen)} tabular-nums`}
           >
             {t("timer.preset", { minutes })}
           </button>

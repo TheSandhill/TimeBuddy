@@ -6,6 +6,8 @@ import { formatDuration } from "../entries/duration";
 import type { EntryDay } from "../entries/grouping";
 import { windowOf } from "../entries/window";
 import { formatClock } from "../timer/clock";
+import { linkButtonClass, linkDangerButtonClass } from "./button";
+import { quietLabelClass } from "./field";
 
 interface EntryListProps {
   days: EntryDay[];
@@ -34,8 +36,8 @@ export function EntryList({ days, projects, onEdit, onDelete }: EntryListProps) 
     <div className="flex flex-col gap-6">
       {days.map((day) => (
         <section key={day.date} className="flex flex-col gap-2">
-          <h3 className="flex items-baseline justify-between gap-4 border-b border-border pb-1">
-            <span className="text-xs uppercase tracking-widest text-ink-muted">
+          <h3 className="flex items-baseline justify-between gap-4 border-b border-hairline pb-1">
+            <span className={quietLabelClass}>
               {dayLabel(day.date, i18n.language)}
             </span>
             <span className="text-sm tabular-nums text-ink">
@@ -43,7 +45,7 @@ export function EntryList({ days, projects, onEdit, onDelete }: EntryListProps) 
             </span>
           </h3>
 
-          <ul className="flex flex-col divide-y divide-border">
+          <ul className="flex flex-col divide-y divide-hairline">
             {day.entries.map((entry) => {
               const project = nameOf(entry.projectId);
               const ran = windowOf(entry);
@@ -75,7 +77,7 @@ export function EntryList({ days, projects, onEdit, onDelete }: EntryListProps) 
                       type="button"
                       aria-label={t("entries.editEntry", { project })}
                       onClick={() => onEdit(entry)}
-                      className="text-xs uppercase tracking-widest transition-colors motion-quick hover:text-ink"
+                      className={linkButtonClass}
                     >
                       {t("entries.edit")}
                     </button>
@@ -83,7 +85,7 @@ export function EntryList({ days, projects, onEdit, onDelete }: EntryListProps) 
                       type="button"
                       aria-label={t("entries.deleteEntry", { project })}
                       onClick={() => onDelete(entry)}
-                      className="text-xs uppercase tracking-widest transition-colors motion-quick hover:text-danger"
+                      className={linkDangerButtonClass}
                     >
                       {t("entries.delete")}
                     </button>
