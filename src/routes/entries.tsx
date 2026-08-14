@@ -15,6 +15,7 @@ import { DateRangeFilter } from "../components/date-range-filter";
 import { EntryForm, type EntryFormValues } from "../components/entry-form";
 import { EntryList } from "../components/entry-list";
 import { quietLabelClass } from "../components/field";
+import { TransientToast } from "../components/transient";
 import { UndoToast } from "../components/undo-toast";
 import {
   createTimeEntry,
@@ -174,13 +175,15 @@ export function Entries() {
         }}
       />
 
-      {deletion.pending ? (
-        <UndoToast
-          message={t("entries.deleted")}
-          actionLabel={t("entries.undo")}
-          onUndo={deletion.undo}
-        />
-      ) : null}
+      <TransientToast>
+        {deletion.pending ? (
+          <UndoToast
+            message={t("entries.deleted")}
+            actionLabel={t("entries.undo")}
+            onUndo={deletion.undo}
+          />
+        ) : null}
+      </TransientToast>
     </section>
   );
 }
