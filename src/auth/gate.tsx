@@ -103,7 +103,5 @@ export function Gate({ children }: { children: ReactNode }) {
 
 /** The scrolling body the lock screen and the wizard both sit in. */
 function Setting({ children }: { children: ReactNode }) {
-  return (
-    <main className="min-h-0 flex-1 overflow-y-auto p-6">{children}</main>
-  );
+  return <main className="min-h-0 flex-1 overflow-y-auto p-6">{children}</main>;
 }

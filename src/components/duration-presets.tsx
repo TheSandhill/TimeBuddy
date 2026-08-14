@@ -47,7 +47,7 @@ export function DurationPresets({
             aria-label={t("timer.presetLabel", { minutes })}
             disabled={disabled}
             onClick={() => onChange(minutes)}
-            className={`${toggleButtonClass(chosen)} tabular-nums`}
+            className={toggleButtonClass(chosen)}
           >
             {t("timer.preset", { minutes })}
           </button>

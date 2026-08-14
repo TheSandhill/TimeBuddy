@@ -1,24 +1,18 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
-import fg from "fast-glob";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import {
+  classListsOf,
+  componentSources,
+  lineOf,
+  parse,
+  utilitiesOf,
+} from "../test/class-lists";
 import { motionTiers } from "./tokens";
-
-const srcDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const tier = new RegExp(`^-?motion-(?:${motionTiers.join("|")})$`);
 
-/**
- * A class list is read as one string literal, so a tier has to sit beside the
- * `transition-*` it belongs to. Splitting the two across a concatenation would
- * hide the pairing from this guard, and from whoever reads the component next.
- */
 function offencesInClassList(classList: string): string[] {
-  const classes = classList.split(/\s+/).filter(Boolean);
-  // `hover:`, `md:`, `disabled:` — the utility is what comes after the last one.
-  const utilities = classes.map((name) => name.slice(name.lastIndexOf(":") + 1));
+  const utilities = utilitiesOf(classList);
 
   const reasons = new Set<string>();
 
@@ -51,53 +45,39 @@ function offencesInClassList(classList: string): string[] {
 
 /**
  * ADR-0004: "a raw value in a component is a defect — a hex, a duration and an
- * easing alike." This is the raw-hex guard's sibling, and it reads string
- * literals through the TypeScript AST rather than whole lines, so a duration
- * mentioned in a comment is prose and a `setTimeout(…, 5000)` is behaviour.
+ * easing alike." This is the raw-hex guard's sibling, and it reads the source
+ * through the AST rather than line by line, so a duration mentioned in a comment
+ * is prose and a `setTimeout(…, 5000)` is behaviour.
  */
 function findMotionOffences(fileName: string, source: string): string[] {
-  const file = ts.createSourceFile(
-    fileName,
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TSX,
-  );
-
+  const file = parse(fileName, source);
   const offenders: string[] = [];
 
-  const report = (node: ts.Node, reason: string) => {
-    const { line } = file.getLineAndCharacterOfPosition(node.getStart(file));
-    offenders.push(`${fileName}:${line + 1}: ${reason}`);
-  };
+  const report = (line: number, reason: string) =>
+    offenders.push(`${fileName}:${line}: ${reason}`);
 
+  for (const { text, line } of classListsOf(file)) {
+    if (text.includes("transition-duration")) {
+      report(line, "a literal transition-duration");
+    }
+    for (const reason of offencesInClassList(text)) {
+      report(line, reason);
+    }
+  }
+
+  // The same defect wearing a style object: `style={{ transitionDuration }}`.
   const visit = (node: ts.Node) => {
     if (
-      ts.isStringLiteralLike(node) ||
-      ts.isTemplateHead(node) ||
-      ts.isTemplateMiddle(node) ||
-      ts.isTemplateTail(node)
-    ) {
-      if (node.text.includes("transition-duration")) {
-        report(node, "a literal transition-duration");
-      }
-      for (const reason of offencesInClassList(node.text)) {
-        report(node, reason);
-      }
-    }
-
-    // The same defect wearing a style object: `style={{ transitionDuration }}`.
-    if (
-      (ts.isPropertyAssignment(node) || ts.isShorthandPropertyAssignment(node)) &&
+      (ts.isPropertyAssignment(node) ||
+        ts.isShorthandPropertyAssignment(node)) &&
       /^(?:transition|animation)Duration$/.test(node.name.getText(file))
     ) {
-      report(node, `a literal ${node.name.getText(file)}`);
+      report(lineOf(file, node), `a literal ${node.name.getText(file)}`);
     }
-
     ts.forEachChild(node, visit);
   };
-
   visit(file);
+
   return offenders;
 }
 
@@ -168,15 +148,11 @@ describe("the motion guard", () => {
 
 describe("ADR-0004: components name a motion tier, never a number", () => {
   it("finds no raw motion in component source", () => {
-    const files = fg.sync(["**/*.{ts,tsx}"], {
-      cwd: srcDir,
-      absolute: true,
-      ignore: ["**/*.test.{ts,tsx}"],
-    });
-    expect(files.length, "guard scanned no files").toBeGreaterThan(0);
+    const sources = componentSources();
+    expect(sources.length, "guard scanned no files").toBeGreaterThan(0);
 
-    const offenders = files.flatMap((file) =>
-      findMotionOffences(path.relative(srcDir, file), readFileSync(file, "utf8")),
+    const offenders = sources.flatMap(({ fileName, source }) =>
+      findMotionOffences(fileName, source),
     );
 
     expect(offenders).toEqual([]);

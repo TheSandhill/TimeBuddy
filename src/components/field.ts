@@ -19,7 +19,7 @@ export const labelClass = `flex flex-col gap-1 ${quietLabelClass}`;
 
 /** An input, a select or a textarea. */
 export const fieldClass =
-  "rounded-md bg-surface-soft px-3 py-2 text-sm text-ink disabled:opacity-50";
+  "rounded-md soft-fill px-3 py-2 text-sm text-ink disabled:opacity-50";
 
 /**
  * A checkbox and the sentence it belongs to. Full-size text, because the label

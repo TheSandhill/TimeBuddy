@@ -112,7 +112,11 @@ export function Unlock({ onOpen }: { onOpen: (token: string | null) => void }) {
           <FormError message={error} />
 
           <div className="flex items-center gap-3">
-            <button type="submit" className={primaryButtonClass} disabled={busy}>
+            <button
+              type="submit"
+              className={primaryButtonClass}
+              disabled={busy}
+            >
               {t("unlock.setPassword")}
             </button>
             <button
@@ -163,7 +167,11 @@ export function Unlock({ onOpen }: { onOpen: (token: string | null) => void }) {
           <FormError message={error} />
 
           <div className="flex items-center gap-3">
-            <button type="submit" className={primaryButtonClass} disabled={busy}>
+            <button
+              type="submit"
+              className={primaryButtonClass}
+              disabled={busy}
+            >
               {t("unlock.unlock")}
             </button>
             <button

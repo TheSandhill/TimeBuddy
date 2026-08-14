@@ -72,10 +72,9 @@ describe("a start/stop asked for from the tray", () => {
     // has since ended.
     const stale = vi.fn();
     const current = vi.fn();
-    const { rerender } = renderHook(
-      ({ toggle }) => useTimerToggle(toggle),
-      { initialProps: { toggle: stale } },
-    );
+    const { rerender } = renderHook(({ toggle }) => useTimerToggle(toggle), {
+      initialProps: { toggle: stale },
+    });
 
     rerender({ toggle: current });
     clickMenuItem();

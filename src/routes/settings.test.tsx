@@ -100,7 +100,9 @@ const loaded = () => screen.findByRole("radio", { name: "Walnoot" });
 beforeEach(() => {
   vi.clearAllMocks();
   commands.getSettings.mockResolvedValue(stored);
-  commands.updateSettings.mockImplementation(async (next: StoredSettings) => next);
+  commands.updateSettings.mockImplementation(
+    async (next: StoredSettings) => next,
+  );
   commands.backupStatus.mockResolvedValue(backedUp);
   commands.runBackup.mockResolvedValue(backedUp);
   commands.listRestorableBackups.mockResolvedValue(restorable);
@@ -127,8 +129,9 @@ describe("picking a theme", () => {
     renderSettings();
     await loaded();
 
-    expect(screen.getAllByRole("radio").map((input) => input.getAttribute("value")))
-      .toEqual(["walnut", "sand", "high-contrast"]);
+    expect(
+      screen.getAllByRole("radio").map((input) => input.getAttribute("value")),
+    ).toEqual(["walnut", "sand", "high-contrast"]);
   });
 
   it("saves the theme that was picked", async () => {
@@ -168,7 +171,10 @@ describe("following the system", () => {
   });
 
   it("keeps the chosen theme in the row so turning it back off restores it", async () => {
-    commands.getSettings.mockResolvedValue({ ...stored, theme: "high-contrast" });
+    commands.getSettings.mockResolvedValue({
+      ...stored,
+      theme: "high-contrast",
+    });
     renderSettings();
     await screen.findByRole("radio", { name: "Hoog contrast" });
 
@@ -188,7 +194,9 @@ describe("the rest of the preferences", () => {
     renderSettings();
     await loaded();
 
-    fireEvent.change(screen.getByLabelText("Taal"), { target: { value: "en" } });
+    fireEvent.change(screen.getByLabelText("Taal"), {
+      target: { value: "en" },
+    });
     fireEvent.change(screen.getByLabelText("Bloklengte (minuten)"), {
       target: { value: "50" },
     });
@@ -251,9 +259,7 @@ describe("the backup folder", () => {
     renderSettings();
     await loaded();
 
-    expect(
-      screen.getByText("De eigen datamap van de app"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("De eigen datamap van de app")).toBeInTheDocument();
   });
 
   it("asks for a folder, not a file", async () => {
@@ -455,9 +461,7 @@ describe("restoring a backup", () => {
 
     await choose("timebuddy-20260803T073000Z.db");
 
-    expect(
-      await screen.findByText(/laat niets vervallen/),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/laat niets vervallen/)).toBeInTheDocument();
   });
 
   it("stages rather than restores, and asks for a restart", async () => {
@@ -529,7 +533,9 @@ describe("restoring a backup", () => {
     ).not.toBeInTheDocument();
 
     click("Toch niet terugzetten");
-    await waitFor(() => expect(commands.cancelRestore).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(commands.cancelRestore).toHaveBeenCalledTimes(1),
+    );
   });
 
   it("says there is nothing to restore from on a folder with no backups", async () => {

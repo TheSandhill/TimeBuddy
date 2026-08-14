@@ -144,7 +144,8 @@ export type PresetName = "thisWeek" | "lastWeek" | "thisMonth" | "lastMonth";
  * week" means the same Monday-to-Sunday here as it does in the export, and no
  * ISO rule is re-implemented in JavaScript.
  */
-export type Period = { preset: PresetName } | ({ preset: "custom" } & DateRange);
+export type Period =
+  { preset: PresetName } | ({ preset: "custom" } & DateRange);
 
 /**
  * An ISO week number and the ISO year it belongs to — not always the calendar

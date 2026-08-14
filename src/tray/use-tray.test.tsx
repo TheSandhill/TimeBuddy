@@ -31,8 +31,12 @@ const bus = vi.hoisted(() => {
 });
 vi.mock("@tauri-apps/api/event", () => ({ listen: bus.listen }));
 
-const { useTray, TOGGLE_TIMER_EVENT, TOGGLE_PAUSE_EVENT, HIDDEN_TO_TRAY_EVENT } =
-  await import("./use-tray");
+const {
+  useTray,
+  TOGGLE_TIMER_EVENT,
+  TOGGLE_PAUSE_EVENT,
+  HIDDEN_TO_TRAY_EVENT,
+} = await import("./use-tray");
 
 const idle: RunningBlock = { block: null, now: "2026-08-05T12:00:00Z" };
 

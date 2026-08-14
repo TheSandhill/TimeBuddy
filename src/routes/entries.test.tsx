@@ -1,5 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
@@ -96,7 +103,12 @@ describe("reading hours back", () => {
   it("groups the days and totals each one", async () => {
     commands.listTimeEntries.mockResolvedValue([
       entry({ id: 1, date: "2026-08-05", durationMinutes: 90 }),
-      entry({ id: 2, date: "2026-08-05", durationMinutes: 30, projectId: app.id }),
+      entry({
+        id: 2,
+        date: "2026-08-05",
+        durationMinutes: 30,
+        projectId: app.id,
+      }),
       entry({ id: 3, date: "2026-08-03", durationMinutes: 45 }),
     ]);
     renderEntries();

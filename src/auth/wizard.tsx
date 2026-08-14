@@ -123,7 +123,9 @@ export function Wizard({
             total: steps.length,
           })}
         </p>
-        <h1 className="text-lg font-medium text-ink">{t(`wizard.${step}Title`)}</h1>
+        <h1 className="text-lg font-medium text-ink">
+          {t(`wizard.${step}Title`)}
+        </h1>
       </header>
 
       {step === "password" ? (

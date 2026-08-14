@@ -17,10 +17,12 @@ export const primaryButtonClass =
   "rounded-lg bg-accent px-4 py-2 text-sm font-medium text-surface " +
   "transition-opacity motion-quick hover:opacity-90 disabled:opacity-40";
 
+const quietClass =
+  "rounded-md soft-fill px-4 py-2 text-sm text-ink-muted " +
+  "transition-colors motion-quick disabled:opacity-40";
+
 /** A real button that is not the point of the screen: Browse, Check again. */
-export const quietButtonClass =
-  "rounded-md bg-surface-soft px-4 py-2 text-sm text-ink-muted " +
-  "transition-colors motion-quick hover:text-ink disabled:opacity-40";
+export const quietButtonClass = `${quietClass} hover:text-ink`;
 
 /**
  * A quiet button that steps towards losing something — Stop, Discard.
@@ -28,26 +30,28 @@ export const quietButtonClass =
  * It hovers terracotta rather than wearing it: the colour is the warning, and a
  * button that is red before it is pointed at reads as the screen's subject.
  */
-export const quietDangerButtonClass =
-  "rounded-md bg-surface-soft px-4 py-2 text-sm text-ink-muted " +
-  "transition-colors motion-quick hover:text-danger disabled:opacity-40";
+export const quietDangerButtonClass = `${quietClass} hover:text-danger`;
 
 /**
  * A row action: no fill at all, because a row that carries three of these reads
  * as a toolbar rather than as a name.
  */
-export const linkButtonClass =
+const linkClass =
   "text-xs font-medium text-ink-muted " +
-  "transition-colors motion-quick hover:text-ink disabled:opacity-40";
+  "transition-colors motion-quick disabled:opacity-40";
+
+export const linkButtonClass = `${linkClass} hover:text-ink`;
 
 /** The row action that removes something. */
-export const linkDangerButtonClass =
-  "text-xs font-medium text-ink-muted " +
-  "transition-colors motion-quick hover:text-danger disabled:opacity-40";
+export const linkDangerButtonClass = `${linkClass} hover:text-danger`;
 
+/**
+ * Tabular figures because half of these are numbers — a preset length, a week —
+ * and digits that change width make a set of them twitch.
+ */
 const toggleClass =
-  "rounded-full px-3 py-1.5 text-sm transition-colors motion-quick " +
-  "disabled:opacity-40";
+  "rounded-full px-3 py-1.5 text-sm tabular-nums " +
+  "transition-colors motion-quick disabled:opacity-40";
 
 /**
  * One of a set where exactly one answer is in force: a preset length, a report
@@ -60,5 +64,5 @@ const toggleClass =
 export function toggleButtonClass(chosen: boolean): string {
   return chosen
     ? `${toggleClass} bg-accent font-medium text-surface`
-    : `${toggleClass} bg-surface-soft text-ink-muted hover:text-ink`;
+    : `${toggleClass} soft-fill text-ink-muted hover:text-ink`;
 }

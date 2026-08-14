@@ -192,7 +192,9 @@ describe("the first client and project", () => {
     type("Project", "Website");
     press("Aan de slag");
 
-    await waitFor(() => expect(commands.createClient).toHaveBeenCalledWith("Acme"));
+    await waitFor(() =>
+      expect(commands.createClient).toHaveBeenCalledWith("Acme"),
+    );
     await waitFor(() =>
       expect(commands.createProject).toHaveBeenCalledWith(acme.id, "Website"),
     );
@@ -215,7 +217,10 @@ describe("the first client and project", () => {
     // while the wizard was still being walked. Opening onto those answers is
     // how a fresh install lands in an app that looks empty.
     const client = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     });
     const invalidate = vi.spyOn(client, "invalidateQueries");
     render(

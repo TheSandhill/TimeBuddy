@@ -156,18 +156,26 @@ describe("applying a language without a reload", () => {
     stubMatchMedia(true);
     const i18n = createI18n("nl");
     const { rerender } = render(
-      <Appearance theme="walnut" followSystem={false} language="nl" i18n={i18n} />,
+      <Appearance
+        theme="walnut"
+        followSystem={false}
+        language="nl"
+        i18n={i18n}
+      />,
     );
 
     rerender(
-      <Appearance theme="walnut" followSystem={false} language="en" i18n={i18n} />,
+      <Appearance
+        theme="walnut"
+        followSystem={false}
+        language="en"
+        i18n={i18n}
+      />,
     );
 
     // The instance switches asynchronously; the attribute follows it.
     await vi.waitFor(() => expect(i18n.language).toBe("en"));
-    await vi.waitFor(() =>
-      expect(document.documentElement.lang).toBe("en"),
-    );
+    await vi.waitFor(() => expect(document.documentElement.lang).toBe("en"));
   });
 });
 

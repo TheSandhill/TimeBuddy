@@ -204,7 +204,9 @@ export function restoreProject(id: number): Promise<Project> {
 
 // -- Time entries -----------------------------------------------------------
 
-export function listTimeEntries(filter: EntryFilter = {}): Promise<TimeEntry[]> {
+export function listTimeEntries(
+  filter: EntryFilter = {},
+): Promise<TimeEntry[]> {
   return call("list_time_entries", { filter });
 }
 
@@ -287,7 +289,12 @@ export function exportReport(
   range: DateRange,
   labels: SheetLabels,
 ): Promise<void> {
-  return call("export_report", { path, from: range.from, to: range.to, labels });
+  return call("export_report", {
+    path,
+    from: range.from,
+    to: range.to,
+    labels,
+  });
 }
 
 // -- Settings ---------------------------------------------------------------

@@ -143,7 +143,9 @@ export function ArchivableList<T extends Archivable>({
                         {item.name}
                       </button>
                     ) : (
-                      <span className="truncate text-sm text-ink">{item.name}</span>
+                      <span className="truncate text-sm text-ink">
+                        {item.name}
+                      </span>
                     )}
 
                     {/* One badge, not two: being archived outranks
@@ -169,7 +171,9 @@ export function ArchivableList<T extends Archivable>({
                       <button
                         type="button"
                         disabled={moving}
-                        aria-label={t("clients.restoreNamed", { name: item.name })}
+                        aria-label={t("clients.restoreNamed", {
+                          name: item.name,
+                        })}
                         onClick={() => onRestore(item)}
                         className={linkButtonClass}
                       >
@@ -179,7 +183,9 @@ export function ArchivableList<T extends Archivable>({
                       <button
                         type="button"
                         disabled={moving}
-                        aria-label={t("clients.archiveNamed", { name: item.name })}
+                        aria-label={t("clients.archiveNamed", {
+                          name: item.name,
+                        })}
                         onClick={() => onArchive(item)}
                         className={linkButtonClass}
                       >

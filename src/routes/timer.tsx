@@ -150,9 +150,9 @@ export function Timer() {
       <TodayEntries entries={entries.data ?? []} projects={named.data ?? []} />
 
       {/*
-        * The five seconds in which stopping is still a question. Nothing has
-        * been written yet, so undoing costs the block nothing at all.
-        */}
+       * The five seconds in which stopping is still a question. Nothing has
+       * been written yet, so undoing costs the block nothing at all.
+       */}
       {pendingStop !== null && pendingStop.kind !== "tooShort" ? (
         <UndoToast
           message={t("timer.stopped", {

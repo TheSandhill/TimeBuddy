@@ -255,11 +255,19 @@ A named set of design tokens (`--color-surface`, `--color-ink`, `--color-accent`
 reference tokens, **never raw hex** — that is what makes user-authored themes a later addition
 rather than a rewrite.
 
-A Theme covers **colour and Motion**. A duration written into a component is the same defect as a hex
-written into one, and if motion lived outside the Theme then two documents would answer the question
-"what is a theme made of". So the durations, the easings and the two looping animations are token sets
-a Theme carries, and a Theme is allowed to vary any of them — High-contrast turns the motion down,
-which is the concrete reason this had to be one decision rather than two.
+A Theme covers **colour, shape, type and Motion**. A duration written into a component is the same
+defect as a hex written into one, and if motion lived outside the Theme then two documents would answer
+the question "what is a theme made of". So the radii, the font family, the durations, the easings and
+the two looping animations are all token sets a Theme carries, and a Theme is allowed to vary any of
+them — High-contrast turns the motion down, which is the concrete reason this had to be one decision
+rather than two.
+
+Two colour tokens exist to *remove* lines rather than draw them: a **soft raised fill** groups content
+where a border would otherwise outline it, and a **hairline** is what a line becomes where one is
+genuinely unavoidable. A hard border survives only where a line carries meaning — a failure, or the
+frame of the window. The treatments that use them are the app's **control vocabulary**: one file of
+buttons and one of fields, labels and quiet headings, which every screen imports and no screen
+re-decides (ADR-0004). Labels are sentence case; the wall of tracked capitals is gone.
 
 A Theme may also change an asset's **fidelity and not only its hue**, which is why a themed asset is
 a token set rather than a file: High-contrast wants an outline where Walnut wants something soft, and

@@ -37,7 +37,9 @@ function findHardcodedStrings(file: string): string[] {
   const offenders: string[] = [];
 
   const report = (node: ts.Node, text: string) => {
-    const { line } = source.getLineAndCharacterOfPosition(node.getStart(source));
+    const { line } = source.getLineAndCharacterOfPosition(
+      node.getStart(source),
+    );
     offenders.push(
       `${path.relative(srcDir, file)}:${line + 1}: ${text.trim()}`,
     );

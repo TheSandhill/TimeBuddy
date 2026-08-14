@@ -15,10 +15,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import {
-  ArchivableList,
-  type Archivable,
-} from "../components/archivable-list";
+import { ArchivableList, type Archivable } from "../components/archivable-list";
 import { checkboxLabelClass } from "../components/field";
 import {
   archiveClient,

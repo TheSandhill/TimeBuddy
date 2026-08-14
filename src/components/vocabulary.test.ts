@@ -1,11 +1,12 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
-import fg from "fast-glob";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
-
-const srcDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+import {
+  classListsOf,
+  componentSources,
+  lineOf,
+  parse,
+  utilitiesOf,
+} from "../test/class-lists";
 
 /**
  * The two files that are allowed to dress a control. Everything else imports
@@ -15,20 +16,10 @@ const sharedModules = new Set(["components/button.ts", "components/field.ts"]);
 
 /** What a constant is called when it is a control treatment in disguise. */
 const treatmentName =
-  /(?:button|field|label|legend|chip|checkbox|input|control)class$/i;
-
-function utilitiesOf(classList: string): string[] {
-  return (
-    classList
-      .split(/\s+/)
-      .filter(Boolean)
-      // `hover:`, `md:`, `disabled:` — the utility is what follows the last one.
-      .map((name) => name.slice(name.lastIndexOf(":") + 1))
-  );
-}
+  /(?:button|field|label|legend|chip|checkbox|toggle|control)(?:class)?$/i;
 
 /**
- * The two rules that are about the look of a class list rather than about who
+ * The rules that are about the look of a class list rather than about who
  * declared it.
  *
  * Tracked capitals are the wall of uppercase the overhaul exists to remove, and
@@ -37,7 +28,7 @@ function utilitiesOf(classList: string): string[] {
  * `border-hairline` where a division genuinely has to be drawn both say
  * something, which is the whole test of whether a border survives.
  */
-function offencesInClassList(classList: string): string[] {
+function offencesInClassList(classList: string, shared: boolean): string[] {
   const utilities = utilitiesOf(classList);
   const has = (pattern: RegExp) => utilities.some((name) => pattern.test(name));
 
@@ -56,60 +47,64 @@ function offencesInClassList(classList: string): string[] {
     reasons.add("an outlined box: a soft raised fill needs no line round it");
   }
 
+  // The fill that dresses a field or a quiet control. A screen reaching for it
+  // is inventing one of those, whatever it calls the string it puts it in.
+  if (!shared && has(/^(?:soft-fill|bg-surface-soft)$/)) {
+    reasons.add(
+      "the control fill: a field or a control belongs to the vocabulary",
+    );
+  }
+
   return [...reasons];
 }
 
 /**
  * ADR-0004's sibling rule for shape: the form vocabulary lives in two files, and
  * a screen that re-decides what a button looks like is a defect in the way a raw
- * hex is. Reads string literals and declarations through the TypeScript AST, so
- * prose about a border is prose.
+ * hex is.
  */
 function findVocabularyOffences(fileName: string, source: string): string[] {
-  const file = ts.createSourceFile(
-    fileName,
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TSX,
-  );
+  const file = parse(fileName, source);
+  const shared = sharedModules.has(fileName.split("\\").join("/"));
 
   const offenders: string[] = [];
-  const shared = sharedModules.has(fileName.split(path.sep).join("/"));
+  const report = (line: number, reason: string) =>
+    offenders.push(`${fileName}:${line}: ${reason}`);
 
-  const report = (node: ts.Node, reason: string) => {
-    const { line } = file.getLineAndCharacterOfPosition(node.getStart(file));
-    offenders.push(`${fileName}:${line + 1}: ${reason}`);
-  };
-
-  const visit = (node: ts.Node) => {
-    if (
-      ts.isStringLiteralLike(node) ||
-      ts.isTemplateHead(node) ||
-      ts.isTemplateMiddle(node) ||
-      ts.isTemplateTail(node)
-    ) {
-      for (const reason of offencesInClassList(node.text)) {
-        report(node, reason);
-      }
+  for (const { text, line } of classListsOf(file)) {
+    for (const reason of offencesInClassList(text, shared)) {
+      report(line, reason);
     }
+  }
 
+  /**
+   * A constant holding a string and named after a control. Only string-valued
+   * ones: `const rowButton = "…"` is a treatment, and a component or a boolean
+   * that happens to end in the same word is not.
+   */
+  const visit = (node: ts.Node) => {
     if (
       !shared &&
       ts.isVariableDeclaration(node) &&
       ts.isIdentifier(node.name) &&
-      treatmentName.test(node.name.text)
+      treatmentName.test(node.name.text) &&
+      node.initializer !== undefined &&
+      (ts.isStringLiteralLike(node.initializer) ||
+        ts.isTemplateExpression(node.initializer) ||
+        // A class list long enough to be split over two lines. Only `+`: a
+        // comparison named after a control is a boolean, not a treatment.
+        (ts.isBinaryExpression(node.initializer) &&
+          node.initializer.operatorToken.kind === ts.SyntaxKind.PlusToken))
     ) {
       report(
-        node,
+        lineOf(file, node),
         `a competing treatment: ${node.name.text} belongs in the shared vocabulary`,
       );
     }
-
     ts.forEachChild(node, visit);
   };
-
   visit(file);
+
   return offenders;
 }
 
@@ -143,8 +138,24 @@ describe("the vocabulary guard", () => {
     expect(
       reasons(`const a = "rounded-md border border-hairline px-3 py-2";`),
     ).toEqual([]);
-    expect(reasons(`const a = "border-b border-border px-6 py-2";`)).toEqual([]);
+    expect(reasons(`const a = "border-b border-border px-6 py-2";`)).toEqual(
+      [],
+    );
     expect(reasons(`const a = "divide-y divide-border";`)).toEqual([]);
+  });
+
+  it("fails a screen dressing a control in the grouping fill", () => {
+    // The hole a name-based rule leaves: no constant, no telling name.
+    expect(
+      reasons(
+        `const a = <input className="rounded-md soft-fill px-3 py-2" />;`,
+      ),
+    ).toContain(
+      "the control fill: a field or a control belongs to the vocabulary",
+    );
+    expect(reasons(`const a = "bg-surface-soft px-4 py-2 text-sm";`)).toContain(
+      "the control fill: a field or a control belongs to the vocabulary",
+    );
   });
 
   it("fails a screen that declares its own control treatment", () => {
@@ -154,11 +165,25 @@ describe("the vocabulary guard", () => {
     expect(reasons(`const legendClass = "text-xs";`)).toContain(
       "a competing treatment: legendClass belongs in the shared vocabulary",
     );
+    // The name the guard used to miss: a treatment need not say "class".
+    expect(reasons(`const rowButton = "text-xs " + "text-ink";`)).toContain(
+      "a competing treatment: rowButton belongs in the shared vocabulary",
+    );
+  });
+
+  it("leaves alone what only reads like a treatment", () => {
+    // A component, a boolean and a catalogue key are not dressing anything.
+    expect(reasons(`const UndoToast = () => null;`)).toEqual([]);
+    expect(reasons(`const chosenLabel = t("timer.preset");`)).toEqual([]);
+    expect(reasons(`const showLabel = minutes === value;`)).toEqual([]);
   });
 
   it("lets the shared vocabulary declare the vocabulary", () => {
     expect(
-      reasons(`const quietButtonClass = "px-3";`, "components/button.ts"),
+      reasons(
+        `const quietButtonClass = "soft-fill px-4 py-2";`,
+        "components/button.ts",
+      ),
     ).toEqual([]);
     expect(
       reasons(`const labelClass = "text-xs";`, "components/field.ts"),
@@ -168,18 +193,11 @@ describe("the vocabulary guard", () => {
 
 describe("one form vocabulary, shared", () => {
   it("finds no competing control treatment in component source", () => {
-    const files = fg.sync(["**/*.{ts,tsx}"], {
-      cwd: srcDir,
-      absolute: true,
-      ignore: ["**/*.test.{ts,tsx}"],
-    });
-    expect(files.length, "guard scanned no files").toBeGreaterThan(0);
+    const sources = componentSources();
+    expect(sources.length, "guard scanned no files").toBeGreaterThan(0);
 
-    const offenders = files.flatMap((file) =>
-      findVocabularyOffences(
-        path.relative(srcDir, file),
-        readFileSync(file, "utf8"),
-      ),
+    const offenders = sources.flatMap(({ fileName, source }) =>
+      findVocabularyOffences(fileName, source),
     );
 
     expect(offenders).toEqual([]);

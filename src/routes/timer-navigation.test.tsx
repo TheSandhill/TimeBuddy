@@ -19,7 +19,13 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
@@ -46,9 +52,8 @@ const notify = vi.hoisted(() => ({ notify: vi.fn(() => Promise.resolve()) }));
 vi.mock("../timer/notify", () => notify);
 
 const { routeTree } = await import("../router");
-const { clearTimerPause, requestTimerPause } = await import(
-  "../tray/toggle-request"
-);
+const { clearTimerPause, requestTimerPause } =
+  await import("../tray/toggle-request");
 
 /**
  * A one-minute block, so that running one out costs the suite sixty ticks

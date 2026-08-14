@@ -59,9 +59,7 @@ describe("when a render throws", () => {
   it("carries the error, so the cause is on screen rather than only in a console", () => {
     crash("restoredFrom is not a date");
 
-    expect(
-      screen.getByText("restoredFrom is not a date"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("restoredFrom is not a date")).toBeInTheDocument();
   });
 
   it("offers a reload, and says where quitting lives when that does not help", () => {

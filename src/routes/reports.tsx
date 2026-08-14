@@ -41,8 +41,6 @@ const presets: PresetName[] = [
   "lastMonth",
 ];
 
-
-
 export function Reports() {
   const { t, i18n } = useTranslation();
 
@@ -172,7 +170,9 @@ export function Reports() {
               onClick={() => shown && exporting.mutate(shown.range)}
               className={primaryButtonClass}
             >
-              {exporting.isPending ? t("reports.exporting") : t("reports.export")}
+              {exporting.isPending
+                ? t("reports.exporting")
+                : t("reports.export")}
             </button>
           </div>
         </div>
@@ -218,8 +218,7 @@ export function Reports() {
           </ul>
 
           <p className="flex items-baseline justify-between gap-4 border-t border-hairline pt-2">
-            <span className={quietLabelClass}>{t("reports.total")}
-            </span>
+            <span className={quietLabelClass}>{t("reports.total")}</span>
             <span className="text-lg tabular-nums text-ink">
               {formatDuration(shown?.totalMinutes ?? 0)}
             </span>

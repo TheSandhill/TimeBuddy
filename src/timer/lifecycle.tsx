@@ -209,7 +209,7 @@ export function TimerLifecycleProvider({
    * clearing `startedHere` mid-window would turn an undone stop into an
    * Orphaned Block.
    */
-  const liveBlock = watching ? running.data ?? null : null;
+  const liveBlock = watching ? (running.data ?? null) : null;
   const stopping = pendingStop !== null;
   const block = stopping ? null : liveBlock;
   const orphaned = block !== null && !startedHere.current;

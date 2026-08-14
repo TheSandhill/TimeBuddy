@@ -1,5 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
@@ -93,7 +99,9 @@ describe("the master-detail pairing", () => {
   it("asks only for what is live until archived ones are asked for", async () => {
     renderClients();
 
-    await waitFor(() => expect(commands.listClients).toHaveBeenCalledWith(false));
+    await waitFor(() =>
+      expect(commands.listClients).toHaveBeenCalledWith(false),
+    );
     await waitFor(() =>
       expect(commands.listProjects).toHaveBeenCalledWith({
         clientId: acme.id,
@@ -103,7 +111,10 @@ describe("the master-detail pairing", () => {
   });
 
   it("selects the first client so the right-hand side is never empty for no reason", async () => {
-    commands.listClients.mockResolvedValue([acme, { ...acme, id: 3, name: "Beta" }]);
+    commands.listClients.mockResolvedValue([
+      acme,
+      { ...acme, id: 3, name: "Beta" },
+    ]);
     renderClients();
 
     expect(await screen.findByText("Website")).toBeInTheDocument();
@@ -162,7 +173,9 @@ describe("the show-archived toggle", () => {
 
     fireEvent.click(await screen.findByLabelText("Toon gearchiveerde"));
 
-    const client = (await screen.findByRole("button", { name: "Oldco" })).closest("li");
+    const client = (
+      await screen.findByRole("button", { name: "Oldco" })
+    ).closest("li");
     expect(client).toHaveTextContent("Gearchiveerd");
 
     const project = (await screen.findByText("Rebrand")).closest("li");
@@ -174,7 +187,9 @@ describe("the show-archived toggle", () => {
 
   it("says why a live project under an archived client is out of the pickers", async () => {
     commands.listClients.mockResolvedValue([oldco]);
-    commands.listProjects.mockResolvedValue([{ ...website, clientId: oldco.id }]);
+    commands.listProjects.mockResolvedValue([
+      { ...website, clientId: oldco.id },
+    ]);
     renderClients();
 
     fireEvent.click(await screen.findByLabelText("Toon gearchiveerde"));
@@ -192,7 +207,9 @@ describe("creating and renaming", () => {
   it("adds a client", async () => {
     renderClients();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Klant toevoegen" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Klant toevoegen" }),
+    );
     typeName(await screen.findByRole("form", { name: "Nieuwe klant" }), "Beta");
 
     await waitFor(() =>
@@ -203,7 +220,9 @@ describe("creating and renaming", () => {
   it("adds a project to the client that is open, at no rate", async () => {
     renderClients();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Project toevoegen" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Project toevoegen" }),
+    );
     typeName(await screen.findByRole("form", { name: "Nieuw project" }), "App");
 
     await waitFor(() =>
@@ -239,7 +258,10 @@ describe("creating and renaming", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: "Website hernoemen" }),
     );
-    typeName(await screen.findByRole("form", { name: "Project hernoemen" }), "Site");
+    typeName(
+      await screen.findByRole("form", { name: "Project hernoemen" }),
+      "Site",
+    );
 
     await waitFor(() =>
       expect(commands.updateProject).toHaveBeenCalledWith(
@@ -257,7 +279,9 @@ describe("creating and renaming", () => {
     });
     renderClients();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Klant toevoegen" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Klant toevoegen" }),
+    );
     typeName(await screen.findByRole("form", { name: "Nieuwe klant" }), " ");
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -315,7 +339,9 @@ describe("archiving, which is the only way out", () => {
     await waitFor(() =>
       expect(commands.restoreClient).toHaveBeenCalledWith(oldco.id),
     );
-    expect(screen.queryByRole("button", { name: "Oldco archiveren" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Oldco archiveren" }),
+    ).toBeNull();
 
     fireEvent.click(
       await screen.findByRole("button", { name: "Rebrand terugzetten" }),
@@ -347,7 +373,9 @@ describe("nothing in the UI touches the rate", () => {
   it("has no field for hourly rate", async () => {
     renderClients();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Project toevoegen" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Project toevoegen" }),
+    );
     const form = await screen.findByRole("form", { name: "Nieuw project" });
 
     expect(within(form).queryByLabelText(/tarief/i)).toBeNull();

@@ -157,11 +157,7 @@ export function EntryForm({
       ) : null}
 
       <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={busy}
-          className={primaryButtonClass}
-        >
+        <button type="submit" disabled={busy} className={primaryButtonClass}>
           {t("entries.save")}
         </button>
         <button

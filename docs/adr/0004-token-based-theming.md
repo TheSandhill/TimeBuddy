@@ -94,6 +94,12 @@ sentence case and quiet rather than a wall of tracked capitals; a rounded box ou
 `--color-border`, because a soft raised fill needs no line round it; and any file outside those two
 declaring a constant named like a button, field or label treatment.
 
+The fill itself is a `soft-fill` utility rather than `bg-surface-soft` written into the strings, because
+High-contrast has to answer it differently: there the soft fill is `#0a0a0a` on `#000000`, which is
+1.04:1 and not an edge at all. That theme outlines the same controls instead — the fidelity rule above,
+finally exercised by something that ships. A screen reaching for that fill is inventing a field or a
+control, so the guard fails that too.
+
 **A hard border survives only where a line carries meaning.** `border-danger` on a failure and
 `border-hairline` on a division are left alone by the guard, and the frame of the app — the titlebar and
 the banners across the top — keeps `--color-border`. Nothing inside a screen outlines a card, a field

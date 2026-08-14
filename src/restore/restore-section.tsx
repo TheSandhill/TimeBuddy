@@ -94,7 +94,9 @@ export function RestoreSection() {
           <p className="text-xs text-ink-muted">{t("restore.hint")}</p>
 
           {backups.data?.length === 0 ? (
-            <p className="text-sm text-ink-muted">{t("restore.noneToRestore")}</p>
+            <p className="text-sm text-ink-muted">
+              {t("restore.noneToRestore")}
+            </p>
           ) : (
             <label className={labelClass}>
               {t("restore.choose")}
@@ -138,7 +140,9 @@ export function RestoreSection() {
                 disabled={stage.isPending || preview.data === undefined}
                 onClick={() => stage.mutate(chosen)}
               >
-                {stage.isPending ? t("restore.preparing") : t("restore.prepare")}
+                {stage.isPending
+                  ? t("restore.preparing")
+                  : t("restore.prepare")}
               </button>
               {stage.isError ? (
                 <span role="alert" className="text-sm text-danger">

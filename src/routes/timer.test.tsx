@@ -1,5 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
@@ -138,7 +144,9 @@ describe("the idle Timer screen", () => {
     );
     expect(await screen.findByLabelText("Project")).toHaveValue("7");
     expect(screen.getByText("Vandaag")).toBeInTheDocument();
-    expect(screen.getByText("Nog geen uren geregistreerd.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Nog geen uren geregistreerd."),
+    ).toBeInTheDocument();
   });
 
   it("shows the configured block length on the dial", async () => {
@@ -172,7 +180,9 @@ describe("the idle Timer screen", () => {
     commands.listProjects.mockResolvedValue([]);
     renderTimer();
 
-    expect(await screen.findByText("Maak eerst een project aan.")).toBeVisible();
+    expect(
+      await screen.findByText("Maak eerst een project aan."),
+    ).toBeVisible();
     expect(screen.getByRole("button", { name: "Start" })).toBeDisabled();
   });
 
@@ -198,7 +208,9 @@ describe("the idle Timer screen", () => {
     renderTimer();
 
     // No longer startable, still named.
-    expect(await screen.findByText("Maak eerst een project aan.")).toBeVisible();
+    expect(
+      await screen.findByText("Maak eerst een project aan."),
+    ).toBeVisible();
     expect(await screen.findByRole("listitem")).toHaveTextContent(website.name);
   });
 
@@ -233,9 +245,7 @@ describe("a block found in flight on launch", () => {
     renderTimer();
 
     expect(await screen.findByText("Er liep nog een blok")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Bewaren" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Bewaren" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Stop" })).toBeNull();
     expect(commands.stopRunningTimer).not.toHaveBeenCalled();
     expect(commands.discardRunningTimer).not.toHaveBeenCalled();
@@ -301,9 +311,7 @@ describe("a block found in flight on launch", () => {
     commands.getRunningTimer.mockResolvedValue(inFlight(10));
     renderTimer();
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Weggooien" }),
-    );
+    fireEvent.click(await screen.findByRole("button", { name: "Weggooien" }));
 
     await waitFor(() =>
       expect(commands.discardRunningTimer).toHaveBeenCalled(),
@@ -316,7 +324,9 @@ describe("a block found in flight on launch", () => {
     renderTimer();
 
     expect(
-      await screen.findByText("Er was te weinig tijd verstreken om te bewaren."),
+      await screen.findByText(
+        "Er was te weinig tijd verstreken om te bewaren.",
+      ),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Bewaren" })).toBeNull();
   });
@@ -443,7 +453,9 @@ describe("stopping a block by hand", () => {
   it("says what it is about to log, and has not logged it yet", async () => {
     await stopAfter(10);
 
-    expect(await screen.findByText("10 min geregistreerd.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("10 min geregistreerd."),
+    ).toBeInTheDocument();
     expect(commands.stopRunningTimer).not.toHaveBeenCalled();
   });
 
@@ -511,7 +523,9 @@ describe("stopping a block by hand", () => {
     // would be noise.
     await stopAfter(0);
 
-    await waitFor(() => expect(commands.discardRunningTimer).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(commands.discardRunningTimer).toHaveBeenCalled(),
+    );
     expect(screen.queryByRole("button", { name: "Ongedaan maken" })).toBeNull();
     expect(commands.stopRunningTimer).not.toHaveBeenCalled();
   });
@@ -550,7 +564,6 @@ describe("pausing a block", () => {
       }
       return Promise.resolve(row);
     });
-
   }
 
   /** A block `worked` minutes in, held for `heldMinutes`, and still held. */
@@ -634,9 +647,7 @@ describe("pausing a block", () => {
 
     await waitFor(() => expect(held()).toBeNull());
     expect(commands.resumeRunningTimer).toHaveBeenCalledTimes(1);
-    expect(
-      screen.getByRole("button", { name: "Pauzeer" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pauzeer" })).toBeInTheDocument();
   });
 
   it("asks to be held once, however many times the button is hit", async () => {
@@ -744,14 +755,19 @@ describe("the duration presets", () => {
   it("offers the four lengths, and marks the one in force", async () => {
     renderTimer();
 
-    await waitFor(() => expect(preset(25)).toHaveAttribute("aria-pressed", "true"));
+    await waitFor(() =>
+      expect(preset(25)).toHaveAttribute("aria-pressed", "true"),
+    );
     for (const minutes of [15, 45, 60]) {
       expect(preset(minutes)).toHaveAttribute("aria-pressed", "false");
     }
   });
 
   it("marks none of them when the saved length is not one of the four", async () => {
-    commands.getSettings.mockResolvedValue({ ...settings, pomodoroMinutes: 50 });
+    commands.getSettings.mockResolvedValue({
+      ...settings,
+      pomodoroMinutes: 50,
+    });
     renderTimer();
 
     await screen.findByText("50:00");

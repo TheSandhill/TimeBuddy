@@ -27,7 +27,9 @@ export function RecoveryPrompt({
 
   return (
     <section className="flex flex-col gap-4 rounded-lg bg-surface-raised p-6">
-      <h2 className="text-lg font-medium text-ink">{t("timer.recoveryTitle")}</h2>
+      <h2 className="text-lg font-medium text-ink">
+        {t("timer.recoveryTitle")}
+      </h2>
 
       <p className="text-sm text-ink-muted">
         {keepable

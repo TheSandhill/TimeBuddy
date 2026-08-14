@@ -144,7 +144,9 @@ export function Settings() {
           />
           {t("settings.followSystem")}
         </label>
-        <p className="text-xs text-ink-muted">{t("settings.followSystemHint")}</p>
+        <p className="text-xs text-ink-muted">
+          {t("settings.followSystemHint")}
+        </p>
 
         <label className={labelClass}>
           {t("settings.language")}

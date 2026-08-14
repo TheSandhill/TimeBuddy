@@ -22,7 +22,12 @@ interface EntryListProps {
  * A day is the unit someone remembers work in, so the day total sits in the
  * heading rather than being left for the reader to add up.
  */
-export function EntryList({ days, projects, onEdit, onDelete }: EntryListProps) {
+export function EntryList({
+  days,
+  projects,
+  onEdit,
+  onDelete,
+}: EntryListProps) {
   const { t, i18n } = useTranslation();
 
   const nameOf = (projectId: number) =>

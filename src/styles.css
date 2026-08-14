@@ -13,7 +13,8 @@
  * what makes "name a tier, never a number" enforceable.
  */
 @theme {
-  --font-sans: "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
+  --font-sans:
+    "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
 
   /* Raised, so a squircle has something to round: one at 4px is a rounded
    * corner with extra steps. */
@@ -111,6 +112,24 @@
 }
 
 /*
+ * How a field or a quiet control is grouped without a line drawn round it.
+ *
+ * A utility rather than `bg-surface-soft` written into the vocabulary, because
+ * High-contrast has to be able to answer this differently: there the fill is
+ * #0a0a0a on #000000, which is 1.04:1 — not an edge. That theme promises nothing
+ * is soft, so it varies the *fidelity* of the treatment rather than its hue
+ * (ADR-0004, themed assets), and every control gets its line back. An outline
+ * rather than a border so no layout moves between themes.
+ */
+@utility soft-fill {
+  background-color: var(--color-surface-soft);
+}
+
+[data-theme="high-contrast"] .soft-fill {
+  outline: 1px solid var(--color-border);
+}
+
+/*
  * Enhancement, never a dependency: WebView2 is evergreen Chromium, and anywhere
  * the property is missing the radius alone is what was asked for. Only the
  * raised radii — a squircle at 6px is not worth the name.
@@ -128,7 +147,8 @@
  * what makes a user-authored theme a token set rather than a patch.
  */
 [data-theme="sand"] {
-  --font-sans: "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
+  --font-sans:
+    "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
 
   --radius-sm: 6px;
   --radius-md: 12px;
@@ -170,7 +190,8 @@
  * is signalled by motion alone.
  */
 [data-theme="high-contrast"] {
-  --font-sans: "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
+  --font-sans:
+    "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
 
   --radius-sm: 6px;
   --radius-md: 12px;

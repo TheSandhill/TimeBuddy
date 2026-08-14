@@ -23,7 +23,9 @@ export function parseHex(colour: string): [number, number, number] {
     throw new Error(`not a hex colour: ${colour}`);
   }
 
-  const [red, green, blue] = pairs.slice(0, 3).map((pair) => parseInt(pair, 16));
+  const [red, green, blue] = pairs
+    .slice(0, 3)
+    .map((pair) => parseInt(pair, 16));
   return [red, green, blue];
 }
 
@@ -31,9 +33,7 @@ export function parseHex(colour: string): [number, number, number] {
 export function luminance(colour: string): number {
   const [red, green, blue] = parseHex(colour).map((channel) => {
     const value = channel / 255;
-    return value <= 0.03928
-      ? value / 12.92
-      : ((value + 0.055) / 1.055) ** 2.4;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
   });
 
   return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
