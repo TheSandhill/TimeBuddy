@@ -63,7 +63,7 @@ interface ArchivableListProps<T extends Archivable> {
 }
 
 const rowButton =
-  "text-xs uppercase tracking-widest text-ink-muted transition-colors hover:text-ink disabled:opacity-40";
+  "text-xs uppercase tracking-widest text-ink-muted transition-colors motion-quick hover:text-ink disabled:opacity-40";
 
 /**
  * One column of things that are archived, never deleted.
@@ -137,7 +137,7 @@ export function ArchivableList<T extends Archivable>({
                         type="button"
                         onClick={() => onSelect(item)}
                         aria-current={item.id === selectedId}
-                        className={`truncate text-sm transition-colors ${
+                        className={`truncate text-sm transition-colors motion-quick ${
                           item.id === selectedId
                             ? "text-accent"
                             : "text-ink hover:text-accent"

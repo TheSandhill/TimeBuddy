@@ -295,11 +295,18 @@ never have to fit beside each other, because only one label is ever on screen.
 
 How the app moves between one state and the next. Part of the Theme, for the reason above.
 
-Four **durations**, and a fifth is a sign one of these should have been reused: `quick` for hover,
-colour and focus; `base` for disclosure — the accordion, a form opening, the tab indicator; `page`
-for a route change; `deliberate` for the one animation allowed to be slow enough to notice, the
-Mug pouring out when a block is stopped by hand. Three **easings** — soft out for arrivals, quick in
-for departures, soft in-out for the breath.
+Five **durations**, and a sixth is a sign one of these should have been reused: `quick` for hover,
+colour and focus; `base` for disclosure — the accordion, a form opening, the tab indicator; `bounce`
+for anything on an overshoot curve; `page` for a route change; `deliberate` for the one animation
+allowed to be slow enough to notice, the Mug pouring out when a block is stopped by hand.
+
+`bounce` is a tier of its own rather than a use of `base` because an overshoot inside 220ms has no
+room for its return leg and reads as a glitch rather than as spring.
+
+Five **easings** — soft out for arrivals, quick in for departures, soft in-out for the breath, and
+two overshoots: soft for a panel, snappier for a control. A route change also carries a **travel**,
+the short distance it moves along the tab bar's order; it is a length rather than a duration, but it
+is turned down by the same hands.
 
 The **spring is not a token**. The floating tab bar's active pill widens to fit its label and its
 neighbours slide aside, and that is a spring, which is not a cubic-bézier and cannot be a CSS

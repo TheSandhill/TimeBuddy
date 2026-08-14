@@ -44,9 +44,9 @@ bug, not a feature. The selection persists in the database.
 
 ### Motion
 
-Four durations — `quick`, `base`, `page`, `deliberate` — three easings, and two loops, the Mug's steam
-and the dial ring's breath. Values and rationale are in `CONTEXT.md`; what this ADR fixes is where
-they live and what may not be written without them.
+Five durations — `quick`, `base`, `bounce`, `page`, `deliberate` — five easings, and two loops, the
+Mug's steam and the dial ring's breath. Values and rationale are in `CONTEXT.md`; what this ADR fixes
+is where they live and what may not be written without them.
 
 Tailwind v4 has `--ease-*` and `--animate-*` theme namespaces but **no duration namespace**, so
 `duration-150` is a bare value that reads nothing. Durations are therefore plain `--motion-*` custom

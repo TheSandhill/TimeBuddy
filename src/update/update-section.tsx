@@ -18,7 +18,7 @@ import { useCurrentVersion, useUpdateCheck } from "./use-update";
 const sectionClass = "flex flex-col gap-4 border-t border-border pt-4";
 const legendClass = "text-xs uppercase tracking-widest text-ink-muted";
 const quietButtonClass =
-  "rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors hover:text-ink";
+  "rounded-md border border-border px-3 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:text-ink";
 
 export function UpdateSection() {
   const { t } = useTranslation();

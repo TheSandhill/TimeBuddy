@@ -1,22 +1,51 @@
 @import "tailwindcss";
 
 /* Bundled locally — no CDN, the app must render identically offline. */
-@import "@fontsource-variable/inter/index.css";
+@import "@fontsource-variable/nunito/index.css";
 
 /*
  * Walnut is the default theme, so its values live in @theme and become the
  * `:root` custom properties every utility resolves against (ADR-0004).
+ *
+ * A Theme is colour, shape, type and motion. Tailwind v4 has `--ease-*` and
+ * `--animate-*` namespaces but no duration namespace, so the durations are
+ * plain custom properties with `@utility` shorthands over them — which is also
+ * what makes "name a tier, never a number" enforceable.
  */
 @theme {
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* Raised, so a squircle has something to round: one at 4px is a rounded
+   * corner with extra steps. */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 26px;
   --radius-full: 9999px;
+
+  --motion-quick: 120ms; /* hover, colour, focus */
+  --motion-base: 220ms; /* plain disclosure */
+  --motion-bounce: 380ms; /* anything on an overshoot curve */
+  --motion-page: 280ms; /* a route change */
+  --motion-deliberate: 450ms; /* the one you are meant to notice */
+  --motion-page-travel: 12px;
+
+  --ease-out-soft: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ease-in-quick: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out-soft: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  --ease-bounce-soft: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --ease-bounce-snap: cubic-bezier(0.22, 1.52, 0.36, 1);
+
+  /* Deliberately different periods — two things breathing in step read as
+   * machinery. The breath is slow because a heartbeat cadence means urgency,
+   * and this is a tool for twenty-five uninterrupted minutes. */
+  --animate-steam: steam 3.2s linear infinite;
+  --animate-breath: breath 4.5s var(--ease-in-out-soft) infinite;
 
   --color-surface: #2a211b;
   --color-surface-raised: #362b23;
+  --color-surface-soft: #31261f;
+  --color-hairline: #3c2f26;
   --color-ink: #ede4d6;
   --color-ink-muted: #a49482;
   --color-border: #4a3b30;
@@ -25,13 +54,107 @@
 }
 
 /*
+ * Kept out of @theme so they are emitted whether or not a utility has reached
+ * for them yet, and so the token-contract test can keep reading @theme as a
+ * flat block.
+ */
+@keyframes steam {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-6%) scaleY(1.06);
+  }
+}
+
+@keyframes breath {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/*
+ * Motion shorthands. A component writes `transition-colors motion-quick`, never
+ * a number. `--tw-duration` is set alongside the property so the tier wins
+ * whatever order Tailwind emits the two utilities in.
+ */
+@utility motion-quick {
+  --tw-duration: var(--motion-quick);
+  transition-duration: var(--motion-quick);
+}
+
+@utility motion-base {
+  --tw-duration: var(--motion-base);
+  transition-duration: var(--motion-base);
+}
+
+@utility motion-bounce {
+  --tw-duration: var(--motion-bounce);
+  transition-duration: var(--motion-bounce);
+}
+
+@utility motion-page {
+  --tw-duration: var(--motion-page);
+  transition-duration: var(--motion-page);
+}
+
+@utility motion-deliberate {
+  --tw-duration: var(--motion-deliberate);
+  transition-duration: var(--motion-deliberate);
+}
+
+/*
+ * Enhancement, never a dependency: WebView2 is evergreen Chromium, and anywhere
+ * the property is missing the radius alone is what was asked for. Only the
+ * raised radii — a squircle at 6px is not worth the name.
+ */
+@supports (corner-shape: squircle) {
+  :where(.rounded-md, .rounded-lg, .rounded-xl) {
+    corner-shape: squircle;
+  }
+}
+
+/*
  * Only the non-default themes need a block: `data-theme="walnut"` matches
- * nothing and falls through to the @theme values above, so Walnut's colours
- * have exactly one home.
+ * nothing and falls through to the @theme values above, so Walnut's values have
+ * exactly one home. Every other theme restates the whole contract — that is
+ * what makes a user-authored theme a token set rather than a patch.
  */
 [data-theme="sand"] {
+  --font-sans: "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 26px;
+
+  --motion-quick: 120ms;
+  --motion-base: 220ms;
+  --motion-bounce: 380ms;
+  --motion-page: 280ms;
+  --motion-deliberate: 450ms;
+  --motion-page-travel: 12px;
+
+  --ease-out-soft: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ease-in-quick: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out-soft: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  --ease-bounce-soft: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --ease-bounce-snap: cubic-bezier(0.22, 1.52, 0.36, 1);
+
+  --animate-steam: steam 3.2s linear infinite;
+  --animate-breath: breath 4.5s var(--ease-in-out-soft) infinite;
+
   --color-surface: #f5efe6;
   --color-surface-raised: #fffbf4;
+  --color-surface-soft: #faf5ed;
+  --color-hairline: #e6dccd;
   --color-ink: #2a211b;
   --color-ink-muted: #6f6157;
   --color-border: #ded3c4;
@@ -39,9 +162,43 @@
   --color-danger: #a85440;
 }
 
+/*
+ * High-contrast turns the motion down as well as up the contrast — the concrete
+ * reason motion had to be part of the Theme rather than beside it. The loops go
+ * to `none` rather than to a millisecond: a breath that fast is a flicker,
+ * which is worse than stillness. Nothing is lost, because no state in this app
+ * is signalled by motion alone.
+ */
 [data-theme="high-contrast"] {
+  --font-sans: "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 26px;
+
+  --motion-quick: 1ms;
+  --motion-base: 1ms;
+  --motion-bounce: 1ms;
+  --motion-page: 1ms;
+  --motion-deliberate: 1ms;
+  --motion-page-travel: 0px;
+
+  --ease-out-soft: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ease-in-quick: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out-soft: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  /* Flattened: an overshoot is a movement past the answer, which is exactly
+   * what a theme asked to stop moving must not do. */
+  --ease-bounce-soft: linear;
+  --ease-bounce-snap: linear;
+
+  --animate-steam: none;
+  --animate-breath: none;
+
   --color-surface: #000000;
   --color-surface-raised: #101010;
+  --color-surface-soft: #0a0a0a;
+  --color-hairline: #ffffff;
   --color-ink: #ffffff;
   --color-ink-muted: #d4d4d4;
   --color-border: #ffffff;
@@ -62,4 +219,26 @@ body {
   font-family: var(--font-sans);
   /* The custom titlebar owns dragging; stray text selection reads as a bug. */
   user-select: none;
+}
+
+/*
+ * An operating system asked to reduce motion gets the same answer High-contrast
+ * gives, whichever theme is on. Last in the file deliberately: `:root` and
+ * `[data-theme="…"]` have the same specificity, so order is what decides.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-quick: 1ms;
+    --motion-base: 1ms;
+    --motion-bounce: 1ms;
+    --motion-page: 1ms;
+    --motion-deliberate: 1ms;
+    --motion-page-travel: 0px;
+
+    --ease-bounce-soft: linear;
+    --ease-bounce-snap: linear;
+
+    --animate-steam: none;
+    --animate-breath: none;
+  }
 }

@@ -10,7 +10,7 @@ import { RestoreBanner } from "./restore-banner";
 import { UpdateBanner } from "./update-banner";
 import { WindowFrame } from "./window-frame";
 
-const linkClass = "text-sm text-ink-muted transition-colors hover:text-ink";
+const linkClass = "text-sm text-ink-muted transition-colors motion-quick hover:text-ink";
 /** The active screen is named in the accent colour, nowhere else. */
 const activeClass = "text-sm text-accent";
 

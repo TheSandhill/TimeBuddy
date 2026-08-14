@@ -25,7 +25,7 @@ export function UndoToast({ message, actionLabel, onUndo }: UndoToastProps) {
       <button
         type="button"
         onClick={onUndo}
-        className="text-sm font-medium text-accent transition-opacity hover:opacity-80"
+        className="text-sm font-medium text-accent transition-opacity motion-quick hover:opacity-80"
       >
         {actionLabel}
       </button>

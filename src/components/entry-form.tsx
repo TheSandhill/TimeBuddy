@@ -167,7 +167,7 @@ export function EntryForm({
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md px-4 py-2 text-sm text-ink-muted transition-colors hover:text-ink"
+          className="rounded-md px-4 py-2 text-sm text-ink-muted transition-colors motion-quick hover:text-ink"
         >
           {t("entries.cancel")}
         </button>
