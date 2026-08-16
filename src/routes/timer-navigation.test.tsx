@@ -167,12 +167,12 @@ function renderApp() {
 const onTimerScreen = () => screen.queryByText("Vandaag");
 
 async function leaveTheTimer() {
-  fireEvent.click(screen.getByRole("link", { name: "Klanten" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Klanten" }));
   await waitFor(() => expect(onTimerScreen()).toBeNull());
 }
 
 async function returnToTheTimer() {
-  fireEvent.click(screen.getByRole("link", { name: "Timer" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Timer" }));
   await waitFor(() => expect(onTimerScreen()).not.toBeNull());
 }
 
@@ -339,5 +339,60 @@ describe("a Break in progress", () => {
     await returnToTheTimer();
 
     expect(await screen.findByText("Pauze")).toBeInTheDocument();
+  });
+});
+
+describe("the floating tab bar", () => {
+  it("renders five tabs, all reachable", async () => {
+    renderApp();
+
+    await waitFor(() =>
+      expect(screen.getAllByRole("tab")).toHaveLength(5),
+    );
+  });
+
+  it("marks the active tab and gives it its label", async () => {
+    renderApp();
+
+    await waitFor(() => {
+      const tabs = screen.getAllByRole("tab");
+      const selected = tabs.filter(
+        (tab) => tab.getAttribute("aria-selected") === "true",
+      );
+      expect(selected).toHaveLength(1);
+      expect(selected[0]).toHaveTextContent("Timer");
+    });
+  });
+
+  it("navigates when a tab is clicked", async () => {
+    renderApp();
+
+    await waitFor(() =>
+      expect(screen.getAllByRole("tab")).toHaveLength(5),
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: /Klanten/i }));
+    await waitFor(() =>
+      expect(
+        screen.getByRole("tab", { selected: true }),
+      ).toHaveTextContent("Klanten"),
+    );
+  });
+
+  it("moves the active label to the clicked tab", async () => {
+    renderApp();
+
+    await waitFor(() =>
+      expect(screen.getAllByRole("tab")).toHaveLength(5),
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: /Rapport/i }));
+    await waitFor(() => {
+      const selected = screen
+        .getAllByRole("tab")
+        .filter((tab) => tab.getAttribute("aria-selected") === "true");
+      expect(selected).toHaveLength(1);
+      expect(selected[0]).toHaveTextContent("Rapport");
+    });
   });
 });

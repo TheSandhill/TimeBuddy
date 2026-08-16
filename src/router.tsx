@@ -33,7 +33,7 @@ const entriesRoute = createRoute({
   component: Entries,
 });
 
-/** Where the work itself is named: clients on the left, their projects right. */
+/** Where the work itself is named: an exclusive accordion of clients. */
 const clientsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/clients",
