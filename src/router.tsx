@@ -33,7 +33,10 @@ const entriesRoute = createRoute({
   component: Entries,
 });
 
-/** Where the work itself is named: an exclusive accordion of clients. */
+/**
+ * Where the work itself is named: an exclusive accordion of clients, with each
+ * client's projects inside its own panel.
+ */
 const clientsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/clients",

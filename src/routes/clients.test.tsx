@@ -95,27 +95,22 @@ beforeEach(() => {
   commands.restoreProject.mockResolvedValue(website);
 });
 
-describe("the master-detail pairing", () => {
-  it("asks only for what is live until archived ones are asked for", async () => {
+describe("the accordion", () => {
+  it("shows nothing expanded on arrival", async () => {
     renderClients();
 
-    await waitFor(() =>
-      expect(commands.listClients).toHaveBeenCalledWith(false),
-    );
-    await waitFor(() =>
-      expect(commands.listProjects).toHaveBeenCalledWith({
-        clientId: acme.id,
-        includeArchived: false,
-      }),
-    );
+    const row = (await screen.findByRole("button", { name: "Acme" }))
+      .closest("[data-client]") as HTMLElement;
+    expect(
+      within(row).getByRole("button", { name: "Acme" }),
+    ).toHaveAttribute("aria-expanded", "false");
+    expect(commands.listProjects).not.toHaveBeenCalled();
   });
 
-  it("selects the first client so the right-hand side is never empty for no reason", async () => {
-    commands.listClients.mockResolvedValue([
-      acme,
-      { ...acme, id: 3, name: "Beta" },
-    ]);
+  it("reveals a client's projects when opened", async () => {
     renderClients();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
 
     expect(await screen.findByText("Website")).toBeInTheDocument();
     expect(commands.listProjects).toHaveBeenCalledWith({
@@ -124,19 +119,50 @@ describe("the master-detail pairing", () => {
     });
   });
 
-  it("shows the picked client's projects and nothing else", async () => {
-    const beta = { ...acme, id: 3, name: "Beta" };
+  it("closes the open client when a second is opened", async () => {
+    const beta: Client = { ...acme, id: 3, name: "Beta" };
     commands.listClients.mockResolvedValue([acme, beta]);
     renderClients();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Beta" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
+    await screen.findByText("Website");
+
+    const betaProject: Project = {
+      ...website,
+      id: 10,
+      name: "Mobile",
+      clientId: beta.id,
+    };
+    commands.listProjects.mockResolvedValue([betaProject]);
+    fireEvent.click(screen.getByRole("button", { name: "Beta" }));
 
     await waitFor(() =>
-      expect(commands.listProjects).toHaveBeenCalledWith({
-        clientId: beta.id,
-        includeArchived: false,
-      }),
+      expect(
+        screen.getByRole("button", { name: "Acme" }),
+      ).toHaveAttribute("aria-expanded", "false"),
     );
+    expect(
+      screen.getByRole("button", { name: "Beta" }),
+    ).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("picks no client on the user's behalf", async () => {
+    commands.listClients.mockResolvedValue([acme, { ...acme, id: 3, name: "Beta" }]);
+    renderClients();
+
+    await screen.findByText("Acme");
+    expect(commands.listProjects).not.toHaveBeenCalled();
+  });
+
+  it("says so when a client has no projects", async () => {
+    commands.listProjects.mockResolvedValue([]);
+    renderClients();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
+
+    expect(
+      await screen.findByText("Nog geen projecten voor deze klant."),
+    ).toBeInTheDocument();
   });
 
   it("asks for no projects at all when there is no client to ask about", async () => {
@@ -151,6 +177,8 @@ describe("the master-detail pairing", () => {
 describe("the show-archived toggle", () => {
   it("asks for archived clients and projects together", async () => {
     renderClients();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
     await screen.findByText("Website");
 
     fireEvent.click(screen.getByLabelText("Toon gearchiveerde"));
@@ -166,26 +194,19 @@ describe("the show-archived toggle", () => {
     );
   });
 
-  it("marks an archived row as archived rather than letting it pass for live", async () => {
+  it("marks an archived client on its own row", async () => {
     commands.listClients.mockResolvedValue([acme, oldco]);
-    commands.listProjects.mockResolvedValue([website, rebrand]);
     renderClients();
 
     fireEvent.click(await screen.findByLabelText("Toon gearchiveerde"));
 
-    const client = (
+    const row = (
       await screen.findByRole("button", { name: "Oldco" })
-    ).closest("li");
-    expect(client).toHaveTextContent("Gearchiveerd");
-
-    const project = (await screen.findByText("Rebrand")).closest("li");
-    expect(project).toHaveTextContent("Gearchiveerd");
-    expect(screen.getByText("Website").closest("li")).not.toHaveTextContent(
-      "Gearchiveerd",
-    );
+    ).closest("[data-client]");
+    expect(row).toHaveTextContent("Gearchiveerd");
   });
 
-  it("says why a live project under an archived client is out of the pickers", async () => {
+  it("gives a project under an archived client no badge of its own", async () => {
     commands.listClients.mockResolvedValue([oldco]);
     commands.listProjects.mockResolvedValue([
       { ...website, clientId: oldco.id },
@@ -193,13 +214,11 @@ describe("the show-archived toggle", () => {
     renderClients();
 
     fireEvent.click(await screen.findByLabelText("Toon gearchiveerde"));
+    fireEvent.click(await screen.findByRole("button", { name: "Oldco" }));
 
-    const project = (await screen.findByText("Website")).closest("li");
-    expect(project).toHaveTextContent("Klant gearchiveerd");
-    // Its own way back is still archiving, not restoring: it was never archived.
-    expect(
-      within(project!).getByRole("button", { name: "Website archiveren" }),
-    ).toBeInTheDocument();
+    const row = (await screen.findByText("Website")).closest("li");
+    expect(row).not.toHaveTextContent("Gearchiveerd");
+    expect(row).not.toHaveTextContent("Klant gearchiveerd");
   });
 });
 
@@ -220,8 +239,11 @@ describe("creating and renaming", () => {
   it("adds a project to the client that is open, at no rate", async () => {
     renderClients();
 
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
+    await screen.findByText("Website");
+
     fireEvent.click(
-      await screen.findByRole("button", { name: "Project toevoegen" }),
+      screen.getByRole("button", { name: "Project toevoegen" }),
     );
     typeName(await screen.findByRole("form", { name: "Nieuw project" }), "App");
 
@@ -255,8 +277,11 @@ describe("creating and renaming", () => {
     commands.listProjects.mockResolvedValue([{ ...website, hourlyRate: 92.5 }]);
     renderClients();
 
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
+    await screen.findByText("Website");
+
     fireEvent.click(
-      await screen.findByRole("button", { name: "Website hernoemen" }),
+      screen.getByRole("button", { name: "Website hernoemen" }),
     );
     typeName(
       await screen.findByRole("form", { name: "Project hernoemen" }),
@@ -297,12 +322,13 @@ describe("archiving, which is the only way out", () => {
     renderClients();
 
     fireEvent.click(await screen.findByLabelText("Toon gearchiveerde"));
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
     await screen.findByText("Rebrand");
 
     expect(screen.queryByRole("button", { name: /verwijder/i })).toBeNull();
   });
 
-  it("archives a client and refreshes both columns", async () => {
+  it("archives a client and refreshes both queries", async () => {
     renderClients();
 
     fireEvent.click(
@@ -314,11 +340,14 @@ describe("archiving, which is the only way out", () => {
     );
   });
 
-  it("archives a project", async () => {
+  it("archives a project inside the open client", async () => {
     renderClients();
 
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
+    await screen.findByText("Website");
+
     fireEvent.click(
-      await screen.findByRole("button", { name: "Website archiveren" }),
+      screen.getByRole("button", { name: "Website archiveren" }),
     );
 
     await waitFor(() =>
@@ -332,9 +361,11 @@ describe("archiving, which is the only way out", () => {
     renderClients();
 
     fireEvent.click(await screen.findByLabelText("Toon gearchiveerde"));
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
+    await screen.findByText("Rebrand");
 
     fireEvent.click(
-      await screen.findByRole("button", { name: "Oldco terugzetten" }),
+      screen.getByRole("button", { name: "Oldco terugzetten" }),
     );
     await waitFor(() =>
       expect(commands.restoreClient).toHaveBeenCalledWith(oldco.id),
@@ -344,7 +375,7 @@ describe("archiving, which is the only way out", () => {
     ).toBeNull();
 
     fireEvent.click(
-      await screen.findByRole("button", { name: "Rebrand terugzetten" }),
+      screen.getByRole("button", { name: "Rebrand terugzetten" }),
     );
     await waitFor(() =>
       expect(commands.restoreProject).toHaveBeenCalledWith(rebrand.id),
@@ -373,8 +404,11 @@ describe("nothing in the UI touches the rate", () => {
   it("has no field for hourly rate", async () => {
     renderClients();
 
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
+    await screen.findByText("Website");
+
     fireEvent.click(
-      await screen.findByRole("button", { name: "Project toevoegen" }),
+      screen.getByRole("button", { name: "Project toevoegen" }),
     );
     const form = await screen.findByRole("form", { name: "Nieuw project" });
 

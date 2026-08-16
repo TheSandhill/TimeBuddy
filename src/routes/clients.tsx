@@ -1,6 +1,7 @@
 /**
- * The Clients and Projects screen — master on the left, its detail on the
- * right. One screen, because a project only means anything under a client.
+ * The Clients and Projects screen — an exclusive accordion, one row per
+ * Client, its Projects inside it. Nothing is open on arrival, and opening
+ * one closes the last.
  *
  * Nothing here deletes. Hours hang off these rows, and a delete would silently
  * rewrite every report that already went out (`CONTEXT.md`). Archiving is the
@@ -9,14 +10,14 @@
 
 import { useState } from "react";
 import {
-  skipToken,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArchivableList, type Archivable } from "../components/archivable-list";
-import { checkboxLabelClass } from "../components/field";
+import { linkButtonClass } from "../components/button";
+import { checkboxLabelClass, quietLabelClass } from "../components/field";
+import { NameForm } from "../components/name-form";
 import {
   archiveClient,
   archiveProject,
@@ -32,22 +33,19 @@ import {
 import { errorKey } from "../data/error-message";
 import type { Client, Project } from "../data/types";
 
-/** Which column a form belongs to. At most one form is open on the screen. */
-type Column = "clients" | "projects";
-type Editing = { column: Column; item: Archivable | null };
+type Target = "clients" | "projects";
+type Editing = { target: Target; item: { id: number; name: string } | null };
 
 export function Clients() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const [showArchived, setShowArchived] = useState(false);
-  const [picked, setPicked] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<number | null>(null);
   const [editing, setEditing] = useState<Editing | null>(null);
-  /** A rejected write, kept apart: a failed archive is not the form's problem. */
   const [formError, setFormError] = useState<string | null>(null);
-  /** Carries its column: a refused archive belongs above the list it failed in. */
   const [rowError, setRowError] = useState<{
-    column: Column;
+    target: Target;
     message: string;
   } | null>(null);
 
@@ -56,22 +54,8 @@ export function Clients() {
     queryFn: () => listClients(showArchived),
   });
 
-  // Falling back to the first client keeps the right-hand side answering a
-  // question, including after the picked client archives itself out of view.
   const all = clients.data ?? [];
-  const selected = all.find((client) => client.id === picked) ?? all[0] ?? null;
 
-  const projects = useQuery({
-    queryKey: ["projects", selected?.id, showArchived],
-    // No client, no question to ask — `skipToken` says so in the type rather
-    // than leaving a query function that has to assume one.
-    queryFn: selected
-      ? () =>
-          listProjects({ clientId: selected.id, includeArchived: showArchived })
-      : skipToken,
-  });
-
-  /** Archiving a client moves its projects too, so both lists always refresh. */
   const refresh = () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: ["clients"] }),
@@ -79,7 +63,6 @@ export function Clients() {
     ]);
 
   const saveClient = useMutation({
-    // The notes ride along untouched: this form never asked about them.
     mutationFn: ({ item, name }: { item: Client | null; name: string }) =>
       item ? updateClient(item.id, name, item.notes) : createClient(name),
     onSuccess: async () => {
@@ -91,8 +74,6 @@ export function Clients() {
   });
 
   const saveProject = useMutation({
-    // Likewise the rate: v1 shows no field for it, and dropping it here would
-    // lose it the moment someone fixed a typo.
     mutationFn: ({
       item,
       name,
@@ -100,7 +81,6 @@ export function Clients() {
     }: {
       item: Project | null;
       name: string;
-      /** The client whose column the form was opened in. */
       clientId: number;
     }) =>
       item
@@ -124,7 +104,7 @@ export function Clients() {
       await refresh();
     },
     onError: (error) =>
-      setRowError({ column: "clients", message: t(errorKey(error)) }),
+      setRowError({ target: "clients", message: t(errorKey(error)) }),
   });
 
   const moveProject = useMutation({
@@ -137,95 +117,345 @@ export function Clients() {
       await refresh();
     },
     onError: (error) =>
-      setRowError({ column: "projects", message: t(errorKey(error)) }),
+      setRowError({ target: "projects", message: t(errorKey(error)) }),
   });
 
-  /** Leaves the other column's message alone: it is still true over there. */
-  const clearRowError = (column: Column) =>
-    setRowError((current) => (current?.column === column ? null : current));
+  const clearRowError = (target: Target) =>
+    setRowError((current) => (current?.target === target ? null : current));
 
-  const openForm = (column: Column, item: Archivable | null) => {
+  const openForm = (target: Target, item: { id: number; name: string } | null) => {
     setFormError(null);
-    clearRowError(column);
-    setEditing({ column, item });
+    clearRowError(target);
+    setEditing({ target, item });
   };
-
-  const formIn = (column: Column) =>
-    editing?.column === column ? { item: editing.item } : null;
-
-  const rowErrorIn = (column: Column) =>
-    rowError?.column === column ? rowError.message : null;
 
   return (
     <section className="flex flex-col gap-6">
-      <header className="flex items-center justify-end">
-        <label className={checkboxLabelClass}>
-          <input
-            type="checkbox"
-            checked={showArchived}
-            onChange={(event) => setShowArchived(event.target.checked)}
-            className="accent-accent"
-          />
-          {t("clients.showArchived")}
-        </label>
+      <header className="flex items-center justify-between">
+        <h2 className={quietLabelClass}>{t("clients.title")}</h2>
+        <div className="flex items-center gap-4">
+          <label className={checkboxLabelClass}>
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={(event) => setShowArchived(event.target.checked)}
+              className="accent-accent"
+            />
+            {t("clients.showArchived")}
+          </label>
+          <button
+            type="button"
+            onClick={() => openForm("clients", null)}
+            className={linkButtonClass}
+          >
+            {t("clients.addClient")}
+          </button>
+        </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-8">
-        <ArchivableList<Client>
-          labels={{
-            title: t("clients.title"),
-            add: t("clients.addClient"),
-            addTitle: t("clients.newClient"),
-            renameTitle: t("clients.renameClient"),
-            empty: t("clients.noClients"),
-          }}
-          items={all}
-          selectedId={selected?.id}
-          onSelect={(client) => setPicked(client.id)}
-          editing={formIn("clients")}
-          onAdd={() => openForm("clients", null)}
-          onEdit={(client) => openForm("clients", client)}
-          onCancel={() => setEditing(null)}
-          onSubmit={(item, name) => saveClient.mutate({ item, name })}
-          onArchive={(client) => moveClient.mutate(client)}
-          onRestore={(client) => moveClient.mutate(client)}
-          busy={saveClient.isPending}
-          moving={moveClient.isPending}
-          formError={formError}
-          rowError={rowErrorIn("clients")}
-        />
+      {rowError?.target === "clients" ? (
+        <p role="alert" className="text-sm text-danger">
+          {rowError.message}
+        </p>
+      ) : null}
 
-        {selected ? (
-          <ArchivableList<Project>
-            labels={{
-              title: t("clients.projects"),
-              add: t("clients.addProject"),
-              addTitle: t("clients.newProject"),
-              renameTitle: t("clients.renameProject"),
-              empty: t("clients.noProjects"),
-            }}
-            items={projects.data ?? []}
-            editing={formIn("projects")}
-            onAdd={() => openForm("projects", null)}
-            onEdit={(project) => openForm("projects", project)}
-            onCancel={() => setEditing(null)}
-            onSubmit={(item, name) =>
-              saveProject.mutate({ item, name, clientId: selected.id })
-            }
-            onArchive={(project) => moveProject.mutate(project)}
-            onRestore={(project) => moveProject.mutate(project)}
-            busy={saveProject.isPending}
-            moving={moveProject.isPending}
-            // These projects are out of the pickers with nothing on the row to
-            // say why: it is the client above them that was archived.
-            inheritedBadge={
-              selected.archivedAt ? t("clients.clientArchived") : null
-            }
-            formError={formError}
-            rowError={rowErrorIn("projects")}
-          />
-        ) : null}
-      </div>
+      {editing?.target === "clients" && editing.item === null ? (
+        <NameForm
+          title={t("clients.newClient")}
+          initialName=""
+          busy={saveClient.isPending}
+          error={formError}
+          onSubmit={(name) => saveClient.mutate({ item: null, name })}
+          onCancel={() => setEditing(null)}
+        />
+      ) : null}
+
+      {all.length === 0 ? (
+        <p className="text-sm text-ink-muted">{t("clients.noClients")}</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {all.map((client) => (
+            <ClientRow
+              key={client.id}
+              client={client}
+              open={expanded === client.id}
+              onToggle={() =>
+                setExpanded(expanded === client.id ? null : client.id)
+              }
+              showArchived={showArchived}
+              editing={editing}
+              formError={formError}
+              rowError={rowError}
+              onEditClient={() => openForm("clients", client)}
+              onCancelEdit={() => setEditing(null)}
+              onSaveClient={(item, name) =>
+                saveClient.mutate({ item, name })
+              }
+              savingClient={saveClient.isPending}
+              onMoveClient={() => moveClient.mutate(client)}
+              movingClient={moveClient.isPending}
+              onEditProject={(project) => openForm("projects", project)}
+              onAddProject={() => openForm("projects", null)}
+              onCancelProjectEdit={() => setEditing(null)}
+              onSaveProject={(item, name) =>
+                saveProject.mutate({ item, name, clientId: client.id })
+              }
+              savingProject={saveProject.isPending}
+              onMoveProject={(project) => moveProject.mutate(project)}
+              movingProject={moveProject.isPending}
+            />
+          ))}
+        </ul>
+      )}
     </section>
+  );
+}
+
+function ClientRow({
+  client,
+  open,
+  onToggle,
+  showArchived,
+  editing,
+  formError,
+  rowError,
+  onEditClient,
+  onCancelEdit,
+  onSaveClient,
+  savingClient,
+  onMoveClient,
+  movingClient,
+  onEditProject,
+  onAddProject,
+  onCancelProjectEdit,
+  onSaveProject,
+  savingProject,
+  onMoveProject,
+  movingProject,
+}: {
+  client: Client;
+  open: boolean;
+  onToggle: () => void;
+  showArchived: boolean;
+  editing: Editing | null;
+  formError: string | null;
+  rowError: { target: Target; message: string } | null;
+  onEditClient: () => void;
+  onCancelEdit: () => void;
+  onSaveClient: (item: Client | null, name: string) => void;
+  savingClient: boolean;
+  onMoveClient: () => void;
+  movingClient: boolean;
+  onEditProject: (project: Project) => void;
+  onAddProject: () => void;
+  onCancelProjectEdit: () => void;
+  onSaveProject: (item: Project | null, name: string) => void;
+  savingProject: boolean;
+  onMoveProject: (project: Project) => void;
+  movingProject: boolean;
+}) {
+  const { t } = useTranslation();
+  const archived = client.archivedAt !== null;
+  const renaming = editing?.target === "clients" && editing.item?.id === client.id;
+
+  const projects = useQuery({
+    queryKey: ["projects", client.id, showArchived],
+    queryFn: () =>
+      listProjects({ clientId: client.id, includeArchived: showArchived }),
+    enabled: open,
+  });
+
+  return (
+    <li
+      data-client={client.id}
+      className="rounded-lg bg-surface-raised"
+    >
+      <div className="flex items-baseline justify-between gap-3 px-4 py-3">
+        <span className="flex min-w-0 items-baseline gap-2">
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-expanded={open}
+            className="truncate text-sm text-ink transition-colors motion-quick hover:text-accent"
+          >
+            {client.name}
+          </button>
+
+          {archived ? (
+            <span className={`shrink-0 ${quietLabelClass}`}>
+              {t("clients.archived")}
+            </span>
+          ) : null}
+        </span>
+
+        <span className="flex shrink-0 items-baseline gap-3">
+          <button
+            type="button"
+            aria-label={t("clients.renameNamed", { name: client.name })}
+            onClick={onEditClient}
+            className={linkButtonClass}
+          >
+            {t("clients.rename")}
+          </button>
+
+          {archived ? (
+            <button
+              type="button"
+              disabled={movingClient}
+              aria-label={t("clients.restoreNamed", { name: client.name })}
+              onClick={onMoveClient}
+              className={linkButtonClass}
+            >
+              {t("clients.restore")}
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={movingClient}
+              aria-label={t("clients.archiveNamed", { name: client.name })}
+              onClick={onMoveClient}
+              className={linkButtonClass}
+            >
+              {t("clients.archive")}
+            </button>
+          )}
+        </span>
+      </div>
+
+      {renaming ? (
+        <div className="px-4 pb-3">
+          <NameForm
+            key={client.id}
+            title={t("clients.renameClient")}
+            initialName={client.name}
+            busy={savingClient}
+            error={formError}
+            onSubmit={(name) => onSaveClient(client, name)}
+            onCancel={onCancelEdit}
+          />
+        </div>
+      ) : null}
+
+      <div
+        className={`grid transition-[grid-template-rows] motion-bounce ease-bounce-soft ${
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="overflow-hidden">
+          {open ? (
+            <div className="flex flex-col gap-2 rounded-b-lg bg-surface px-4 py-3">
+              {rowError?.target === "projects" ? (
+                <p role="alert" className="text-sm text-danger">
+                  {rowError.message}
+                </p>
+              ) : null}
+
+              {editing?.target === "projects" && editing.item === null ? (
+                <NameForm
+                  title={t("clients.newProject")}
+                  initialName=""
+                  busy={savingProject}
+                  error={formError}
+                  onSubmit={(name) => onSaveProject(null, name)}
+                  onCancel={onCancelProjectEdit}
+                />
+              ) : null}
+
+              {(projects.data ?? []).length === 0 && !projects.isLoading ? (
+                <p className="text-sm text-ink-muted">
+                  {t("clients.noProjects")}
+                </p>
+              ) : (
+                <ul className="flex flex-col divide-y divide-hairline">
+                  {(projects.data ?? []).map((project) => {
+                    const projectArchived = project.archivedAt !== null;
+                    const renamingProject =
+                      editing?.target === "projects" &&
+                      editing.item?.id === project.id;
+
+                    return (
+                      <li key={project.id} className="flex flex-col gap-2 py-2">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="truncate text-sm text-ink">
+                            {project.name}
+                          </span>
+
+                          {projectArchived ? (
+                            <span className={`shrink-0 ${quietLabelClass}`}>
+                              {t("clients.archived")}
+                            </span>
+                          ) : null}
+
+                          <span className="flex shrink-0 items-baseline gap-3">
+                            <button
+                              type="button"
+                              aria-label={t("clients.renameNamed", {
+                                name: project.name,
+                              })}
+                              onClick={() => onEditProject(project)}
+                              className={linkButtonClass}
+                            >
+                              {t("clients.rename")}
+                            </button>
+
+                            {projectArchived ? (
+                              <button
+                                type="button"
+                                disabled={movingProject}
+                                aria-label={t("clients.restoreNamed", {
+                                  name: project.name,
+                                })}
+                                onClick={() => onMoveProject(project)}
+                                className={linkButtonClass}
+                              >
+                                {t("clients.restore")}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={movingProject}
+                                aria-label={t("clients.archiveNamed", {
+                                  name: project.name,
+                                })}
+                                onClick={() => onMoveProject(project)}
+                                className={linkButtonClass}
+                              >
+                                {t("clients.archive")}
+                              </button>
+                            )}
+                          </span>
+                        </div>
+
+                        {renamingProject ? (
+                          <NameForm
+                            key={project.id}
+                            title={t("clients.renameProject")}
+                            initialName={project.name}
+                            busy={savingProject}
+                            error={formError}
+                            onSubmit={(name) => onSaveProject(project, name)}
+                            onCancel={onCancelProjectEdit}
+                          />
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              {editing?.target !== "projects" || editing.item !== null ? (
+                <button
+                  type="button"
+                  onClick={onAddProject}
+                  className={linkButtonClass}
+                >
+                  {t("clients.addProject")}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </li>
   );
 }
