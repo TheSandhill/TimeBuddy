@@ -283,7 +283,7 @@ function ClientRow({
   return (
     <li
       data-client={client.id}
-      className={`bg-surface-raised ${open ? "rounded-t-lg" : "rounded-lg"}`}
+      className="rounded-lg bg-surface-raised"
     >
       <div className="flex items-center justify-between gap-3 px-4 py-3">
         <span className="flex min-w-0 items-baseline gap-2">
@@ -334,7 +334,7 @@ function ClientRow({
       >
         <div className="overflow-hidden">
           {open ? (
-            <div className="flex flex-col gap-2 rounded-b-lg bg-surface px-4 py-3">
+            <div className="flex flex-col gap-2 px-4 py-3">
               {rowError?.target === "projects" ? (
                 <p role="alert" className="text-sm text-danger">
                   {rowError.message}
