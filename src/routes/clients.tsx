@@ -350,8 +350,8 @@ function ClientRow({
           </button>
 
           {archived ? (
-            <span className={`shrink-0 ${quietLabelClass}`}>
-              {t("clients.archived")}
+            <span className="shrink-0 text-ink-muted" title={t("clients.archived")}>
+              <Icon name="archive" className="size-3.5" />
             </span>
           ) : null}
         </span>
@@ -516,8 +516,8 @@ function ProjectRow({
           </span>
 
           {archived ? (
-            <span className={`shrink-0 ${quietLabelClass}`}>
-              {t("clients.archived")}
+            <span className="shrink-0 text-ink-muted" title={t("clients.archived")}>
+              <Icon name="archive" className="size-3.5" />
             </span>
           ) : null}
         </span>
