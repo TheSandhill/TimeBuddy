@@ -52,7 +52,13 @@ export function TabBar() {
               role="tab"
               aria-selected={isActive}
               aria-label={t(tab.labelKey)}
-              className="relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:text-ink"
+              className={
+                "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors motion-quick " +
+                // The colour sits on the tab, not on the label, so the glyph
+                // and the word are one thing: on the accent pill both go to
+                // the surface colour, and off it both stay muted.
+                (isActive ? "text-surface" : "text-ink-muted hover:text-ink")
+              }
             >
               {isActive ? (
                 <motion.span
@@ -66,7 +72,7 @@ export function TabBar() {
               </span>
               {isActive ? (
                 <motion.span
-                  className="relative z-10 font-medium text-surface"
+                  className="relative z-10 font-medium"
                   initial={{ opacity: 0, width: 0 }}
                   animate={{ opacity: 1, width: "auto" }}
                   exit={{ opacity: 0, width: 0 }}
