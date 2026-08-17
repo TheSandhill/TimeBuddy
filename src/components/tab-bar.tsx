@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { useTranslation } from "react-i18next";
 import { tabIndicatorSpring } from "../theme/spring";
+import { Icon, type IconName } from "./icon";
 import { TAB_ORDER, type TabPath } from "./route-direction";
 
 interface Tab {
@@ -12,49 +13,22 @@ interface Tab {
     | "nav.clients"
     | "nav.reports"
     | "nav.settings";
-  icon: string;
+  icon: IconName;
 }
 
+/**
+ * Four of the five tabs are icon alone — only the open one says its name — so
+ * the glyph is the whole of what a tab is until it is reached. That is what the
+ * hand-drawn set could not carry, and why the icons here are named for the
+ * screen rather than for the shape.
+ */
 const tabs: Tab[] = [
-  { path: "/", labelKey: "nav.timer", icon: "M6 1v4M6 8v3M2 5h8" },
-  {
-    path: "/entries",
-    labelKey: "nav.entries",
-    icon: "M2 3h8M2 6h8M2 9h5",
-  },
-  {
-    path: "/clients",
-    labelKey: "nav.clients",
-    icon: "M6 5.5a2 2 0 1 0 0-4 2 2 0 1 0 0 4ZM2 11a4 4 0 0 1 8 0",
-  },
-  {
-    path: "/reports",
-    labelKey: "nav.reports",
-    icon: "M2 10V4M5 10V2M8 10V6",
-  },
-  {
-    path: "/settings",
-    labelKey: "nav.settings",
-    icon: "M6 7.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM6 1v1.5M6 9.5V11M1 6h1.5M9.5 6H11M2.46 2.46l1.06 1.06M8.48 8.48l1.06 1.06M9.54 2.46L8.48 3.52M3.52 8.48l-1.06 1.06",
-  },
+  { path: "/", labelKey: "nav.timer", icon: "timer" },
+  { path: "/entries", labelKey: "nav.entries", icon: "entries" },
+  { path: "/clients", labelKey: "nav.clients", icon: "clients" },
+  { path: "/reports", labelKey: "nav.reports", icon: "reports" },
+  { path: "/settings", labelKey: "nav.settings", icon: "settings" },
 ];
-
-function TabIcon({ d }: { d: string }) {
-  return (
-    <svg
-      viewBox="0 0 12 12"
-      className="size-4"
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.25}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d={d} />
-    </svg>
-  );
-}
 
 export function TabBar() {
   const { t } = useTranslation();
@@ -78,7 +52,13 @@ export function TabBar() {
               role="tab"
               aria-selected={isActive}
               aria-label={t(tab.labelKey)}
-              className="relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-ink-muted transition-colors motion-quick hover:text-ink"
+              className={
+                "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors motion-quick " +
+                // The colour sits on the tab, not on the label, so the glyph
+                // and the word are one thing: on the accent pill both go to
+                // the surface colour, and off it both stay muted.
+                (isActive ? "text-surface" : "text-ink-muted hover:text-ink")
+              }
             >
               {isActive ? (
                 <motion.span
@@ -88,11 +68,11 @@ export function TabBar() {
                 />
               ) : null}
               <span className="relative z-10">
-                <TabIcon d={tab.icon} />
+                <Icon name={tab.icon} />
               </span>
               {isActive ? (
                 <motion.span
-                  className="relative z-10 font-medium text-surface"
+                  className="relative z-10 font-medium"
                   initial={{ opacity: 0, width: 0 }}
                   animate={{ opacity: 1, width: "auto" }}
                   exit={{ opacity: 0, width: 0 }}
