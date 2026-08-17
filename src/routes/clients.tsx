@@ -333,57 +333,55 @@ function ClientRow({
         }`}
       >
         <div className="overflow-hidden">
-          {open ? (
-            <div className="flex flex-col gap-2 px-4 py-3">
-              {rowError?.target === "projects" ? (
-                <p role="alert" className="text-sm text-danger">
-                  {rowError.message}
-                </p>
-              ) : null}
+          <div className="flex flex-col gap-2 px-4 py-3">
+            {rowError?.target === "projects" ? (
+              <p role="alert" className="text-sm text-danger">
+                {rowError.message}
+              </p>
+            ) : null}
 
-              {projectList.length === 0 && !projects.isLoading ? (
-                <p className="text-sm text-ink-muted">
-                  {t("clients.noProjects")}
-                </p>
-              ) : (
-                <ul className="flex flex-col divide-y divide-hairline">
-                  {projectList.map((project) => (
-                    <ProjectRow
-                      key={project.id}
-                      project={project}
-                      editing={editing}
-                      formError={formError}
-                      savingProject={savingProject}
-                      movingProject={movingProject}
-                      onEdit={() => onEditProject(project)}
-                      onCancelEdit={onCancelProjectEdit}
-                      onSave={(name) => onSaveProject(project, name)}
-                      onMove={() => onMoveProject(project)}
-                    />
-                  ))}
-                </ul>
-              )}
+            {projectList.length === 0 && !projects.isLoading ? (
+              <p className="text-sm text-ink-muted">
+                {t("clients.noProjects")}
+              </p>
+            ) : (
+              <ul className="flex flex-col divide-y divide-hairline">
+                {projectList.map((project) => (
+                  <ProjectRow
+                    key={project.id}
+                    project={project}
+                    editing={editing}
+                    formError={formError}
+                    savingProject={savingProject}
+                    movingProject={movingProject}
+                    onEdit={() => onEditProject(project)}
+                    onCancelEdit={onCancelProjectEdit}
+                    onSave={(name) => onSaveProject(project, name)}
+                    onMove={() => onMoveProject(project)}
+                  />
+                ))}
+              </ul>
+            )}
 
-              {editing?.target === "projects" && editing.item === null ? (
-                <NameForm
-                  title={t("clients.newProject")}
-                  initialName=""
-                  busy={savingProject}
-                  error={formError}
-                  onSubmit={(name) => onSaveProject(null, name)}
-                  onCancel={onCancelProjectEdit}
-                />
-              ) : (
-                <button
-                  type="button"
-                  onClick={onAddProject}
-                  className={linkButtonClass}
-                >
-                  {t("clients.addProject")}
-                </button>
-              )}
-            </div>
-          ) : null}
+            {editing?.target === "projects" && editing.item === null ? (
+              <NameForm
+                title={t("clients.newProject")}
+                initialName=""
+                busy={savingProject}
+                error={formError}
+                onSubmit={(name) => onSaveProject(null, name)}
+                onCancel={onCancelProjectEdit}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={onAddProject}
+                className={linkButtonClass}
+              >
+                {t("clients.addProject")}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </li>
