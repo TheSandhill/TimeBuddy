@@ -50,6 +50,23 @@ describe("the icon set", () => {
     expect(container.querySelector("svg")).toHaveClass("size-5");
   });
 
+  it("draws every glyph as at least one path", () => {
+    for (const name of ICON_NAMES) {
+      expect(glyphOf(name).querySelectorAll("path").length, name).toBeGreaterThan(
+        0,
+      );
+    }
+  });
+
+  it("assembles the warning from the two glyphs the set does have", () => {
+    // The set ships no triangle-with-exclamation, so this one is composed. The
+    // transform is what puts the exclamation inside the triangle rather than
+    // across it, which is the part a stray edit would silently undo.
+    const paths = glyphOf("warning").querySelectorAll("path");
+    expect(paths.length).toBe(2);
+    expect(paths[1]).toHaveAttribute("transform");
+  });
+
   it("names no colour of its own", () => {
     // ADR-0004's rule holds for artwork too: no icon opts out of the theme.
     const source = readFileSync("src/components/icon.tsx", "utf8");
