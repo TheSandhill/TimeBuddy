@@ -402,7 +402,7 @@ function ClientRow({
                 {t("clients.noProjects")}
               </p>
             ) : (
-              <ul className="flex flex-col divide-y divide-hairline">
+              <ul className="flex flex-col gap-1">
                 {projectList.map((project) => (
                   <ProjectRow
                     key={project.id}
@@ -508,7 +508,7 @@ function ProjectRow({
   ];
 
   return (
-    <li className="flex flex-col gap-2 py-2">
+    <li className="flex flex-col gap-2 rounded-md bg-surface px-3 py-2">
       <div className="flex items-center justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2">
           <span className="truncate text-sm text-ink">
