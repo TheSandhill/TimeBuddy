@@ -282,6 +282,15 @@
   --color-danger: #ff6b4a;
 }
 
+/*
+ * The default focus ring only on keyboard navigation — a click does not need
+ * a black rectangle around what was just pointed at. :focus-visible is what
+ * the switch-track and any future keyboard-reachable control style themselves.
+ */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 html,
 body,
 #root {
