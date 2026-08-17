@@ -43,6 +43,13 @@
   --animate-steam: steam 3.2s linear infinite;
   --animate-breath: breath 4.5s var(--ease-in-out-soft) infinite;
 
+  /* The two activity loops. Both are fast on purpose — a spinner breathing at
+   * the dial's cadence would read as broken rather than busy — and both are
+   * still only the pleasure: a busy button also says "Saving…", and a running
+   * block also shows its dot. */
+  --animate-spin: spinner-turn 0.75s linear infinite;
+  --animate-pulse-ring: pulse-ring 1.2s var(--ease-out-soft) infinite;
+
   --color-surface: #2a211b;
   --color-surface-raised: #362b23;
   --color-surface-soft: #31261f;
@@ -78,6 +85,33 @@
   }
   50% {
     opacity: 1;
+  }
+}
+
+/*
+ * Named `spinner-turn` rather than `spin` so the keyframe does not collide with
+ * Tailwind's built-in of that name while `--animate-spin` deliberately replaces
+ * the token pointing at it.
+ */
+@keyframes spinner-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*
+ * The ring a running block sends out. It starts at the dot's own radius so that
+ * with the loop off — High-contrast, or reduced motion — what is left is a ring
+ * resting on the dot rather than nothing at all.
+ */
+@keyframes pulse-ring {
+  0% {
+    r: 4;
+    opacity: 0.7;
+  }
+  100% {
+    r: 11;
+    opacity: 0;
   }
 }
 
@@ -173,6 +207,8 @@
 
   --animate-steam: steam 3.2s linear infinite;
   --animate-breath: breath 4.5s var(--ease-in-out-soft) infinite;
+  --animate-spin: spinner-turn 0.75s linear infinite;
+  --animate-pulse-ring: pulse-ring 1.2s var(--ease-out-soft) infinite;
 
   --color-surface: #f5efe6;
   --color-surface-raised: #fffbf4;
@@ -218,6 +254,11 @@
 
   --animate-steam: none;
   --animate-breath: none;
+  /* A spinner that does not turn is still a ring, and the button beside it
+   * still says "Saving…". A running block still shows its dot. Both were built
+   * so that stopping them costs the pleasure and not the message. */
+  --animate-spin: none;
+  --animate-pulse-ring: none;
 
   --color-surface: #000000;
   --color-surface-raised: #101010;

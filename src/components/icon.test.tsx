@@ -1,7 +1,13 @@
 import { render } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { Icon, ICON_NAMES, type IconName } from "./icon";
+import {
+  Icon,
+  ICON_NAMES,
+  RunningIndicator,
+  Spinner,
+  type IconName,
+} from "./icon";
 
 const glyphOf = (name: IconName) => {
   const { container } = render(<Icon name={name} />);
@@ -58,18 +64,76 @@ describe("the icon set", () => {
     }
   });
 
-  it("assembles the warning from the two glyphs the set does have", () => {
+  it("assembles the warning, and draws it at the set's own weight", () => {
     // The set ships no triangle-with-exclamation, so this one is composed. The
-    // transform is what puts the exclamation inside the triangle rather than
-    // across it, which is the part a stray edit would silently undo.
+    // exclamation is authored at final size rather than scaled: a `transform`
+    // here would mean someone shrank a bigger glyph, which thins its stroke and
+    // leaves the triangle and its exclamation reading as two weights.
     const paths = glyphOf("warning").querySelectorAll("path");
     expect(paths.length).toBe(2);
-    expect(paths[1]).toHaveAttribute("transform");
+    for (const path of paths) {
+      expect(path.getAttribute("transform")).toBeNull();
+    }
+  });
+
+  it("keeps the two that move out of the record", () => {
+    // They are a loop rather than a shape, and on another grid. Letting them in
+    // would cost every guard above its "every glyph" phrasing.
+    expect(ICON_NAMES).not.toContain("spinner");
+    expect(ICON_NAMES).not.toContain("running");
   });
 
   it("names no colour of its own", () => {
     // ADR-0004's rule holds for artwork too: no icon opts out of the theme.
     const source = readFileSync("src/components/icon.tsx", "utf8");
     expect(source).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+  });
+});
+
+describe("the glyphs that move", () => {
+  const svgOf = (ui: React.ReactElement) => {
+    const { container } = render(ui);
+    const svg = container.querySelector("svg");
+    if (svg === null) throw new Error("rendered no glyph");
+    return svg;
+  };
+
+  it("drives both loops from the theme, never from SMIL", () => {
+    // The whole reason these were rebuilt: a SMIL `<animate>` does not read
+    // CSS, so it would keep moving through High-contrast's `--animate-*: none`
+    // and through `prefers-reduced-motion` alike (ADR-0014).
+    for (const ui of [<Spinner />, <RunningIndicator />]) {
+      const svg = svgOf(ui);
+      expect(svg.querySelector("animate")).toBeNull();
+      expect(svg.querySelector("animateTransform")).toBeNull();
+    }
+  });
+
+  it("names a themed animation rather than a duration", () => {
+    expect(svgOf(<Spinner />)).toHaveClass("animate-spin");
+    expect(
+      svgOf(<RunningIndicator />).querySelector(".animate-pulse-ring"),
+    ).not.toBeNull();
+  });
+
+  it("leaves something visible when the loop is turned off", () => {
+    // High-contrast sets both to `none`. A spinner is still a ring, and a
+    // running block still has its dot: motion is the pleasure, not the message.
+    expect(svgOf(<Spinner />).querySelectorAll("path").length).toBe(2);
+
+    const still = svgOf(<RunningIndicator />).querySelector("circle");
+    expect(still).not.toBeNull();
+    expect(still).not.toHaveClass("animate-pulse-ring");
+    expect(still).toHaveAttribute("r", "4");
+  });
+
+  it("hides both from the accessibility tree, like every other glyph", () => {
+    expect(svgOf(<Spinner />)).toHaveAttribute("aria-hidden", "true");
+    expect(svgOf(<RunningIndicator />)).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("sizes by class", () => {
+    expect(svgOf(<Spinner className="size-5" />)).toHaveClass("size-5");
+    expect(svgOf(<RunningIndicator className="size-3" />)).toHaveClass("size-3");
   });
 });

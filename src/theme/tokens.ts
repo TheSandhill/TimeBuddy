@@ -61,9 +61,14 @@ export const motionTokens = [
   "--ease-in-out-soft",
   "--ease-bounce-soft",
   "--ease-bounce-snap",
-  // The two loops, and only two: the Mug's steam and the dial ring's breath.
+  // The loops. Steam and breath were the first two; the icon set added the two
+  // that carry activity. `--animate-spin` deliberately shadows Tailwind's own
+  // built-in of that name, so a component reaching for `animate-spin` out of
+  // habit gets the themed one and is turned down with everything else.
   "--animate-steam",
   "--animate-breath",
+  "--animate-spin",
+  "--animate-pulse-ring",
 ] as const;
 
 export const themeTokens = [
