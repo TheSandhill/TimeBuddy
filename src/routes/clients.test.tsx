@@ -211,7 +211,7 @@ describe("the show-archived switch", () => {
     const row = (
       await screen.findByRole("button", { name: "Oldco" })
     ).closest("[data-client]");
-    expect(within(row!).getByTitle("Gearchiveerd")).toBeInTheDocument();
+    expect(row).toHaveTextContent("Gearchiveerd");
   });
 
   it("gives a project under an archived client no badge of its own", async () => {
@@ -225,7 +225,7 @@ describe("the show-archived switch", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Oldco" }));
 
     const row = (await screen.findByText("Website")).closest("li");
-    expect(within(row!).queryByTitle("Gearchiveerd")).toBeNull();
+    expect(row).not.toHaveTextContent("Gearchiveerd");
     expect(row).not.toHaveTextContent("Klant gearchiveerd");
   });
 });

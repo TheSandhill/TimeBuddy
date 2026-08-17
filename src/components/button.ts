@@ -45,6 +45,10 @@ export const linkButtonClass = `${linkClass} hover:text-ink`;
 /** The row action that removes something. */
 export const linkDangerButtonClass = `${linkClass} hover:text-danger`;
 
+/** A quiet status pill — "Archived" beside a name. */
+export const chipClass =
+  "rounded-full soft-fill px-2 py-0.5 text-[11px] leading-none text-ink-muted";
+
 /** The trigger that opens a row's action menu: an icon, nothing more. */
 export const menuTriggerClass =
   "grid size-7 place-items-center rounded-md text-ink-muted " +

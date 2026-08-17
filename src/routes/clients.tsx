@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { primaryButtonClass } from "../components/button";
+import { chipClass, primaryButtonClass } from "../components/button";
 import {
   checkboxLabelClass,
   fieldClass,
@@ -335,7 +335,7 @@ function ClientRow({
       className="rounded-lg bg-surface-raised"
     >
       <div className="flex items-center justify-between gap-3 px-4 py-3">
-        <span className="flex min-w-0 items-baseline gap-2">
+        <span className="flex min-w-0 items-center gap-2">
           <button
             type="button"
             onClick={onToggle}
@@ -350,8 +350,8 @@ function ClientRow({
           </button>
 
           {archived ? (
-            <span className="shrink-0 text-ink-muted" title={t("clients.archived")}>
-              <Icon name="archive" className="size-3.5" />
+            <span className={`shrink-0 ${chipClass}`}>
+              {t("clients.archived")}
             </span>
           ) : null}
         </span>
@@ -510,14 +510,14 @@ function ProjectRow({
   return (
     <li className="flex flex-col gap-2 py-2">
       <div className="flex items-center justify-between gap-3">
-        <span className="flex min-w-0 items-baseline gap-2">
+        <span className="flex min-w-0 items-center gap-2">
           <span className="truncate text-sm text-ink">
             {project.name}
           </span>
 
           {archived ? (
-            <span className="shrink-0 text-ink-muted" title={t("clients.archived")}>
-              <Icon name="archive" className="size-3.5" />
+            <span className={`shrink-0 ${chipClass}`}>
+              {t("clients.archived")}
             </span>
           ) : null}
         </span>
