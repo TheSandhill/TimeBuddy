@@ -283,12 +283,18 @@
 }
 
 /*
- * The default focus ring only on keyboard navigation — a click does not need
- * a black rectangle around what was just pointed at. :focus-visible is what
- * the switch-track and any future keyboard-reachable control style themselves.
+ * No focus ring on pointer interaction. Every outline is removed globally and
+ * restored on :focus-visible only, so keyboard navigation still shows a ring
+ * but clicking never leaves a black rectangle behind. Controls that need their
+ * own ring (the switch-track) style :focus-visible individually.
  */
-:focus:not(:focus-visible) {
+:focus {
   outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 html,
