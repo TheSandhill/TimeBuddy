@@ -6,6 +6,9 @@
   no-maximize reaffirmed. Amended in place rather than superseded: nothing here was reversed.
 - **Amended**: 2026-08-14 — shape and type join the token set (squircles, Inter → Nunito); the Mug is
   **deferred** after three rejected attempts, leaving the fidelity rule behind as provision.
+- **Narrowed**: 2026-08-17 by ADR-0014 — the app takes an icon set, and two more loops join the motion
+  tokens. The no-icon-dependency sentence below survives for the titlebar's two glyphs only. This is
+  the first amendment that reverses rather than adds, which is why it is an ADR of its own.
 
 ## Context
 
@@ -123,7 +126,8 @@ Those buttons are **28×28 with inline-SVG glyphs**, transparent until hover —
 original ~12px bare circles, which were both unlabelled and genuinely hard to hit. Close still hovers
 to the warm terracotta `--color-danger` rather than the usual harsh red. The glyphs are two hand-drawn
 paths on `currentColor`; an icon dependency for a horizontal rule and a cross is not worth the bundle
-or the licence.
+or the licence. **Narrowed by ADR-0014**, which takes an icon set for the rest of the app: this
+sentence still holds for these two glyphs, and they stay hand-drawn.
 
 **Still no maximize**, and the reason is now stronger than when it was a mitigation. Every screen is
 single-column by design — the Clients screen became an accordion rather than a master-detail pair

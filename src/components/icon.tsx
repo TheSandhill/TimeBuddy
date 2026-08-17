@@ -1,5 +1,5 @@
 /**
- * The icon set.
+ * The icon set (ADR-0014).
  *
  * Phosphor, bold weight, and the weight is the reason: at a 256 grid its stroke
  * is 24 units, which is 2.25px once an icon is drawn at 24px — within a hair of
@@ -134,6 +134,85 @@ export function Icon({
       {shapesOf(paths[name]).map((shape) => (
         <path key={shape.d} d={shape.d} transform={shape.transform} />
       ))}
+    </svg>
+  );
+}
+
+/*
+ * The two that move.
+ *
+ * They are not in `paths` and are not Phosphor: they came from a spinner set, on
+ * a 24 grid rather than 256, and they are the only glyphs whose meaning is a
+ * loop rather than a shape. Keeping them out of the record is what lets every
+ * name in it stay a static, single-viewBox fill.
+ *
+ * Both arrived animating themselves, with SMIL `<animate>` elements. SMIL does
+ * not read CSS, so those glyphs would have kept moving through High-contrast's
+ * `--animate-*: none` and through `prefers-reduced-motion` alike — a second
+ * motion code path, which is the thing ADR-0004 exists to prevent. The artwork
+ * is unchanged; only the engine is, and it is now the theme's.
+ *
+ * Each is built so that stopping the loop costs the pleasure and not the
+ * message (ADR-0004: no state is signalled by motion alone).
+ */
+
+/**
+ * Busy. Turning is the pleasure; the button beside this one still swaps its word
+ * to "Saving…", and with the loop off what is left is a ring rather than
+ * nothing.
+ *
+ * The whole element turns rather than the arc inside it — the track is a full
+ * circle, so rotating it is invisible, and it saves fighting `transform-box` on
+ * an SVG child.
+ */
+export function Spinner({ className = "size-4" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={`animate-spin ${className}`}
+      aria-hidden="true"
+      fill="currentColor"
+    >
+      <path
+        opacity="0.25"
+        d="M12 1A11 11 0 1 0 23 12A11 11 0 0 0 12 1Zm0 19a8 8 0 1 1 8-8A8 8 0 0 1 12 20Z"
+      />
+      <path d="M10.72 19.9a8 8 0 0 1-6.5-9.79A7.77 7.77 0 0 1 10.4 4.16a8 8 0 0 1 9.49 6.52A1.54 1.54 0 0 0 21.38 12h.13a1.37 1.37 0 0 0 1.38-1.54a11 11 0 1 0-12.7 12.39A1.54 1.54 0 0 0 12 21.34h0A1.47 1.47 0 0 0 10.72 19.9Z" />
+    </svg>
+  );
+}
+
+/**
+ * A block is running.
+ *
+ * The dot is the state and never moves; the ring is the pleasure and starts at
+ * the dot's own radius, so with the loop off the two settle into a ring resting
+ * on a dot rather than into an empty box. The original artwork was the ring
+ * alone, growing from `r="0"` — which would have vanished entirely the moment a
+ * theme turned the loop off.
+ */
+export function RunningIndicator({
+  className = "size-4",
+}: {
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      aria-hidden="true"
+      fill="currentColor"
+    >
+      <circle cx="12" cy="12" r="4" />
+      <circle
+        className="animate-pulse-ring"
+        cx="12"
+        cy="12"
+        r="4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
     </svg>
   );
 }
