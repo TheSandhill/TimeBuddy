@@ -8,7 +8,7 @@ import { requestTimerPause, requestTimerToggle } from "../tray/toggle-request";
 import { useUpdatePrompt } from "../update/use-update";
 import { BackupBanner } from "./backup-banner";
 import { RestoreBanner } from "./restore-banner";
-import { routeDirection } from "./route-direction";
+import { routeDirection, type Direction } from "./route-direction";
 import { TabBar } from "./tab-bar";
 import { TransientBanner } from "./transient";
 import { UpdateBanner } from "./update-banner";
@@ -20,15 +20,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const previousPath = useRef<string | null>(null);
   const forceNeutral = useRef(false);
 
-  const direction = forceNeutral.current
-    ? "neutral" as const
+  const direction: Direction = forceNeutral.current
+    ? "neutral"
     : routeDirection(previousPath.current, location);
-  const travel =
-    direction === "neutral"
-      ? 0
-      : direction === "right"
-        ? 1
-        : -1;
+  const travel = { left: -1, neutral: 0, right: 1 }[direction];
 
   if (previousPath.current !== location) {
     previousPath.current = location;

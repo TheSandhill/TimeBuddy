@@ -25,7 +25,7 @@ const tabs: Tab[] = [
   {
     path: "/clients",
     labelKey: "nav.clients",
-    icon: "M6 5.5a2 2 0 1 0 0-4 2 0 0 1 0 4ZM2 11a4 4 0 0 1 8 0",
+    icon: "M6 5.5a2 2 0 1 0 0-4 2 2 0 1 0 0 4ZM2 11a4 4 0 0 1 8 0",
   },
   {
     path: "/reports",
