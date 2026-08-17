@@ -265,6 +265,8 @@ function ClientRow({
     enabled: open,
   });
 
+  const projectList = projects.data ?? [];
+
   return (
     <li
       data-client={client.id}
@@ -361,85 +363,26 @@ function ClientRow({
                 />
               ) : null}
 
-              {(projects.data ?? []).length === 0 && !projects.isLoading ? (
+              {projectList.length === 0 && !projects.isLoading ? (
                 <p className="text-sm text-ink-muted">
                   {t("clients.noProjects")}
                 </p>
               ) : (
                 <ul className="flex flex-col divide-y divide-hairline">
-                  {(projects.data ?? []).map((project) => {
-                    const projectArchived = project.archivedAt !== null;
-                    const renamingProject =
-                      editing?.target === "projects" &&
-                      editing.item?.id === project.id;
-
-                    return (
-                      <li key={project.id} className="flex flex-col gap-2 py-2">
-                        <div className="flex items-baseline justify-between gap-3">
-                          <span className="truncate text-sm text-ink">
-                            {project.name}
-                          </span>
-
-                          {projectArchived ? (
-                            <span className={`shrink-0 ${quietLabelClass}`}>
-                              {t("clients.archived")}
-                            </span>
-                          ) : null}
-
-                          <span className="flex shrink-0 items-baseline gap-3">
-                            <button
-                              type="button"
-                              aria-label={t("clients.renameNamed", {
-                                name: project.name,
-                              })}
-                              onClick={() => onEditProject(project)}
-                              className={linkButtonClass}
-                            >
-                              {t("clients.rename")}
-                            </button>
-
-                            {projectArchived ? (
-                              <button
-                                type="button"
-                                disabled={movingProject}
-                                aria-label={t("clients.restoreNamed", {
-                                  name: project.name,
-                                })}
-                                onClick={() => onMoveProject(project)}
-                                className={linkButtonClass}
-                              >
-                                {t("clients.restore")}
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                disabled={movingProject}
-                                aria-label={t("clients.archiveNamed", {
-                                  name: project.name,
-                                })}
-                                onClick={() => onMoveProject(project)}
-                                className={linkButtonClass}
-                              >
-                                {t("clients.archive")}
-                              </button>
-                            )}
-                          </span>
-                        </div>
-
-                        {renamingProject ? (
-                          <NameForm
-                            key={project.id}
-                            title={t("clients.renameProject")}
-                            initialName={project.name}
-                            busy={savingProject}
-                            error={formError}
-                            onSubmit={(name) => onSaveProject(project, name)}
-                            onCancel={onCancelProjectEdit}
-                          />
-                        ) : null}
-                      </li>
-                    );
-                  })}
+                  {projectList.map((project) => (
+                    <ProjectRow
+                      key={project.id}
+                      project={project}
+                      editing={editing}
+                      formError={formError}
+                      savingProject={savingProject}
+                      movingProject={movingProject}
+                      onEdit={() => onEditProject(project)}
+                      onCancelEdit={onCancelProjectEdit}
+                      onSave={(name) => onSaveProject(project, name)}
+                      onMove={() => onMoveProject(project)}
+                    />
+                  ))}
                 </ul>
               )}
 
@@ -456,6 +399,94 @@ function ClientRow({
           ) : null}
         </div>
       </div>
+    </li>
+  );
+}
+
+function ProjectRow({
+  project,
+  editing,
+  formError,
+  savingProject,
+  movingProject,
+  onEdit,
+  onCancelEdit,
+  onSave,
+  onMove,
+}: {
+  project: Project;
+  editing: Editing | null;
+  formError: string | null;
+  savingProject: boolean;
+  movingProject: boolean;
+  onEdit: () => void;
+  onCancelEdit: () => void;
+  onSave: (name: string) => void;
+  onMove: () => void;
+}) {
+  const { t } = useTranslation();
+  const archived = project.archivedAt !== null;
+  const renaming =
+    editing?.target === "projects" && editing.item?.id === project.id;
+
+  return (
+    <li className="flex flex-col gap-2 py-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="truncate text-sm text-ink">
+          {project.name}
+        </span>
+
+        {archived ? (
+          <span className={`shrink-0 ${quietLabelClass}`}>
+            {t("clients.archived")}
+          </span>
+        ) : null}
+
+        <span className="flex shrink-0 items-baseline gap-3">
+          <button
+            type="button"
+            aria-label={t("clients.renameNamed", { name: project.name })}
+            onClick={onEdit}
+            className={linkButtonClass}
+          >
+            {t("clients.rename")}
+          </button>
+
+          {archived ? (
+            <button
+              type="button"
+              disabled={movingProject}
+              aria-label={t("clients.restoreNamed", { name: project.name })}
+              onClick={onMove}
+              className={linkButtonClass}
+            >
+              {t("clients.restore")}
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={movingProject}
+              aria-label={t("clients.archiveNamed", { name: project.name })}
+              onClick={onMove}
+              className={linkButtonClass}
+            >
+              {t("clients.archive")}
+            </button>
+          )}
+        </span>
+      </div>
+
+      {renaming ? (
+        <NameForm
+          key={project.id}
+          title={t("clients.renameProject")}
+          initialName={project.name}
+          busy={savingProject}
+          error={formError}
+          onSubmit={onSave}
+          onCancel={onCancelEdit}
+        />
+      ) : null}
     </li>
   );
 }
