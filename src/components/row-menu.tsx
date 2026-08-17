@@ -3,9 +3,12 @@ import { createPortal } from "react-dom";
 import { menuItemClass, menuTriggerClass } from "./button";
 import { Icon } from "./icon";
 
+import type { IconName } from "./icon";
+
 interface MenuItem {
   label: string;
   ariaLabel?: string;
+  icon?: IconName;
   onClick: () => void;
   disabled?: boolean;
 }
@@ -88,8 +91,9 @@ export function RowMenu({
                     setOpen(false);
                     item.onClick();
                   }}
-                  className={menuItemClass}
+                  className={`${menuItemClass} flex items-center gap-2`}
                 >
+                  {item.icon ? <Icon name={item.icon} className="size-4" /> : null}
                   {item.label}
                 </button>
               ))}

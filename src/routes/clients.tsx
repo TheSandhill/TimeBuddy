@@ -309,18 +309,21 @@ function ClientRow({
     {
       label: t("clients.rename"),
       ariaLabel: t("clients.renameNamed", { name: client.name }),
+      icon: "rename" as const,
       onClick: onEditClient,
     },
     archived
       ? {
           label: t("clients.restore"),
           ariaLabel: t("clients.restoreNamed", { name: client.name }),
+          icon: "unarchive" as const,
           onClick: onMoveClient,
           disabled: movingClient,
         }
       : {
           label: t("clients.archive"),
           ariaLabel: t("clients.archiveNamed", { name: client.name }),
+          icon: "archive" as const,
           onClick: onMoveClient,
           disabled: movingClient,
         },
@@ -484,18 +487,21 @@ function ProjectRow({
     {
       label: t("clients.rename"),
       ariaLabel: t("clients.renameNamed", { name: project.name }),
+      icon: "rename" as const,
       onClick: onEdit,
     },
     archived
       ? {
           label: t("clients.restore"),
           ariaLabel: t("clients.restoreNamed", { name: project.name }),
+          icon: "unarchive" as const,
           onClick: onMove,
           disabled: movingProject,
         }
       : {
           label: t("clients.archive"),
           ariaLabel: t("clients.archiveNamed", { name: project.name }),
+          icon: "archive" as const,
           onClick: onMove,
           disabled: movingProject,
         },
