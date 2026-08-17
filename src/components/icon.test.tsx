@@ -64,13 +64,16 @@ describe("the icon set", () => {
     }
   });
 
-  it("assembles the warning from the two glyphs the set does have", () => {
+  it("assembles the warning, and draws it at the set's own weight", () => {
     // The set ships no triangle-with-exclamation, so this one is composed. The
-    // transform is what puts the exclamation inside the triangle rather than
-    // across it, which is the part a stray edit would silently undo.
+    // exclamation is authored at final size rather than scaled: a `transform`
+    // here would mean someone shrank a bigger glyph, which thins its stroke and
+    // leaves the triangle and its exclamation reading as two weights.
     const paths = glyphOf("warning").querySelectorAll("path");
     expect(paths.length).toBe(2);
-    expect(paths[1]).toHaveAttribute("transform");
+    for (const path of paths) {
+      expect(path.getAttribute("transform")).toBeNull();
+    }
   });
 
   it("keeps the two that move out of the record", () => {

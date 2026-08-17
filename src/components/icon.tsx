@@ -17,7 +17,7 @@
  * than `user-list`. A screen asking for `clients` keeps asking the right
  * question when the artwork is swapped underneath it.
  */
-type Glyph = string | { d: string; transform?: string }[];
+type Glyph = string | { d: string }[];
 
 const paths = {
   timer:
@@ -58,28 +58,37 @@ const paths = {
   stop: "M216 56v144a16 16 0 0 1-16 16H56a16 16 0 0 1-16-16V56a16 16 0 0 1 16-16h144a16 16 0 0 1 16 16",
 
   // The status vocabulary. Every alert in the app was red text and every
-  // confirmation a bare word; these are what give them a shape. `error` is a
-  // cross in a circle rather than a bare cross on purpose — a bare cross in a
-  // banner reads as "dismiss this" and gets clicked.
+  // confirmation a bare word; these are what give them a shape.
+  //
+  // `success` and `error` are the same circle carrying a different mark, so the
+  // pair reads as one answer to one question. `error` being a cross *in a
+  // circle* rather than a bare cross also keeps it away from `close` — a bare
+  // cross beside a red message reads as "dismiss this" and gets clicked.
   success:
-    "m243.31 90.91l-128.4 128.4a16 16 0 0 1-22.62 0l-71.62-72a16 16 0 0 1 0-22.61l20-20a16 16 0 0 1 22.58 0L104 144.22l96.76-95.57a16 16 0 0 1 22.59 0l19.95 19.54a16 16 0 0 1 .01 22.72",
+    "M176.49 95.51a12 12 0 0 1 0 17l-56 56a12 12 0 0 1-17 0l-24-24a12 12 0 1 1 17-17L112 143l47.51-47.52a12 12 0 0 1 16.98.03M236 128A108 108 0 1 1 128 20a108.12 108.12 0 0 1 108 108m-24 0a84 84 0 1 0-84 84a84.09 84.09 0 0 0 84-84",
   error:
     "M168.49 104.49L145 128l23.52 23.51a12 12 0 0 1-17 17L128 145l-23.51 23.52a12 12 0 0 1-17-17L111 128l-23.49-23.51a12 12 0 0 1 17-17L128 111l23.51-23.52a12 12 0 0 1 17 17ZM236 128A108 108 0 1 1 128 20a108.12 108.12 0 0 1 108 108m-24 0a84 84 0 1 0-84 84a84.09 84.09 0 0 0 84-84",
 
   /**
    * The one composite: the set ships no triangle-with-exclamation, so it is
-   * assembled from the two glyphs that do exist. The exclamation is scaled to
-   * 52% about the centre and dropped 14 units, which lands it in the triangle's
-   * lower half where the counter is wide enough to hold it — the same placement
-   * Phosphor's own `warning` uses.
+   * assembled from the triangle plus an exclamation drawn to fit inside it.
+   *
+   * The exclamation is **authored at final size rather than scaled down**. The
+   * obvious way round — take the standalone exclamation and shrink it — thins
+   * its stroke by whatever the scale factor is, so it arrives lighter than the
+   * triangle holding it and the glyph reads as two weights. Drawn here instead
+   * with a stem a full 24 units wide, which is bold Phosphor's stroke, so it
+   * matches the triangle and every other glyph in the set.
+   *
+   * It sits low on purpose: a triangle's visual centre is below its geometric
+   * one, which is where Phosphor's own `warning` puts it too.
    */
   warning: [
     {
       d: "M240.26 186.1L152.81 34.23a28.74 28.74 0 0 0-49.62 0L15.74 186.1a27.45 27.45 0 0 0 0 27.71A28.31 28.31 0 0 0 40.55 228h174.9a28.31 28.31 0 0 0 24.79-14.19a27.45 27.45 0 0 0 .02-27.71m-20.8 15.7a4.46 4.46 0 0 1-4 2.2H40.55a4.46 4.46 0 0 1-4-2.2a3.56 3.56 0 0 1 0-3.73L124 46.2a4.75 4.75 0 0 1 8 0l87.45 151.87a3.56 3.56 0 0 1 .01 3.73",
     },
     {
-      d: "M148 200a20 20 0 1 1-20-20a20 20 0 0 1 20 20m-20-40a12 12 0 0 0 12-12V48a12 12 0 0 0-24 0v100a12 12 0 0 0 12 12",
-      transform: "translate(128 142) scale(0.52) translate(-128 -128)",
+      d: "M128 84a12 12 0 0 1 12 12v36a12 12 0 0 1-24 0v-36a12 12 0 0 1 12-12M145 172a17 17 0 1 1-34 0a17 17 0 0 1 34 0",
     },
   ],
 
@@ -106,7 +115,7 @@ export const ICON_NAMES = Object.keys(paths) as IconName[];
 
 /** Most glyphs are one path. The array form is for the assembled ones. */
 const shapesOf = (glyph: Glyph) =>
-  typeof glyph === "string" ? [{ d: glyph, transform: undefined }] : glyph;
+  typeof glyph === "string" ? [{ d: glyph }] : glyph;
 
 /**
  * `aria-hidden` without exception: every control that carries a glyph already
@@ -132,7 +141,7 @@ export function Icon({
       fill="currentColor"
     >
       {shapesOf(paths[name]).map((shape) => (
-        <path key={shape.d} d={shape.d} transform={shape.transform} />
+        <path key={shape.d} d={shape.d} />
       ))}
     </svg>
   );
