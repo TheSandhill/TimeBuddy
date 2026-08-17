@@ -5,8 +5,12 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { linkButtonClass } from "../components/button";
-import { checkboxLabelClass, quietLabelClass } from "../components/field";
+import { quietButtonClass } from "../components/button";
+import {
+  checkboxLabelClass,
+  fieldClass,
+  quietLabelClass,
+} from "../components/field";
 import { Icon } from "../components/icon";
 import { NameForm } from "../components/name-form";
 import { RowMenu } from "../components/row-menu";
@@ -36,6 +40,7 @@ export function Clients() {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [rowError, setRowError] = useState<{
     target: Target;
     message: string;
@@ -46,12 +51,30 @@ export function Clients() {
     queryFn: () => listClients(showArchived),
   });
 
+  const allProjects = useQuery({
+    queryKey: ["all-projects", showArchived],
+    queryFn: () => listProjects({ includeArchived: showArchived }),
+    enabled: search.length > 0,
+  });
+
   const all = clients.data ?? [];
+  const term = search.toLowerCase();
+  const filtered = term
+    ? all.filter(
+        (c) =>
+          c.name.toLowerCase().includes(term) ||
+          (allProjects.data ?? []).some(
+            (p) =>
+              p.clientId === c.id && p.name.toLowerCase().includes(term),
+          ),
+      )
+    : all;
 
   const refresh = () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: ["clients"] }),
       queryClient.invalidateQueries({ queryKey: ["projects"] }),
+      queryClient.invalidateQueries({ queryKey: ["all-projects"] }),
     ]);
 
   const saveClient = useMutation({
@@ -121,8 +144,10 @@ export function Clients() {
     setEditing({ target, item });
   };
 
+  const addingClient = editing?.target === "clients" && editing.item === null;
+
   return (
-    <section className="flex flex-col gap-6">
+    <section className="flex flex-col gap-4">
       <header className="flex items-center justify-between">
         <h2 className={quietLabelClass}>{t("clients.title")}</h2>
         <label className={checkboxLabelClass}>
@@ -137,17 +162,25 @@ export function Clients() {
         </label>
       </header>
 
+      <input
+        type="search"
+        placeholder={t("clients.search")}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className={fieldClass}
+      />
+
       {rowError?.target === "clients" ? (
         <p role="alert" className="text-sm text-danger">
           {rowError.message}
         </p>
       ) : null}
 
-      {all.length === 0 ? (
+      {filtered.length === 0 ? (
         <p className="text-sm text-ink-muted">{t("clients.noClients")}</p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {all.map((client) => (
+          {filtered.map((client) => (
             <ClientRow
               key={client.id}
               client={client}
@@ -181,24 +214,36 @@ export function Clients() {
         </ul>
       )}
 
-      {editing?.target === "clients" && editing.item === null ? (
-        <NameForm
-          title={t("clients.newClient")}
-          initialName=""
-          busy={saveClient.isPending}
-          error={formError}
-          onSubmit={(name) => saveClient.mutate({ item: null, name })}
-          onCancel={() => setEditing(null)}
-        />
-      ) : (
+      <div
+        className={`grid transition-[grid-template-rows] motion-base ease-out-soft ${
+          addingClient ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="overflow-hidden">
+          {addingClient ? (
+            <NameForm
+              title={t("clients.newClient")}
+              initialName=""
+              busy={saveClient.isPending}
+              error={formError}
+              onSubmit={(name) => saveClient.mutate({ item: null, name })}
+              onCancel={() => setEditing(null)}
+            />
+          ) : null}
+        </div>
+      </div>
+
+      {!addingClient ? (
         <button
           type="button"
           onClick={() => openForm("clients", null)}
-          className={linkButtonClass}
+          className={`${quietButtonClass} flex items-center gap-1.5 self-start`}
+          style={{ animation: "disclose var(--motion-base) var(--ease-out-soft)" }}
         >
+          <Icon name="add" className="size-4" />
           {t("clients.addClient")}
         </button>
-      )}
+      ) : null}
     </section>
   );
 }
@@ -249,6 +294,7 @@ function ClientRow({
   const { t } = useTranslation();
   const archived = client.archivedAt !== null;
   const renaming = editing?.target === "clients" && editing.item?.id === client.id;
+  const addingProject = editing?.target === "projects" && editing.item === null;
 
   const projects = useQuery({
     queryKey: ["projects", client.id, showArchived],
@@ -363,24 +409,36 @@ function ClientRow({
               </ul>
             )}
 
-            {editing?.target === "projects" && editing.item === null ? (
-              <NameForm
-                title={t("clients.newProject")}
-                initialName=""
-                busy={savingProject}
-                error={formError}
-                onSubmit={(name) => onSaveProject(null, name)}
-                onCancel={onCancelProjectEdit}
-              />
-            ) : (
+            <div
+              className={`grid transition-[grid-template-rows] motion-base ease-out-soft ${
+                addingProject ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+              }`}
+            >
+              <div className="overflow-hidden">
+                {addingProject ? (
+                  <NameForm
+                    title={t("clients.newProject")}
+                    initialName=""
+                    busy={savingProject}
+                    error={formError}
+                    onSubmit={(name) => onSaveProject(null, name)}
+                    onCancel={onCancelProjectEdit}
+                  />
+                ) : null}
+              </div>
+            </div>
+
+            {!addingProject ? (
               <button
                 type="button"
                 onClick={onAddProject}
-                className={linkButtonClass}
+                className={`${quietButtonClass} flex items-center gap-1.5 self-start`}
+                style={{ animation: "disclose var(--motion-base) var(--ease-out-soft)" }}
               >
+                <Icon name="add" className="size-4" />
                 {t("clients.addProject")}
               </button>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

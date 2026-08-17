@@ -52,7 +52,7 @@ export const menuTriggerClass =
 
 /** An item inside the action menu a row trigger opens. */
 export const menuItemClass =
-  "w-full px-3 py-1.5 text-left text-sm text-ink-muted " +
+  "mx-1 rounded-md px-2 py-1.5 text-left text-sm text-ink-muted " +
   "transition-colors motion-quick hover:bg-surface-soft hover:text-ink disabled:opacity-40";
 
 /**

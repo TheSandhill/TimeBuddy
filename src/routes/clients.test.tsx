@@ -230,6 +230,43 @@ describe("the show-archived switch", () => {
   });
 });
 
+describe("searching", () => {
+  it("filters clients by name", async () => {
+    const beta: Client = { ...acme, id: 3, name: "Beta" };
+    commands.listClients.mockResolvedValue([acme, beta]);
+    renderClients();
+
+    await screen.findByText("Acme");
+    expect(screen.getByText("Beta")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText("Zoeken…"), {
+      target: { value: "Acm" },
+    });
+
+    expect(screen.getByText("Acme")).toBeInTheDocument();
+    expect(screen.queryByText("Beta")).toBeNull();
+  });
+
+  it("includes a client when a project matches", async () => {
+    commands.listClients.mockResolvedValue([acme]);
+    commands.listProjects.mockResolvedValue([website]);
+    renderClients();
+
+    await screen.findByText("Acme");
+
+    fireEvent.change(screen.getByPlaceholderText("Zoeken…"), {
+      target: { value: "Website" },
+    });
+
+    await waitFor(() =>
+      expect(commands.listProjects).toHaveBeenCalledWith({
+        includeArchived: false,
+      }),
+    );
+    expect(await screen.findByText("Acme")).toBeInTheDocument();
+  });
+});
+
 describe("creating and renaming", () => {
   it("adds a client", async () => {
     renderClients();
