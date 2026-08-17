@@ -81,6 +81,14 @@ function typeName(form: HTMLElement, value: string) {
   fireEvent.click(within(form).getByRole("button", { name: "Opslaan" }));
 }
 
+/** Opens the row-action menu for the named item and clicks an action. */
+function menuAction(name: string, action: string) {
+  fireEvent.click(
+    screen.getByRole("button", { name: `Acties voor ${name}` }),
+  );
+  fireEvent.click(screen.getByRole("menuitem", { name: action }));
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   commands.listClients.mockResolvedValue([acme]);
@@ -174,7 +182,7 @@ describe("the accordion", () => {
   });
 });
 
-describe("the show-archived toggle", () => {
+describe("the show-archived switch", () => {
   it("asks for archived clients and projects together", async () => {
     renderClients();
 
@@ -256,9 +264,9 @@ describe("creating and renaming", () => {
     commands.listClients.mockResolvedValue([{ ...acme, notes: "Via Jan" }]);
     renderClients();
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Acme hernoemen" }),
-    );
+    await screen.findByRole("button", { name: "Acme" });
+    menuAction("Acme", "Acme hernoemen");
+
     const form = await screen.findByRole("form", { name: "Klant hernoemen" });
     expect(within(form).getByLabelText("Naam")).toHaveValue("Acme");
 
@@ -280,9 +288,8 @@ describe("creating and renaming", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
     await screen.findByText("Website");
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Website hernoemen" }),
-    );
+    menuAction("Website", "Website hernoemen");
+
     typeName(
       await screen.findByRole("form", { name: "Project hernoemen" }),
       "Site",
@@ -295,6 +302,24 @@ describe("creating and renaming", () => {
         92.5,
       ),
     );
+  });
+
+  it("leaves the accordion alone when a form is cancelled", async () => {
+    renderClients();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
+    await screen.findByText("Website");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Project toevoegen" }),
+    );
+    const form = await screen.findByRole("form", { name: "Nieuw project" });
+    fireEvent.click(within(form).getByRole("button", { name: "Annuleren" }));
+
+    expect(
+      screen.getByRole("button", { name: "Acme" }),
+    ).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Website")).toBeInTheDocument();
   });
 
   it("says what the command layer rejected, in the user's own language", async () => {
@@ -326,14 +351,14 @@ describe("archiving, which is the only way out", () => {
     await screen.findByText("Rebrand");
 
     expect(screen.queryByRole("button", { name: /verwijder/i })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: /verwijder/i })).toBeNull();
   });
 
   it("archives a client and refreshes both queries", async () => {
     renderClients();
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Acme archiveren" }),
-    );
+    await screen.findByRole("button", { name: "Acme" });
+    menuAction("Acme", "Acme archiveren");
 
     await waitFor(() =>
       expect(commands.archiveClient).toHaveBeenCalledWith(acme.id),
@@ -346,9 +371,7 @@ describe("archiving, which is the only way out", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
     await screen.findByText("Website");
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Website archiveren" }),
-    );
+    menuAction("Website", "Website archiveren");
 
     await waitFor(() =>
       expect(commands.archiveProject).toHaveBeenCalledWith(website.id),
@@ -364,19 +387,12 @@ describe("archiving, which is the only way out", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
     await screen.findByText("Rebrand");
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Oldco terugzetten" }),
-    );
+    menuAction("Oldco", "Oldco terugzetten");
     await waitFor(() =>
       expect(commands.restoreClient).toHaveBeenCalledWith(oldco.id),
     );
-    expect(
-      screen.queryByRole("button", { name: "Oldco archiveren" }),
-    ).toBeNull();
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Rebrand terugzetten" }),
-    );
+    menuAction("Rebrand", "Rebrand terugzetten");
     await waitFor(() =>
       expect(commands.restoreProject).toHaveBeenCalledWith(rebrand.id),
     );
@@ -390,9 +406,8 @@ describe("archiving, which is the only way out", () => {
     });
     renderClients();
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Acme archiveren" }),
-    );
+    await screen.findByRole("button", { name: "Acme" });
+    menuAction("Acme", "Acme archiveren");
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Dat bestaat niet meer.",

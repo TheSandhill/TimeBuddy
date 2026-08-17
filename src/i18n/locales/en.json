@@ -87,6 +87,7 @@
     "addProject": "Add project",
     "newProject": "New project",
     "renameProject": "Rename project",
+    "actionsNamed": "Actions for {{name}}",
     "noProjects": "No projects for this client yet."
   },
   "reports": {

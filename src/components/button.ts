@@ -45,6 +45,16 @@ export const linkButtonClass = `${linkClass} hover:text-ink`;
 /** The row action that removes something. */
 export const linkDangerButtonClass = `${linkClass} hover:text-danger`;
 
+/** The trigger that opens a row's action menu: an icon, nothing more. */
+export const menuTriggerClass =
+  "grid size-7 place-items-center rounded-md text-ink-muted " +
+  "transition-colors motion-quick hover:soft-fill hover:text-ink";
+
+/** An item inside the action menu a row trigger opens. */
+export const menuItemClass =
+  "w-full px-3 py-1.5 text-left text-sm text-ink-muted " +
+  "transition-colors motion-quick hover:bg-surface-soft hover:text-ink disabled:opacity-40";
+
 /**
  * The window's own minimize and close (ADR-0004).
  *
