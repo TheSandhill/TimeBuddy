@@ -48,8 +48,13 @@ swapping the artwork underneath leaves every caller still asking the right quest
 type-checked, so a glyph that does not exist is a compile error rather than an empty box.
 
 **One glyph may be more than one path.** The set ships no triangle holding an exclamation, so `warning`
-is assembled from the two glyphs that do exist, the exclamation scaled and translated into the
-triangle's lower half. Composition is allowed; a hand-drawn *new* shape is not.
+is assembled: Phosphor's triangle, plus an exclamation drawn to sit inside it.
+
+That exclamation is **authored at final size, not scaled down**. Taking the standalone exclamation and
+shrinking it — the obvious route, and the one tried first — thins its stroke by the scale factor, so it
+arrives lighter than the triangle holding it and the single glyph reads as two weights. Drawn instead
+with a stem a full 24 units wide, it matches the triangle and the rest of the set. Composition is
+allowed; a scaled-down borrow is not, and neither is a hand-drawn *new* shape.
 
 **Two glyphs are not Phosphor and do not live in the record.** `Spinner` and `RunningIndicator` came
 from a spinner set, on a 24 grid, and their meaning is a loop rather than a shape. They are separate
@@ -100,9 +105,10 @@ provision still waits for the Mug.
 - Cost: the app carries a copy of somebody else's artwork rather than a dependency that could be
   updated. Re-fetching a glyph is a manual act. This is the right trade for an offline app with roughly
   thirty icons and the wrong one at three hundred.
-- Cost: `warning` is composed by arithmetic, so it is the one glyph whose correctness is not obvious
-  from its source. It is guarded by a test asserting the transform is present, which catches its
-  deletion but not its being wrong.
+- Cost: `warning` is the one glyph nobody upstream drew, so its correctness is not obvious from its
+  source and no test can judge it. It was checked by eye across all three themes at 16, 32 and 96px.
+  The guard asserts its two paths carry **no** `transform` — the signature of somebody having scaled a
+  borrowed glyph down again, which is exactly the mistake that made the first attempt read wrong.
 - Two icon *sets* are now in play — Phosphor for shape, a spinner set for the two loops. Held to one
   set, not two, was the rule going in; the exception is that a loop is not a shape and Phosphor does not
   draw one.
