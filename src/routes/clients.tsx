@@ -7,6 +7,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { linkButtonClass } from "../components/button";
 import { checkboxLabelClass, quietLabelClass } from "../components/field";
+import { Icon } from "../components/icon";
 import { NameForm } from "../components/name-form";
 import { RowMenu } from "../components/row-menu";
 import {
@@ -282,7 +283,7 @@ function ClientRow({
   return (
     <li
       data-client={client.id}
-      className="rounded-lg bg-surface-raised"
+      className={`bg-surface-raised ${open ? "rounded-t-lg" : "rounded-lg"}`}
     >
       <div className="flex items-center justify-between gap-3 px-4 py-3">
         <span className="flex min-w-0 items-baseline gap-2">
@@ -290,8 +291,12 @@ function ClientRow({
             type="button"
             onClick={onToggle}
             aria-expanded={open}
-            className="truncate text-sm text-ink transition-colors motion-quick hover:text-accent"
+            className="flex items-center gap-1.5 truncate text-sm text-ink transition-colors motion-quick hover:text-accent"
           >
+            <Icon
+              name="chevron"
+              className={`size-3 shrink-0 transition-transform motion-base ${open ? "" : "rotate-180"}`}
+            />
             {client.name}
           </button>
 

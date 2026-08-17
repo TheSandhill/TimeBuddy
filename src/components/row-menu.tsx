@@ -46,12 +46,12 @@ export function RowMenu({
         onClick={() => setOpen(!open)}
         className={menuTriggerClass}
       >
-        <Icon name="more" className="size-4" />
+        <Icon name="more" className="size-5" />
       </button>
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 top-full z-10 mt-1 flex min-w-32 flex-col rounded-lg border border-hairline bg-surface-raised py-1"
+          className="absolute right-0 top-full z-50 mt-1 flex min-w-32 flex-col rounded-lg border border-hairline bg-surface-raised py-1"
         >
           {items.map((item) => (
             <button
