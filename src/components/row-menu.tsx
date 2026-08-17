@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { menuItemClass, menuTriggerClass } from "./button";
 import { Icon } from "./icon";
 
@@ -17,12 +18,20 @@ export function RowMenu({
   items: MenuItem[];
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, right: 0 });
 
   useEffect(() => {
     if (!open) return;
     const dismiss = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node))
+      const target = e.target as Node;
+      if (
+        triggerRef.current &&
+        !triggerRef.current.contains(target) &&
+        menuRef.current &&
+        !menuRef.current.contains(target)
+      )
         setOpen(false);
     };
     const escape = (e: KeyboardEvent) => {
@@ -36,41 +45,58 @@ export function RowMenu({
     };
   }, [open]);
 
+  const toggle = () => {
+    if (!open && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPos({
+        top: rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+      });
+    }
+    setOpen(!open);
+  };
+
   return (
-    <div ref={ref} className="relative">
+    <>
       <button
+        ref={triggerRef}
         type="button"
         aria-label={label}
         aria-expanded={open}
         aria-haspopup="menu"
-        onClick={() => setOpen(!open)}
+        onClick={toggle}
         className={menuTriggerClass}
       >
         <Icon name="more" className="size-5" />
       </button>
-      {open ? (
-        <div
-          role="menu"
-          className="absolute right-0 top-full z-50 mt-1 flex min-w-32 flex-col rounded-lg border border-hairline bg-surface-raised py-1"
-        >
-          {items.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              role="menuitem"
-              disabled={item.disabled}
-              aria-label={item.ariaLabel}
-              onClick={() => {
-                setOpen(false);
-                item.onClick();
-              }}
-              className={menuItemClass}
+      {open
+        ? createPortal(
+            <div
+              ref={menuRef}
+              role="menu"
+              style={{ top: pos.top, right: pos.right }}
+              className="fixed z-50 flex min-w-32 flex-col rounded-lg border border-hairline bg-surface-raised py-1"
             >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
+              {items.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  role="menuitem"
+                  disabled={item.disabled}
+                  aria-label={item.ariaLabel}
+                  onClick={() => {
+                    setOpen(false);
+                    item.onClick();
+                  }}
+                  className={menuItemClass}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
   );
 }
