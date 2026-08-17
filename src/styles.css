@@ -66,6 +66,13 @@
  * for them yet, and so the token-contract test can keep reading @theme as a
  * flat block.
  */
+@keyframes disclose {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
 @keyframes steam {
   0%,
   100% {
@@ -163,6 +170,10 @@
  * and needs it for the same reason: #0a0a0a arriving on #101010 is not a hover
  * anyone can see. */
 [data-theme="high-contrast"] :is(.soft-fill, .hover\:soft-fill:hover) {
+  outline: 1px solid var(--color-border);
+}
+
+[data-theme="high-contrast"] .switch-track {
   outline: 1px solid var(--color-border);
 }
 
@@ -271,6 +282,21 @@
   --color-danger: #ff6b4a;
 }
 
+/*
+ * No focus ring on pointer interaction. Every outline is removed globally and
+ * restored on :focus-visible only, so keyboard navigation still shows a ring
+ * but clicking never leaves a black rectangle behind. Controls that need their
+ * own ring (the switch-track) style :focus-visible individually.
+ */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 html,
 body,
 #root {
@@ -291,6 +317,57 @@ body {
  * gives, whichever theme is on. Last in the file deliberately: `:root` and
  * `[data-theme="…"]` have the same specificity, so order is what decides.
  */
+/*
+ * The switch the archived filter wears. A checkbox with `role="switch"` for
+ * screen readers, styled as a track and thumb so it reads as a toggle rather
+ * than a tick.
+ *
+ * All colours are theme tokens, so a user-authored theme recolours it the same
+ * way it would a button. The thumb is `surface-raised`, which sits comfortably
+ * on both the muted off-track and the accent on-track in every shipped theme.
+ */
+.switch-track {
+  appearance: none;
+  width: 1.75rem;
+  height: 1rem;
+  border-radius: 9999px;
+  background-color: var(--color-ink-muted);
+  position: relative;
+  cursor: pointer;
+  transition: background-color var(--motion-quick);
+  flex-shrink: 0;
+}
+
+.switch-track:checked {
+  background-color: var(--color-accent);
+}
+
+.switch-track::after {
+  content: "";
+  position: absolute;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  background-color: var(--color-surface-raised);
+  top: 0.125rem;
+  left: 0.125rem;
+  transition: transform var(--motion-quick);
+}
+
+.switch-track:checked::after {
+  transform: translateX(0.75rem);
+}
+
+.switch-track:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.switch-track:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-quick: 1ms;

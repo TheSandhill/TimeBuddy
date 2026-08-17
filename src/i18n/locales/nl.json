@@ -87,6 +87,8 @@
     "addProject": "Project toevoegen",
     "newProject": "Nieuw project",
     "renameProject": "Project hernoemen",
+    "actionsNamed": "Acties voor {{name}}",
+    "search": "Zoeken…",
     "noProjects": "Nog geen projecten voor deze klant."
   },
   "reports": {

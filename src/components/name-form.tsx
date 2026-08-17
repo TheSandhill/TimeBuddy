@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { fieldClass, labelClass } from "./field";
+import { Icon } from "./icon";
 
 interface NameFormProps {
   /** Names the form out loud — "Nieuwe klant", "Project hernoemen". */
@@ -60,8 +61,9 @@ export function NameForm({
         <button
           type="submit"
           disabled={busy}
-          className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-surface transition-opacity motion-quick hover:opacity-90 disabled:opacity-40"
+          className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-surface transition-opacity motion-quick hover:opacity-90 disabled:opacity-40"
         >
+          <Icon name="save" className="size-4" />
           {t("clients.save")}
         </button>
         <button
