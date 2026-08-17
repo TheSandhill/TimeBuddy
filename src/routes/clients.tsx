@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { quietButtonClass } from "../components/button";
+import { primaryButtonClass } from "../components/button";
 import {
   checkboxLabelClass,
   fieldClass,
@@ -237,7 +237,7 @@ export function Clients() {
         <button
           type="button"
           onClick={() => openForm("clients", null)}
-          className={`${quietButtonClass} flex items-center gap-1.5 self-start`}
+          className={`${primaryButtonClass} flex items-center gap-1.5 self-start`}
           style={{ animation: "disclose var(--motion-base) var(--ease-out-soft)" }}
         >
           <Icon name="add" className="size-4" />
@@ -359,19 +359,27 @@ function ClientRow({
         />
       </div>
 
-      {renaming ? (
-        <div className="px-4 pb-3">
-          <NameForm
-            key={client.id}
-            title={t("clients.renameClient")}
-            initialName={client.name}
-            busy={savingClient}
-            error={formError}
-            onSubmit={(name) => onSaveClient(client, name)}
-            onCancel={onCancelEdit}
-          />
+      <div
+        className={`grid transition-[grid-template-rows] motion-base ease-out-soft ${
+          renaming ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="overflow-hidden">
+          {renaming ? (
+            <div className="px-4 pb-3">
+              <NameForm
+                key={client.id}
+                title={t("clients.renameClient")}
+                initialName={client.name}
+                busy={savingClient}
+                error={formError}
+                onSubmit={(name) => onSaveClient(client, name)}
+                onCancel={onCancelEdit}
+              />
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      </div>
 
       <div
         className={`grid transition-[grid-template-rows] motion-bounce ease-bounce-soft ${
@@ -432,7 +440,7 @@ function ClientRow({
               <button
                 type="button"
                 onClick={onAddProject}
-                className={`${quietButtonClass} flex items-center gap-1.5 self-start`}
+                className={`${primaryButtonClass} flex items-center gap-1.5 self-start`}
                 style={{ animation: "disclose var(--motion-base) var(--ease-out-soft)" }}
               >
                 <Icon name="add" className="size-4" />
@@ -514,17 +522,25 @@ function ProjectRow({
         />
       </div>
 
-      {renaming ? (
-        <NameForm
-          key={project.id}
-          title={t("clients.renameProject")}
-          initialName={project.name}
-          busy={savingProject}
-          error={formError}
-          onSubmit={onSave}
-          onCancel={onCancelEdit}
-        />
-      ) : null}
+      <div
+        className={`grid transition-[grid-template-rows] motion-base ease-out-soft ${
+          renaming ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="overflow-hidden">
+          {renaming ? (
+            <NameForm
+              key={project.id}
+              title={t("clients.renameProject")}
+              initialName={project.name}
+              busy={savingProject}
+              error={formError}
+              onSubmit={onSave}
+              onCancel={onCancelEdit}
+            />
+          ) : null}
+        </div>
+      </div>
     </li>
   );
 }
