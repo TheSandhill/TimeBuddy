@@ -149,7 +149,6 @@ export function Timer() {
               value={plannedMinutes}
               onChange={chooseLength}
               disabled={block !== null || busy || plannedMinutes === 0}
-              frozen={block !== null}
             />
 
             <ProjectPicker

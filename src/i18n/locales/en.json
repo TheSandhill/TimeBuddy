@@ -36,7 +36,6 @@
     "presetLabel": "{{minutes}}-minute block",
     "presetGroup": "Block length",
     "presetFailed": "That block length could not be saved.",
-    "presetFrozen": "Fixed during this block",
     "stopped": "{{minutes}} min logged.",
     "undoStop": "Undo",
     "pause": "Pause",
