@@ -827,6 +827,36 @@ describe("the duration presets", () => {
     expect(commands.updateSettings).not.toHaveBeenCalled();
   });
 
+  it("says why it has gone dead, so it does not read as broken", async () => {
+    appearsAfterStart(inFlight(1));
+    renderTimer();
+    await clickStart();
+    await screen.findByRole("button", { name: "Stop" });
+
+    expect(screen.getByText("Vast tijdens dit blok")).toBeInTheDocument();
+    // Said once, with the buttons it explains rather than beside them.
+    expect(preset(15)).toHaveAccessibleDescription("Vast tijdens dit blok");
+  });
+
+  it("says nothing at all while they still answer", async () => {
+    renderTimer();
+    await waitFor(() => expect(preset(15)).toBeEnabled());
+
+    expect(screen.queryByText("Vast tijdens dit blok")).toBeNull();
+  });
+
+  it("is still frozen, and still says so, while the block is held", async () => {
+    // Held is not stopped: the finish line is where it was, so the reason the
+    // presets are dead has not gone away either.
+    appearsAfterStart({ ...inFlight(1), pausedAt: new Date().toISOString() });
+    renderTimer();
+    await clickStart();
+    await screen.findByText("Gepauzeerd");
+
+    expect(preset(15)).toBeDisabled();
+    expect(screen.getByText("Vast tijdens dit blok")).toBeInTheDocument();
+  });
+
   it("is absent while an orphaned block is being asked about", async () => {
     commands.getRunningTimer.mockResolvedValue(inFlight(10));
     renderTimer();

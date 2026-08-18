@@ -36,6 +36,7 @@
     "presetLabel": "Blok van {{minutes}} minuten",
     "presetGroup": "Bloklengte",
     "presetFailed": "Die bloklengte kon niet worden opgeslagen.",
+    "presetFrozen": "Vast tijdens dit blok",
     "stopped": "{{minutes}} min geregistreerd.",
     "undoStop": "Ongedaan maken",
     "pause": "Pauzeer",

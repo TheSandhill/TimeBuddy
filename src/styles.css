@@ -16,6 +16,11 @@
   --font-sans:
     "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
 
+  /* The countdown's own size, and the only size in the contract: the digits are
+   * the largest thing in the app by a clear margin, which is a decision a theme
+   * is allowed to hold rather than a number a component may write. */
+  --text-dial: 66px;
+
   /* Raised, so a squircle has something to round: one at 4px is a rounded
    * corner with extra steps. */
   --radius-sm: 6px;
@@ -197,6 +202,7 @@
 [data-theme="sand"] {
   --font-sans:
     "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
+  --text-dial: 66px;
 
   --radius-sm: 6px;
   --radius-md: 12px;
@@ -242,6 +248,7 @@
 [data-theme="high-contrast"] {
   --font-sans:
     "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
+  --text-dial: 66px;
 
   --radius-sm: 6px;
   --radius-md: 12px;
