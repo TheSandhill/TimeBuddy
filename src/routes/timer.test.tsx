@@ -827,6 +827,18 @@ describe("the duration presets", () => {
     expect(commands.updateSettings).not.toHaveBeenCalled();
   });
 
+  it("is dead while the block is held, too", async () => {
+    // Held is not stopped: the finish line is where it was, so the reason the
+    // presets cannot move it has not gone away either.
+    appearsAfterStart({ ...inFlight(1), pausedAt: new Date().toISOString() });
+    renderTimer();
+    await clickStart();
+    await screen.findByText("Gepauzeerd");
+
+    expect(preset(15)).toBeDisabled();
+    expect(commands.updateSettings).not.toHaveBeenCalled();
+  });
+
   it("is absent while an orphaned block is being asked about", async () => {
     commands.getRunningTimer.mockResolvedValue(inFlight(10));
     renderTimer();

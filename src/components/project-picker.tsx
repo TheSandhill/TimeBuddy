@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { Project } from "../data/types";
-import { fieldClass, quietLabelClass } from "./field";
+import { pickerClass } from "./field";
 
 interface ProjectPickerProps {
   projects: Project[];
@@ -14,6 +14,12 @@ interface ProjectPickerProps {
  *
  * A plain select: this screen is mostly whitespace, and one question with one
  * answer does not need a custom control.
+ *
+ * It carries **no visible label**. The dial owns this screen and the picker is
+ * one of the things visibly secondary to it, so a label above it would be a
+ * third small grey line under a 66px countdown — and a select holding a project
+ * name has already said what it is. The name survives for anyone not reading
+ * the screen, as `aria-label`.
  */
 export function ProjectPicker({
   projects,
@@ -28,20 +34,18 @@ export function ProjectPicker({
   }
 
   return (
-    <label className="flex flex-col items-center gap-2">
-      <span className={quietLabelClass}>{t("timer.project")}</span>
-      <select
-        value={value ?? ""}
-        disabled={disabled}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className={fieldClass}
-      >
-        {projects.map((project) => (
-          <option key={project.id} value={project.id}>
-            {project.name}
-          </option>
-        ))}
-      </select>
-    </label>
+    <select
+      value={value ?? ""}
+      disabled={disabled}
+      aria-label={t("timer.project")}
+      onChange={(event) => onChange(Number(event.target.value))}
+      className={pickerClass}
+    >
+      {projects.map((project) => (
+        <option key={project.id} value={project.id}>
+          {project.name}
+        </option>
+      ))}
+    </select>
   );
 }

@@ -10,6 +10,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { BreakBanner } from "../components/break-banner";
+import { Icon } from "../components/icon";
 import { DurationPresets } from "../components/duration-presets";
 import { PomodoroDial } from "../components/pomodoro-dial";
 import { ProjectPicker } from "../components/project-picker";
@@ -80,16 +81,24 @@ export function Timer() {
     queryFn: () => listTimeEntries({ from: today, to: today }),
   });
 
-  const countdown = formatCountdown(
-    block && orphan === null
-      ? remainingSeconds(block, now)
-      : plannedMinutes * SECONDS_PER_MINUTE,
-  );
+  // What the dial says, and how much of the ring is left to say it with. A
+  // block being asked about is not a block running: the prompt takes the
+  // screen, and the length it leaves behind is the one the next block would
+  // get rather than the orphan's.
+  const live = block !== null && orphan === null;
+  const remainingBlockSeconds = live
+    ? remainingSeconds(block, now)
+    : plannedMinutes * SECONDS_PER_MINUTE;
+  const countdown = formatCountdown(remainingBlockSeconds);
+  const plannedSeconds = live
+    ? block.plannedMinutes * SECONDS_PER_MINUTE
+    : plannedMinutes * SECONDS_PER_MINUTE;
 
   return (
-    <section className="flex flex-col gap-10">
+    <section className="flex flex-col gap-5">
       {fault !== null ? (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="flex items-center gap-2 text-sm text-danger">
+          <Icon name="error" />
           {t(faultMessages[fault])}
         </p>
       ) : null}
@@ -110,9 +119,12 @@ export function Timer() {
             />
           ) : null}
 
-          <div className="flex flex-col items-center gap-8 py-6">
+          <div className="flex flex-col gap-5">
             <PomodoroDial
               countdown={countdown}
+              remaining={
+                plannedSeconds === 0 ? 0 : remainingBlockSeconds / plannedSeconds
+              }
               running={block !== null}
               paused={paused}
               canStart={canStart}
@@ -123,10 +135,11 @@ export function Timer() {
             />
 
             {/*
-             * Between the dial and the picker, so the screen reads countdown →
-             * how long → what for. It also puts the two controls that go dead
-             * while a block runs next to each other, which makes that one rule
-             * rather than two coincidences.
+             * Directly under the dial, because they are the second thing
+             * touched even though the dial is the first thing seen, and the
+             * screen reads countdown → how long → what for. It also puts the
+             * two controls that go dead while a block runs next to each other,
+             * which makes that one rule rather than two coincidences.
              *
              * Dead until the settings row has arrived, too: the new length is
              * that row with one field changed, so there is nothing yet to change

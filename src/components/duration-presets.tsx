@@ -15,7 +15,10 @@ import { toggleButtonClass } from "./button";
  *
  * Disabled while a block runs, like the project picker beside it, because
  * `planned_minutes` is frozen at start — a live button here would change the
- * next block and look like it had done nothing.
+ * next block and look like it had done nothing. It goes dead without a line
+ * saying why: the dial above it is counting down, which is the reason, and a
+ * sentence under four greyed buttons was one grey line too many on a screen
+ * whose whole redesign was subtraction.
  */
 export const PRESET_MINUTES = [15, 25, 45, 60] as const;
 
@@ -47,7 +50,7 @@ export function DurationPresets({
             aria-label={t("timer.presetLabel", { minutes })}
             disabled={disabled}
             onClick={() => onChange(minutes)}
-            className={toggleButtonClass(chosen)}
+            className={`${toggleButtonClass(chosen)} flex-1`}
           >
             {t("timer.preset", { minutes })}
           </button>

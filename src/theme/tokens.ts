@@ -30,7 +30,12 @@ export const shapeTokens = [
   "--radius-xl",
 ] as const;
 
-export const typeTokens = ["--font-sans"] as const;
+/**
+ * The face, and the one size that is a decision rather than a step on a scale:
+ * the countdown's digits. Everything else takes Tailwind's scale, so a theme
+ * restating the contract restates a family and a hero size, not a type system.
+ */
+export const typeTokens = ["--font-sans", "--text-dial"] as const;
 
 /**
  * The motion tiers a component may name. `bounce` is its own tier rather than
