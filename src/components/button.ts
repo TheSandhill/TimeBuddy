@@ -109,13 +109,12 @@ export const closeButtonClass = `${windowButtonClass} hover:bg-danger hover:text
  * Tabular figures because half of these are numbers — a preset length, a week —
  * and digits that change width make a set of them twitch.
  *
- * Rounded rather than a pill, and on the small raised radius because these are
- * the smallest thing that carries one: a radius past half a control's height is
- * a stadium whatever number it names, so the token has to come down as the
- * control does for the shape to still be a choice.
+ * Rounded rather than a pill, on the same raised radius as the controls under
+ * the dial, so a set of these and the button above them agree about their
+ * corners rather than each naming a shape of its own.
  */
 const toggleClass =
-  "rounded-md px-3 py-1.5 text-sm tabular-nums " +
+  "rounded-lg px-3 py-1.5 text-sm tabular-nums " +
   "transition-colors motion-quick disabled:opacity-40";
 
 /**
