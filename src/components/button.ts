@@ -21,21 +21,23 @@ export const primaryButtonClass =
  * The Timer's own pair, under the dial: the one control the screen is for, and
  * the one beside it.
  *
- * A pill rather than the ordinary rounded button, and larger, because these two
- * are the second thing the screen is — a 32px commit button under a 236px ring
- * would read as a form control that wandered in. `active:scale-95` is the press
+ * Larger than the ordinary button, because these two are the second thing the
+ * screen is — a 32px commit button under a 236px ring would read as a form
+ * control that wandered in. On the raised radius rather than a pill: a stadium
+ * this wide is the one shape the rest of the app never wears, and the squircle
+ * the radius earns is what keeps it soft. `active:scale-95` is the press
  * every control answers with, and the tier carries it: a theme asking for less
  * motion collapses the squash to an instant instead of playing it.
  */
 export const heroButtonClass =
-  "inline-flex items-center justify-center gap-2 rounded-full bg-accent " +
+  "inline-flex items-center justify-center gap-2 rounded-lg bg-accent " +
   "px-7 py-4 text-base font-semibold text-surface " +
   "transition motion-quick hover:opacity-90 active:scale-95 disabled:opacity-40 " +
   "disabled:active:scale-100";
 
 /** Its neighbour: a step away rather than the point — Stop. */
 export const heroQuietButtonClass =
-  "inline-flex items-center justify-center gap-2 rounded-full soft-fill " +
+  "inline-flex items-center justify-center gap-2 rounded-lg soft-fill " +
   "px-5 py-4 text-sm font-semibold text-ink-muted " +
   "transition motion-quick hover:text-danger active:scale-95 disabled:opacity-40";
 
@@ -106,9 +108,14 @@ export const closeButtonClass = `${windowButtonClass} hover:bg-danger hover:text
 /**
  * Tabular figures because half of these are numbers — a preset length, a week —
  * and digits that change width make a set of them twitch.
+ *
+ * Rounded rather than a pill, and on the small raised radius because these are
+ * the smallest thing that carries one: a radius past half a control's height is
+ * a stadium whatever number it names, so the token has to come down as the
+ * control does for the shape to still be a choice.
  */
 const toggleClass =
-  "rounded-full px-3 py-1.5 text-sm tabular-nums " +
+  "rounded-md px-3 py-1.5 text-sm tabular-nums " +
   "transition-colors motion-quick disabled:opacity-40";
 
 /**
