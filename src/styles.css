@@ -391,3 +391,32 @@ body {
     --animate-breath: none;
   }
 }
+
+/*
+ * The prototype behind #68: what a view transition costs and what it buys.
+ *
+ * The tokens reach these without a runtime read, which is the one clear win.
+ * `::view-transition` is an ordinary pseudo-element tree parented to `:root`,
+ * so custom properties inherit into it the way they inherit anywhere — and
+ * that means High-contrast's 1ms and `prefers-reduced-motion`'s 1ms are already
+ * applied by the time these resolve. No second code path, no `matchMedia`, and
+ * unlike the motion library nothing has to read CSS from JavaScript at all.
+ *
+ * `:root` gives up its own name deliberately. A view transition names the whole
+ * document by default, so the browser lays a frozen screenshot of the entire
+ * page over the live one for the duration — and this app always has something
+ * moving on it: the dial's breath, the Mug's steam, the countdown. A ghost of
+ * all three cross-fading over the real ones is exactly the double-image the
+ * motion budget exists to avoid. Naming only the disclosure keeps the snapshot
+ * to the part that actually changed.
+ */
+:root {
+  view-transition-name: none;
+}
+
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: var(--motion-base);
+  animation-timing-function: var(--ease-out-soft);
+}
