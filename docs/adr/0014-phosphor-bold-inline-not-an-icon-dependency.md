@@ -4,6 +4,8 @@
 - **Date**: 2026-08-17
 - **Amends**: ADR-0004, which held that "an icon dependency for a horizontal rule and a cross is not
   worth the bundle or the licence". That sentence is narrowed rather than deleted — see *What survives*.
+- **Amended**: 2026-08-18 — which of `error` and `warning` a failure takes is now a rule rather than a
+  judgement call per banner. Amended in place: nothing here was reversed.
 
 ## Context
 
@@ -56,6 +58,29 @@ arrives lighter than the triangle holding it and the single glyph reads as two w
 with a stem a full 24 units wide, it matches the triangle and the rest of the set. Composition is
 allowed; a scaled-down borrow is not, and neither is a hand-drawn *new* shape.
 
+### `error` answers a question; `warning` reports a condition
+
+*Added 2026-08-18, when the status glyphs were wired to their first callers (#70).*
+
+`success` and `error` are the same circle carrying a different mark, so the pair reads as one answer to
+one question — and a question implies somebody asked. That is what separates them from `warning`:
+
+- **`error`** — the user asked for something and it did not happen. A submit that was rejected, an
+  install they clicked, a screen that crashed out from under them.
+- **`warning`** — something the app does on its own did not happen, and a fallback is intact. The user
+  did not ask, so there is no question outstanding; there is a condition to know about and usually a
+  retry to press.
+
+Worked through the app's failures, this is not a close call. A failed backup runs unbidden on launch and
+its banner *says which copy is still good* (ADR-0007), so the news is a gap in protection, not a loss —
+`warning`. A failed restore's whole message is that the current database was left alone (ADR-0008) —
+`warning`. `form-error` and a failed update install are both things the user just pressed — `error`. The
+crash boundary is `error` despite the app initiating it, because the fallback test decides it: there is
+no older screen still good to fall back to.
+
+The rule exists because the alternative is deciding per banner, which is how six banners end up with
+four opinions. A new failure asks these two questions and gets its glyph.
+
 **Two glyphs are not Phosphor and do not live in the record.** `Spinner` and `RunningIndicator` came
 from a spinner set, on a 24 grid, and their meaning is a loop rather than a shape. They are separate
 exports for that reason.
@@ -102,6 +127,11 @@ provision still waits for the Mug.
   missing its `aria-label`, and that is the bug to fix rather than route around.
 - The set is stocked ahead of its callers, so #56, #57 and #58 consume a name instead of pasting a path.
   The cost is a record with entries nothing references yet.
+- Stocking ahead has a second cost, found on 2026-08-18: the components with no open issue against them
+  had nowhere to receive the pointer, so the status vocabulary sat unused while every banner stayed text
+  only. #70 wires them. A set stocked ahead of its callers needs the callers ticketed at the same time.
+- `warning` is the composite glyph, and #70 is the first thing to render it anywhere. Until those banners
+  are looked at in the running app, the assembled exclamation has only ever been reasoned about.
 - Cost: the app carries a copy of somebody else's artwork rather than a dependency that could be
   updated. Re-fetching a glyph is a manual act. This is the right trade for an offline app with roughly
   thirty icons and the wrong one at three hundred.
