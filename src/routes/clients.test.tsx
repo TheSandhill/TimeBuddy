@@ -386,19 +386,27 @@ describe("creating and renaming", () => {
     );
   });
 
-  it("offers a Project through the Client it would belong to", async () => {
-    // Adding a Project is something done to a Client, so it is offered where
-    // the other two things done to a Client are — and the row carrying the menu
-    // is the top of the body, so it is never past a list of anything.
+  it("does not hand a pending Project to a different Client", async () => {
+    // The form belongs to the Client it was raised on. Opening another row is
+    // not a way to change its mind about which Client that was — the one thing
+    // a form asking only for a name cannot say for itself.
+    const beta: Client = { ...acme, id: 3, name: "Beta" };
+    commands.listClients.mockResolvedValue([acme, beta]);
     renderClients();
+    await screen.findByRole("button", { name: "Acme" });
 
-    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
-    await screen.findByText("Website");
     menuAction("Acme", "Project toevoegen aan Acme");
+    await screen.findByRole("form", { name: "Nieuw project" });
 
-    expect(
-      await screen.findByRole("form", { name: "Nieuw project" }),
-    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Beta" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Beta" })).toHaveAttribute(
+        "aria-expanded",
+        "true",
+      ),
+    );
+    expect(screen.queryByRole("form", { name: "Nieuw project" })).toBeNull();
   });
 
   it("keeps a cancelled form on screen while it collapses", async () => {

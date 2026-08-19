@@ -31,7 +31,16 @@ import { errorKey } from "../data/error-message";
 import type { Client, Project } from "../data/types";
 
 type Target = "clients" | "projects";
-type Editing = { target: Target; item: { id: number; name: string } | null };
+type Editing = {
+  target: Target;
+  item: { id: number; name: string } | null;
+  /**
+   * Which Client a new Project would belong to. A form asking only for a name
+   * cannot say that for itself, and the row it was raised on is not the answer
+   * either — that row can be closed and another opened while it stands.
+   */
+  clientId?: number;
+};
 
 export function Clients() {
   const { t } = useTranslation();
@@ -139,10 +148,14 @@ export function Clients() {
   const clearRowError = (target: Target) =>
     setRowError((current) => (current?.target === target ? null : current));
 
-  const openForm = (target: Target, item: { id: number; name: string } | null) => {
+  const openForm = (
+    target: Target,
+    item: { id: number; name: string } | null,
+    clientId?: number,
+  ) => {
     setFormError(null);
     clearRowError(target);
-    setEditing({ target, item });
+    setEditing({ target, item, clientId });
   };
 
   const addingClient = editing?.target === "clients" && editing.item === null;
@@ -229,7 +242,7 @@ export function Clients() {
                 // body, so a closed row would raise it nowhere. Opening is
                 // part of the action rather than a step asked of the user.
                 setExpanded(client.id);
-                openForm("projects", null);
+                openForm("projects", null, client.id);
               }}
               onCancelProjectEdit={() => setEditing(null)}
               onSaveProject={(item, name) =>
@@ -293,7 +306,10 @@ function ClientRow({
   const { t } = useTranslation();
   const archived = client.archivedAt !== null;
   const renaming = editing?.target === "clients" && editing.item?.id === client.id;
-  const addingProject = editing?.target === "projects" && editing.item === null;
+  const addingProject =
+    editing?.target === "projects" &&
+    editing.item === null &&
+    editing.clientId === client.id;
 
   const projects = useQuery({
     queryKey: ["projects", client.id, showArchived],
