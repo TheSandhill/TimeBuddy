@@ -468,6 +468,14 @@ select:open .select-caret {
      */
     position-area: block-end span-all;
     position-try-fallbacks: flip-block;
+    /*
+     * The floating tab bar's shadow, and literally its utility rather than a
+     * copy of the two offsets it resolves to: both are things laid over the
+     * screen rather than part of it, and a panel that is over the content
+     * without saying so leaves the list looking pasted into the page. `@apply`
+     * because a pseudo-element has no class to put `shadow-lg` on.
+     */
+    @apply shadow-lg;
   }
 
   [data-theme="high-contrast"] select::picker(select) {
