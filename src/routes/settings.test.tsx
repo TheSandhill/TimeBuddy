@@ -1,5 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
@@ -114,6 +120,147 @@ beforeEach(() => {
   commands.restoreOutcome.mockResolvedValue({ status: "nothing" });
   commands.claimRestoreRelock.mockResolvedValue(false);
   dialog.open.mockResolvedValue(null);
+});
+
+describe("the four groups", () => {
+  /**
+   * The split the screen is read by. The last one is the odd one out: it is the
+   * only group whose contents can fail, which is why Restore and the update
+   * check live in it rather than beside the language dropdown.
+   */
+  const groups = ["Weergave", "Timer", "Systeem", "Data en versie"];
+
+  const group = (name: string) => screen.getByRole("group", { name });
+
+  it("reads as four named groups rather than one scroll", async () => {
+    renderSettings();
+    await loaded();
+
+    for (const name of groups) {
+      expect(group(name)).toBeInTheDocument();
+    }
+
+    // Five groupings, four of them these: the fifth is the theme picker, and it
+    // is *inside* Appearance rather than beside it. A fifth at the top level
+    // would be the undifferentiated scroll coming back one control at a time.
+    expect(screen.getAllByRole("group")).toHaveLength(groups.length + 1);
+    expect(
+      group("Weergave").contains(screen.getByRole("radio", { name: "Zand" })),
+      "the theme picker is nested in Appearance, not a group of its own",
+    ).toBe(true);
+  });
+
+  it("gives every one of the twelve controls exactly one home", async () => {
+    renderSettings();
+    await loaded();
+    await screen.findByText(/Laatste back-up/);
+
+    // `getBy*` is the duplication check: a control living in two groups makes
+    // the screen-wide lookup throw before the containment assertion runs.
+    const homes: [string, string][] = [
+      ["Weergave", "Walnoot"],
+      ["Weergave", "Zand"],
+      ["Weergave", "Hoog contrast"],
+      ["Weergave", "Volg de licht/donker-instelling van Windows"],
+      ["Weergave", "Taal"],
+      ["Timer", "Bloklengte (minuten)"],
+      ["Timer", "Pauzelengte (minuten)"],
+      ["Timer", "Geluid aan het eind van een blok"],
+      ["Timer", "Windows-melding aan het eind van een blok"],
+      ["Systeem", "TimeBuddy starten met Windows"],
+      ["Data en versie", "Terugzetten vanaf"],
+    ];
+
+    for (const [name, control] of homes) {
+      expect(
+        group(name).contains(screen.getByLabelText(control)),
+        `${control} belongs to ${name}`,
+      ).toBe(true);
+    }
+
+    // The rest of the last group is buttons and read-only lines rather than
+    // labelled fields, so they are found the way a person finds them.
+    const data = group("Data en versie");
+    for (const name of ["Kiezen…", "Nu back-uppen", "Controleer op updates"]) {
+      expect(data.contains(screen.getByRole("button", { name }))).toBe(true);
+    }
+    expect(data).toHaveTextContent("De eigen datamap van de app");
+    expect(data).toHaveTextContent(/versie 0\.1\.0/);
+  });
+
+  it("keeps the things that can fail out of the preference groups", async () => {
+    // The line the fourth group is drawn along. A preference is set and that is
+    // the end of it, so the first three groups hold nothing that can be pressed
+    // and refused — no button, and nothing that reports back.
+    commands.runBackup.mockRejectedValue({ kind: "backup", message: "gone" });
+    commands.backupStatus.mockResolvedValue({ ...backedUp, stale: true });
+    renderSettings();
+    await loaded();
+
+    click("Nu back-uppen");
+    const failure = await screen.findByRole("alert");
+
+    for (const name of ["Weergave", "Timer", "Systeem"]) {
+      const preferences = group(name);
+      expect(
+        within(preferences).queryAllByRole("button"),
+        `${name} has nothing to press, so nothing to refuse`,
+      ).toEqual([]);
+      expect(preferences.contains(failure)).toBe(false);
+      expect(
+        preferences.contains(
+          screen.getByRole("region", { name: "Terugzetten" }),
+        ),
+      ).toBe(false);
+      expect(
+        preferences.contains(screen.getByRole("region", { name: "Bijwerken" })),
+      ).toBe(false);
+    }
+
+    // And the news that is read rather than announced is in the fourth too.
+    expect(group("Data en versie")).toHaveTextContent(
+      /langer geleden dan het zou moeten zijn/,
+    );
+  });
+
+  it("sets Restore apart inside the group that can fail", async () => {
+    renderSettings();
+    await loaded();
+
+    const restore = screen.getByRole("region", { name: "Terugzetten" });
+    expect(
+      group("Data en versie").contains(restore),
+      "Restore is in the group whose contents can fail",
+    ).toBe(true);
+    expect(
+      within(restore).getByRole("heading", { name: "Terugzetten" }),
+      "set apart with a name of its own, not just a gap",
+    ).toBeInTheDocument();
+  });
+
+  it("still says what it costs to be in that group at all", async () => {
+    // Set apart is a look; the words are what make it honest. Both survive the
+    // regrouping: the relaunch it needs, and the button that only prepares.
+    renderSettings();
+    await loaded();
+
+    const restore = screen.getByRole("region", { name: "Terugzetten" });
+    expect(restore).toHaveTextContent(/zodra de app opnieuw start/);
+
+    // Wait for the folder to have been read: a picker still listing only its
+    // prompt would swallow the change and leave nothing to press.
+    await within(restore).findByRole("option", { name: /3 aug/ });
+    fireEvent.change(within(restore).getByLabelText("Terugzetten vanaf"), {
+      target: { value: "timebuddy-20260803T073000Z.db" },
+    });
+
+    expect(
+      await within(restore).findByRole("button", {
+        name: "Terugzetten voorbereiden",
+      }),
+      "the button promises preparation, not a completed restore",
+    ).toBeInTheDocument();
+  });
 });
 
 describe("picking a theme", () => {

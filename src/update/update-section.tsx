@@ -10,14 +10,18 @@
  * Installing is not offered here. It is offered on the bar, which is visible from
  * this screen too — two buttons for one act would only be two ways to start two
  * downloads.
+ *
+ * It is the tail of Settings' "Data and version" group and wears no heading of
+ * its own: the group's name already covers the version, and a third heading in
+ * one group would compete with the one heading that has to stand out there —
+ * Restore's.
  */
 
 import { useTranslation } from "react-i18next";
 import { quietButtonClass } from "../components/button";
-import { quietLabelClass } from "../components/field";
+import { Icon } from "../components/icon";
+import { StatusLine } from "../components/status-line";
 import { useCurrentVersion, useUpdateCheck } from "./use-update";
-
-const sectionClass = "flex flex-col gap-4 border-t border-hairline pt-4";
 
 export function UpdateSection() {
   const { t } = useTranslation();
@@ -26,9 +30,7 @@ export function UpdateSection() {
   const check = useUpdateCheck();
 
   return (
-    <section className={sectionClass} aria-label={t("update.title")}>
-      <h2 className={quietLabelClass}>{t("update.title")}</h2>
-
+    <section className="flex flex-col gap-4" aria-label={t("update.title")}>
       {version.data === undefined ? null : (
         <p className="text-sm text-ink">
           {t("update.currentVersion", { version: version.data })}
@@ -49,13 +51,9 @@ export function UpdateSection() {
             what the query says before it has one, and a screen that filled that
             in with "up to date" would be guessing. */}
         {check.checking ? null : check.failed ? (
-          <span role="alert" className="text-sm text-danger">
-            {t("update.checkFailed")}
-          </span>
+          <StatusLine tone="error">{t("update.checkFailed")}</StatusLine>
         ) : check.update === null ? (
-          <span role="status" className="text-sm text-ink-muted">
-            {t("update.upToDate")}
-          </span>
+          <StatusLine tone="success">{t("update.upToDate")}</StatusLine>
         ) : check.update === undefined ? null : (
           <span role="status" className="text-sm text-ink">
             {t("update.available", { version: check.update.version })}
@@ -70,7 +68,10 @@ export function UpdateSection() {
         would be teaching her to expect a prompt updates do not show (ADR-0009).
         What is worth saying is the half that happens every time.
       */}
-      <p className="text-xs text-ink-muted">{t("update.verifiedNote")}</p>
+      <p className="flex items-start gap-2 text-xs text-ink-muted">
+        <Icon name="verified" className="mt-0.5 size-4 shrink-0" />
+        {t("update.verifiedNote")}
+      </p>
     </section>
   );
 }

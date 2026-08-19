@@ -132,6 +132,7 @@
     "notifications": "Windows-melding aan het eind van een blok",
     "system": "Systeem",
     "autostart": "TimeBuddy starten met Windows",
+    "data": "Data en versie",
     "backupFolder": "Back-upmap",
     "backupFolderDefault": "De eigen datamap van de app",
     "chooseFolder": "Kiezen…",
@@ -143,7 +144,6 @@
     "loadFailed": "Instellingen konden niet worden geladen."
   },
   "backup": {
-    "title": "Back-ups",
     "hint": "TimeBuddy kopieert de database hier één keer per dag naartoe en bewaart de laatste zeven. Een map die synchroniseert — OneDrive, Dropbox — zorgt dat een kapotte laptop geen verloren jaar is.",
     "reading": "Back-upmap controleren…",
     "never": "Er is nog geen back-up gemaakt.",
