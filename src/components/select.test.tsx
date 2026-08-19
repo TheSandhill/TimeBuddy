@@ -169,6 +169,10 @@ describe("the open list wears the theme", () => {
     expect.fail(`no rule for \`${selector}\` on its own`);
   };
 
+  /** The same, with the prose taken out — for asserting what is *not* there. */
+  const declarationsIn = (selector: string) =>
+    ruleFor(selector).replace(/\/\*[\s\S]*?\*\//g, "");
+
   it("opts both the field and its picker in", () => {
     expect(stylesheet).toContain("appearance: base-select");
     expect(stylesheet).toContain("::picker(select)");
@@ -183,18 +187,35 @@ describe("the open list wears the theme", () => {
     expect(panel).toContain("border: 0");
   });
 
-  it("opens below the field rather than over it", () => {
+  it("opens below the field, and nowhere else", () => {
     const panel = ruleFor("select::picker(select)");
 
-    // The UA default lays the panel over the field, the way a native popup
-    // does. On the Timer that covers the dial's own countdown.
-    expect(panel).toContain("position-area: block-end span-all");
-    // And no flip. Chromium's own fallback sent the Timer's list up over the
-    // countdown whenever the room below it was short of what the list wanted;
-    // taking the room there is and scrolling inside it is the answer instead.
+    // The user agent lays the panel over the field and flips it above when the
+    // room below is short — which on the Timer put the list over the countdown.
+    expect(panel).toContain("position-area: block-end span-inline-end");
     expect(panel).toContain("position-try-fallbacks: none");
-    expect(panel).toContain("overflow-y: auto");
-    expect(panel).toContain("max-height: stretch");
+    // And it is drawn over what is beneath it at the height the list needs. A
+    // max-height here would clamp it to the gap below the field and turn a list
+    // of four projects into a scroller — which is not what "on top" means.
+    const declarations = declarationsIn("select::picker(select)");
+    expect(declarations).not.toContain("max-height");
+    expect(declarations).not.toContain("overflow-y");
+  });
+
+  it("sits the rows apart rather than flush", () => {
+    // Two fills touching read as one block with a line through it, and an
+    // option's own radius needs somewhere to be seen.
+    expect(ruleFor("select option + option")).toContain("margin-top:");
+  });
+
+  it("carries the floating tab bar's shadow, not one of its own", () => {
+    // Both are laid over the screen rather than part of it. The utility itself
+    // rather than a copy of the offsets it resolves to, so the two cannot drift.
+    expect(ruleFor("select::picker(select)")).toContain("@apply shadow-lg");
+    expect(
+      readFileSync(path.join(srcDir, "components/tab-bar.tsx"), "utf8"),
+      "the tab bar no longer wears shadow-lg",
+    ).toContain("shadow-lg");
   });
 
   it("gives High-contrast the edge it needs", () => {

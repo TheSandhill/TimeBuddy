@@ -369,6 +369,14 @@ the ink because it is the one pairing that clears AA on the accent in every ship
 *chosen* keeps a quiet fill and a check of its own, so the highlight is not asked to say two things —
 and in High-contrast, where a quiet fill is not one, it takes the edge instead.
 
+It opens **below its field and nowhere else**, carrying the floating tab bar's shadow — both are things
+laid over the screen rather than part of it. The user agent's own behaviour is to lay the panel over the
+field and flip it above when the room below is short, and on the Timer, where the picker sits low under
+the dial, that flip put the list on top of the countdown. A list that opens in whichever direction
+happens to fit is a list that opens somewhere different each time it is asked. Nothing has to make room
+for it — it is in the top layer, so it is drawn over today's entries and the tab bar at whatever height
+the list needs, rather than being clamped to the gap below the field and made to scroll inside itself.
+
 One component, `Select`, and one place each for the two halves of the dressing: `field.ts` for what a
 class can reach and `styles.css` for what only a pseudo-element can. The markup half of the enhancement
 is asked for in JavaScript rather than left to `@supports`, because a parser that has never heard of

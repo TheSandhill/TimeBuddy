@@ -452,39 +452,33 @@ select:open .select-caret {
     background-color: var(--color-surface-raised);
     color: var(--color-ink);
     padding: 0.25rem;
-    /* Both sides, because the panel may still open above the field where there
-       is no room below, and flush against it is the complaint this fixes. */
+    /* Off the field rather than flush against it, which is half the complaint
+       this fixes. One side would do now that the panel only ever opens
+       downwards; both, so the gap survives whoever changes that. */
     margin-block: 0.25rem;
     /*
-     * Below the field, spanning its width — not laid over it, which is the
-     * user-agent default and what a native popup does. On the Timer the picker
-     * sits under the dial with today's entries beneath it, so a panel opening
-     * upwards covers the one number the screen exists to show. Every screen gets
-     * the same answer: a list belongs under the thing it is a list for.
+     * Below the field, aligned to its edge, and nowhere else.
      *
-     * The flip is kept, because "downwards" stops being the kind answer for a
-     * field near the bottom of the window; without room below, up is where the
-     * list can be read.
-     */
-    position-area: block-end span-all;
-    /*
-     * Downwards, always — no flip. On the Timer the picker sits low, under the
-     * dial and above today's entries, so there is often less room below it than
-     * the list needs, and the flip Chromium does by default sent the panel up
-     * over the countdown. A list that opens in whichever direction happens to
-     * fit is a list that opens somewhere different each time it is asked.
+     * The user agent lays the panel over the field the way a native popup does,
+     * and flips it above when the room below is short of what the list wants. On
+     * the Timer, where the picker sits low — under the dial, over today's
+     * entries — that flip put the list on top of the one number the screen
+     * exists to show. A list that opens in whichever direction happens to fit is
+     * a list that opens somewhere different each time it is asked.
      *
-     * What used to be the flip's job is done by the two lines under it instead:
-     * the panel takes what room there is below the field and scrolls inside it,
-     * rather than growing past the bottom of the window and being cut off.
+     * So: no flip, and nothing below has to make room for it. The panel is in the
+     * top layer, so it is drawn *over* today's entries and the tab bar at
+     * whatever height the list needs — which is why there is no max-height here
+     * clamping it to the gap below the field and no scroller inside it. Where a
+     * list is long enough to reach the bottom of the window, the user agent's own
+     * sizing is what catches it.
+     *
+     * `span-inline-end` rather than `span-all`: the region starts at the field's
+     * own inline-start edge, so the panel lines up with the field rather than
+     * being centred in whatever the containing block turns out to be.
      */
+    position-area: block-end span-inline-end;
     position-try-fallbacks: none;
-    /* Both spellings: `stretch` is the standard one and `-webkit-fill-available`
-       is what a WebView2 behind the times still obeys — the same pair of
-       spellings the hidden scrollbar needs. */
-    max-height: -webkit-fill-available;
-    max-height: stretch;
-    overflow-y: auto;
     /*
      * The floating tab bar's shadow, and literally its utility rather than a
      * copy of the two offsets it resolves to: both are things laid over the
