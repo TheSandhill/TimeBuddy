@@ -111,6 +111,27 @@ describe("every shipped theme is readable", () => {
     }
   });
 
+  it.each(themeNames)(
+    "%s keeps the highlighted dropdown option readable",
+    (theme) => {
+      const tokens = tokensOf(theme);
+
+      // The open list highlights on the accent (#72), which makes the accent a
+      // background text sits on for the first time — a light tan in Walnut, a
+      // dark brown in Sand, a yellow in High-contrast. `surface-raised` is the
+      // one ink that clears AA on all three, and it is the pairing the switch
+      // thumb already leans on. A theme that retuned its accent without this
+      // gate would land unreadable text in the one place nobody screenshots.
+      expect(
+        contrastRatio(
+          tokens["--color-surface-raised"],
+          tokens["--color-accent"],
+        ),
+        `--color-surface-raised on --color-accent in "${theme}"`,
+      ).toBeGreaterThanOrEqual(AA_BODY_TEXT);
+    },
+  );
+
   it.each(themeNames)("%s keeps secondary text legible too", (theme) => {
     const tokens = tokensOf(theme);
 

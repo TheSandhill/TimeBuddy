@@ -36,6 +36,29 @@ export const pickerClass =
   "transition-colors motion-quick disabled:opacity-50";
 
 /**
+ * What a `<select>` becomes once it draws its own list (#72).
+ *
+ * `appearance: base-select` rebases the field itself: it stops being a UA box
+ * and becomes a button holding the selection plus a caret. The dressing — the
+ * radius, the fill, the padding — stays on the select in `fieldClass` or
+ * `pickerClass`, so this button gives back everything a button normally brings
+ * and is left as nothing but layout: no box of its own inside the field's, and
+ * the type it already had.
+ */
+export const selectButtonClass =
+  "flex w-full min-w-0 items-center gap-2 border-0 bg-transparent p-0 " +
+  "text-left text-inherit";
+
+/**
+ * The caret on the closed field: the icon set's chevron rather than the UA
+ * triangle (ADR-0014). It points up and is turned here, so `:open` turns it back
+ * — one glyph rotating rather than two swapping.
+ */
+export const selectCaretClass =
+  "select-caret size-4 shrink-0 rotate-180 text-ink-muted " +
+  "transition-transform motion-quick";
+
+/**
  * A checkbox and the sentence it belongs to. Full-size text, because the label
  * *is* the control's meaning — there is nothing else to read it against.
  */

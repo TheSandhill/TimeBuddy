@@ -30,6 +30,7 @@ import {
   setApartClass,
 } from "../components/field";
 import { Icon } from "../components/icon";
+import { Select } from "../components/select";
 import { StatusLine } from "../components/status-line";
 import { errorKey } from "../data/error-message";
 import { formatDuration } from "../entries/duration";
@@ -116,7 +117,7 @@ export function RestoreSection() {
           ) : (
             <label className={labelClass}>
               {t("restore.choose")}
-              <select
+              <Select
                 className={fieldClass}
                 value={chosen ?? ""}
                 onChange={(event) => setChosen(event.target.value || null)}
@@ -127,7 +128,7 @@ export function RestoreSection() {
                     {when(candidate.madeAt)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           )}
 

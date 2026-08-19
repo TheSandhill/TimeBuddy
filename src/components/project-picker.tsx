@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { Project } from "../data/types";
 import { pickerClass } from "./field";
+import { Select } from "./select";
 
 interface ProjectPickerProps {
   projects: Project[];
@@ -34,7 +35,7 @@ export function ProjectPicker({
   }
 
   return (
-    <select
+    <Select
       value={value ?? ""}
       disabled={disabled}
       aria-label={t("timer.project")}
@@ -46,6 +47,6 @@ export function ProjectPicker({
           {project.name}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }
