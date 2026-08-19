@@ -2,6 +2,9 @@
 
 - **Status**: Accepted
 - **Date**: 2026-08-19
+- **Amends**: ADR-0004, which held that `motion` covers "the tab indicator, the route transitions, the
+  undo toast and the three banners", and that two motion systems is honest. The route transitions leave;
+  the count becomes three. ADR-0004 carries the back-pointer.
 - **Amended**: 2026-08-19 — the first draft of this ADR turned view transitions down for *everything*,
   route changes included. The route half is reversed and this title with it. Amended in place because
   nothing had been built on the old conclusion, and because the reasoning that was wrong is worth
@@ -43,7 +46,7 @@ defaultViewTransition: {
 ```
 
 and the direction lands in the cascade as `:active-view-transition-type(left|right)`, which picks a
-sign for `--screen-shift`. The whole slide is then two keyframes spending `--motion-page` and
+sign for `--screen-travel`. The whole slide is then two keyframes spending `--motion-page` and
 `--motion-page-travel`. `AppShell` lost twenty-five lines, both refs and its dependency on the motion
 library; the tray's neutral navigation is now a `viewTransition: { types: ["neutral"] }` on the one
 `navigate` that needs it, rather than a ref read on the next render.
@@ -102,15 +105,28 @@ error in one sentence.
 
 - **A direction is now a string agreed between TypeScript and CSS**, and nothing type-checks that
   crossing: rename `right` on one side and the screen silently stops leaning.
-  `src/components/route-transition.test.ts` guards the seam, in the way `tokens.test.ts` guards the one
-  between the token contract and the stylesheet.
+  `src/theme/route-transition.test.ts` guards the seam, beside the guard that holds the token contract
+  and the stylesheet to each other.
 - Route motion is no longer reachable from a unit test. jsdom has no `startViewTransition`, so the
   suite proves the *direction* and the *tokens spent*, never the animation. That was already true of
   the motion library's version; e2e drives UI Automation, not the DOM (ADR-0012).
 - `:active-view-transition-type()` is the newest thing here. Where it is not understood,
-  `--screen-shift` keeps its `0px` default and the screen cross-fades without leaning — a degradation,
-  not a break.
+  `--screen-travel` keeps its `0px` default and the screen cross-fades without leaning — a degradation,
+  not a break. The router guards it with `CSS.supports` before sending a type at all.
+- **The snapshot is painted in the top layer, which the page cannot hold.** Two things follow, and both
+  needed a rule rather than a hope. The user-agent gives `::view-transition-group` a quarter-second, so
+  overriding only the two images leaves reduced motion with an instant cross-fade under an overlay that
+  outlasts it — the visuals turned down and the mechanism still running. And nothing clips the lean:
+  `overflow-y-auto` on `<main>` used to contain the slide, and a pseudo-element in the top layer is
+  outside it, so 12px of screen would travel over the window's own rounded edge. `overflow: clip` on the
+  group restores that boundary. Both are guarded by `route-transition.test.ts`; **neither has been seen
+  in a window**, and the clip especially is the kind of claim that wants eyes.
+- The floating tab bar is not snapshotted and keeps animating through the change — but it is *under* the
+  top layer while the transition runs, not above it. What makes that survivable is that the screen's own
+  bottom is `pb-20` of nothing, so the pixels passing over the bar are transparent. Worth knowing before
+  anything opaque is put down there.
 - The Clients disclosures still close badly, with a known fix. #77.
 - **The shipped route transition has not been watched in a running window.** It builds, the tokens
-  resolve in the emitted CSS, and the direction is tested — but nobody has seen it slide. Given this
-  ADR has already had one conclusion reversed for exactly that reason, treat that as the open item.
+  resolve in the emitted CSS, and the direction is tested — but nobody has seen it slide, and the two
+  top-layer rules above were both found by reading rather than by looking. Given this ADR has already
+  had one conclusion reversed for exactly that reason, treat this as the open item and not a formality.

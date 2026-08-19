@@ -402,22 +402,22 @@ body {
  * over the real one is exactly the double-image this scoping avoids.
  *
  * Direction arrives as a view-transition *type*, named by the router from the
- * tab bar's order. `--screen-shift` is derived from `--motion-page-travel`
+ * tab bar's order. `--screen-travel` is derived from `--motion-page-travel`
  * rather than being a token of its own: it is the same length wearing a sign.
  * Its 0px default is also the fallback wherever `:active-view-transition-type`
  * is not understood — the screen still crosses, it simply does not lean.
  */
 :root {
   view-transition-name: none;
-  --screen-shift: 0px;
+  --screen-travel: 0px;
 }
 
 :root:active-view-transition-type(right) {
-  --screen-shift: var(--motion-page-travel);
+  --screen-travel: var(--motion-page-travel);
 }
 
 :root:active-view-transition-type(left) {
-  --screen-shift: calc(-1 * var(--motion-page-travel));
+  --screen-travel: calc(-1 * var(--motion-page-travel));
 }
 
 @utility screen-slide {
@@ -427,15 +427,32 @@ body {
 @keyframes screen-out {
   to {
     opacity: 0;
-    translate: calc(-1 * var(--screen-shift)) 0;
+    translate: calc(-1 * var(--screen-travel)) 0;
   }
 }
 
 @keyframes screen-in {
   from {
     opacity: 0;
-    translate: var(--screen-shift) 0;
+    translate: var(--screen-travel) 0;
   }
+}
+
+/*
+ * The group carries the transition's own length, and it has to be said: the
+ * user-agent default is a quarter-second, and overriding only the old and new
+ * images leaves reduced motion with a 1ms cross-fade under a 250ms frozen
+ * overlay — the visuals turned down and the mechanism left running.
+ *
+ * It clips, too. These pseudo-elements are painted in the top layer, so nothing
+ * in the page holds them: without this the screen's 12px lean would slide out
+ * over the window's own rounded edge, where `overflow-y-auto` on `<main>` used
+ * to contain it. Clipping at the group is clipping at that same box.
+ */
+::view-transition-group(screen) {
+  animation-duration: var(--motion-page);
+  animation-timing-function: var(--ease-out-soft);
+  overflow: clip;
 }
 
 ::view-transition-old(screen) {

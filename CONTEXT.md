@@ -372,8 +372,10 @@ instead. It has no direction, so it is not given one.
 That direction is decided **once, on the router**, and spent entirely in CSS: it travels to the
 stylesheet as a view-transition *type*, and the screen leans by the sign it puts on
 `--motion-page-travel`. Only the screen is snapshotted — the titlebar, the banners and the floating
-tab bar stay live across it, which matters most for the tab bar, whose indicator is a spring still in
-flight while the screen underneath it slides.
+tab bar are never frozen into it, which matters most for the tab bar, whose indicator is a spring still
+in flight while the screen underneath it slides. They are not *above* it either: a snapshot is painted
+in the top layer and the page cannot reach over it, so the screen is clipped back to its own box on the
+way past.
 
 ### Mug
 
