@@ -6,6 +6,8 @@
   no-maximize reaffirmed. Amended in place rather than superseded: nothing here was reversed.
 - **Amended**: 2026-08-14 — shape and type join the token set (squircles, Inter → Nunito); the Mug is
   **deferred** after three rejected attempts, leaving the fidelity rule behind as provision.
+- **Narrowed**: 2026-08-19 by ADR-0015 — the route transitions leave the motion library for the
+  platform's own, so the count below is three rather than two. Marked where it is now wrong.
 - **Narrowed**: 2026-08-17 by ADR-0014 — the app takes an icon set, and two more loops join the motion
   tokens. The no-icon-dependency sentence below survives for the titlebar's two glyphs only. This is
   the first amendment that reverses rather than adds, which is why it is an ADR of its own.
@@ -61,6 +63,10 @@ One exception, named as one: **the spring is not a token.** The tab bar's active
 neighbours are a spring, which is not a cubic-bézier and cannot be a CSS variable. It is a single
 config in TypeScript. Two motion systems — CSS for state transitions, springs for layout — is honest;
 a token only one library can read is not.
+
+*Three since ADR-0015*, which moved the route change onto the platform's own view transitions. The
+exception above is untouched by it: a spring is precisely what a view transition still cannot express,
+which is why the tab indicator stayed behind when the screen underneath it left.
 
 **No state is signalled by motion alone.** This is the constraint that makes motion safe to tokenise:
 because reduced motion — the OS's, or High-contrast's own token values — sets the loops to `none` and
@@ -149,7 +155,8 @@ the middle of an empty desktop. There is nothing for the width to do.
   a one-off toast the first time, since silent tray-hiding reads as a crash.
 - Motion needs a library: exit animations on unmount and a shared sliding indicator are not things
   plain CSS does without hand-rolled state. One dependency (`motion`) covers the tab indicator, the
-  route transitions, the undo toast and the three banners. Its weight is local — a desktop app pays
+  route transitions, the undo toast and the three banners. **The route transitions left in ADR-0015**;
+  the other three are why the dependency stays, and are the ones this reasoning was always really about. Its weight is local — a desktop app pays
   no network cost for it.
 - A themed asset costs one deliberate authoring per theme, not one asset and two tints — the mug
   attempts proved that much: on Sand a cream mug on a cream surface is simply invisible, so it had to

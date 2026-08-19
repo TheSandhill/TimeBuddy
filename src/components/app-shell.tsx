@@ -1,14 +1,11 @@
-import { useRef, type ReactNode } from "react";
-import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { AnimatePresence, motion } from "motion/react";
+import { type ReactNode } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useDailyBackup } from "../backup/use-daily-backup";
 import { useRestoreOutcome } from "../restore/use-restore";
-import { readDuration, readEasing } from "../theme/motion";
 import { requestTimerPause, requestTimerToggle } from "../tray/toggle-request";
 import { useUpdatePrompt } from "../update/use-update";
 import { BackupBanner } from "./backup-banner";
 import { RestoreBanner } from "./restore-banner";
-import { routeDirection, type Direction } from "./route-direction";
 import { TabBar } from "./tab-bar";
 import { TransientBanner } from "./transient";
 import { UpdateBanner } from "./update-banner";
@@ -16,19 +13,6 @@ import { WindowFrame } from "./window-frame";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const location = useRouterState({ select: (s) => s.location.pathname });
-  const previousPath = useRef<string | null>(null);
-  const forceNeutral = useRef(false);
-
-  const direction: Direction = forceNeutral.current
-    ? "neutral"
-    : routeDirection(previousPath.current, location);
-  const travel = { left: -1, neutral: 0, right: 1 }[direction];
-
-  if (previousPath.current !== location) {
-    previousPath.current = location;
-    forceNeutral.current = false;
-  }
 
   const backup = useDailyBackup();
   const restored = useRestoreOutcome();
@@ -38,8 +22,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     <WindowFrame
       onTrayToggle={() => {
         requestTimerToggle();
-        forceNeutral.current = true;
-        void navigate({ to: "/" });
+        // A navigation nobody walked gets no direction: the tab bar's order
+        // means nothing to a screen the tray pulled up, so this one crosses
+        // rather than leans, whichever tab it came from.
+        void navigate({ to: "/", viewTransition: { types: ["neutral"] } });
       }}
       onTrayPause={requestTimerPause}
     >
@@ -71,28 +57,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       </TransientBanner>
 
-      <main className="relative min-h-0 flex-1 overflow-y-auto pb-20">
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.div
-            key={location}
-            className="p-6"
-            initial={{
-              x: `calc(${travel} * var(--motion-page-travel))`,
-              opacity: 0,
-            }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{
-              x: `calc(${-travel} * var(--motion-page-travel))`,
-              opacity: 0,
-            }}
-            transition={{
-              duration: readDuration("--motion-page"),
-              ease: readEasing("--ease-out-soft"),
-            }}
-          >
-            {children}
-          </motion.div>
-        </AnimatePresence>
+      {/*
+       * The screen is the only thing the route change snapshots. Everything
+       * above it and the tab bar below stay live and untouched — which is why
+       * the name sits here rather than on the document.
+       */}
+      <main className="screen-slide relative min-h-0 flex-1 overflow-y-auto pb-20">
+        <div className="p-6">{children}</div>
       </main>
 
       <TabBar />
