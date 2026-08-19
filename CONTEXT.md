@@ -321,13 +321,13 @@ is turned down by the same hands.
 
 The **spring is not a token**. The floating tab bar's active pill widens to fit its label and its
 neighbours slide aside, and that is a spring, which is not a cubic-bézier and cannot be a CSS
-variable. It is one config in TypeScript, imported wherever it is needed. Two motion systems, named
-as two: CSS for state transitions, springs for layout. A token only one library can read would be a
-token in name.
+variable. It is one config in TypeScript, imported wherever it is needed. A token only one library can
+read would be a token in name.
 
-**Two, and not three.** The platform's own view transitions were prototyped and turned down — not
-because they fit badly, but because the library the app already carries covers the same ground and a
-third motion system has to earn its place. See ADR-0015.
+**Three motion systems, named as three**: CSS for state transitions, the motion library for anything
+that has to outlive its condition, and the platform's own view transitions for a route change. The
+third was the last to arrive and had to earn its place by *removing* code — see ADR-0015, which also
+records why form disclosures did not follow the route change onto it.
 
 **Transient UI arrives and leaves.** The undo toast and the three banners across the top — a failed
 Backup, a failed staged Restore, an offered Update — animate on the way out as well as in, which is
@@ -368,6 +368,12 @@ Route changes move **along the tab bar's order**: leftward for a leftward tab, a
 rather than a full page turn, because a screen crossed five times a minute should not feel crossed. A
 navigation nobody walked — the tray's Start/Stop pulling the Timer up — gets the neutral crossfade
 instead. It has no direction, so it is not given one.
+
+That direction is decided **once, on the router**, and spent entirely in CSS: it travels to the
+stylesheet as a view-transition *type*, and the screen leans by the sign it puts on
+`--motion-page-travel`. Only the screen is snapshotted — the titlebar, the banners and the floating
+tab bar stay live across it, which matters most for the tab bar, whose indicator is a spring still in
+flight while the screen underneath it slides.
 
 ### Mug
 

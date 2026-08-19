@@ -5,6 +5,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { AppShell } from "./components/app-shell";
+import { routeDirection } from "./components/route-direction";
 import { Clients } from "./routes/clients";
 import { Entries } from "./routes/entries";
 import { Reports } from "./routes/reports";
@@ -71,7 +72,27 @@ export const routeTree = rootRoute.addChildren([
   settingsRoute,
 ]);
 
-export const router = createRouter({ routeTree, defaultPreload: "intent" });
+/**
+ * Which way a route change leans, as a view-transition *type* — the one place
+ * that decides it, for every navigation in the app.
+ *
+ * The router hands the update to `document.startViewTransition({ update, types })`
+ * and the type lands as `:active-view-transition-type(...)` in the cascade, so
+ * the direction is chosen here and spent entirely in CSS. Nothing renders a
+ * distance and no component holds the previous path to work one out.
+ *
+ * A navigation nobody walked — the tray pulling the Timer up — passes its own
+ * `neutral` and never reaches this.
+ */
+export const router = createRouter({
+  routeTree,
+  defaultPreload: "intent",
+  defaultViewTransition: {
+    types: ({ fromLocation, toLocation }) => [
+      routeDirection(fromLocation?.pathname, toLocation.pathname),
+    ],
+  },
+});
 
 declare module "@tanstack/react-router" {
   interface Register {

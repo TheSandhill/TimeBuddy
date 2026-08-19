@@ -391,3 +391,57 @@ body {
     --animate-breath: none;
   }
 }
+
+/*
+ * Route changes belong to the platform (ADR-0015, amended by #68).
+ *
+ * `:root` gives up its own name so the snapshot is the screen and nothing else.
+ * The titlebar, the banners and the floating tab bar stay live through the
+ * transition — the tab bar especially, whose indicator is a spring mid-flight
+ * while the screen underneath it slides, and a frozen copy of it cross-fading
+ * over the real one is exactly the double-image this scoping avoids.
+ *
+ * Direction arrives as a view-transition *type*, named by the router from the
+ * tab bar's order. `--screen-shift` is derived from `--motion-page-travel`
+ * rather than being a token of its own: it is the same length wearing a sign.
+ * Its 0px default is also the fallback wherever `:active-view-transition-type`
+ * is not understood — the screen still crosses, it simply does not lean.
+ */
+:root {
+  view-transition-name: none;
+  --screen-shift: 0px;
+}
+
+:root:active-view-transition-type(right) {
+  --screen-shift: var(--motion-page-travel);
+}
+
+:root:active-view-transition-type(left) {
+  --screen-shift: calc(-1 * var(--motion-page-travel));
+}
+
+@utility screen-slide {
+  view-transition-name: screen;
+}
+
+@keyframes screen-out {
+  to {
+    opacity: 0;
+    translate: calc(-1 * var(--screen-shift)) 0;
+  }
+}
+
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    translate: var(--screen-shift) 0;
+  }
+}
+
+::view-transition-old(screen) {
+  animation: screen-out var(--motion-page) var(--ease-out-soft) both;
+}
+
+::view-transition-new(screen) {
+  animation: screen-in var(--motion-page) var(--ease-out-soft) both;
+}
