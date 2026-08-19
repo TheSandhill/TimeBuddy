@@ -177,6 +177,28 @@ export function Clients() {
         </p>
       ) : null}
 
+      <button
+        type="button"
+        onClick={() => openForm("clients", null)}
+        className={`${primaryButtonClass} flex items-center gap-1.5 self-start`}
+      >
+        <Icon name="add" className="size-4" />
+        {t("clients.addClient")}
+      </button>
+
+      <TransientDisclosure>
+        {addingClient ? (
+          <NameForm
+            title={t("clients.newClient")}
+            initialName=""
+            busy={saveClient.isPending}
+            error={formError}
+            onSubmit={(name) => saveClient.mutate({ item: null, name })}
+            onCancel={() => setEditing(null)}
+          />
+        ) : null}
+      </TransientDisclosure>
+
       {filtered.length === 0 ? (
         <p className="text-sm text-ink-muted">{t("clients.noClients")}</p>
       ) : (
@@ -215,29 +237,6 @@ export function Clients() {
         </ul>
       )}
 
-      <TransientDisclosure>
-        {addingClient ? (
-          <NameForm
-            title={t("clients.newClient")}
-            initialName=""
-            busy={saveClient.isPending}
-            error={formError}
-            onSubmit={(name) => saveClient.mutate({ item: null, name })}
-            onCancel={() => setEditing(null)}
-          />
-        ) : null}
-      </TransientDisclosure>
-
-      {!addingClient ? (
-        <button
-          type="button"
-          onClick={() => openForm("clients", null)}
-          className={`${primaryButtonClass} flex items-center gap-1.5 self-start`}
-        >
-          <Icon name="add" className="size-4" />
-          {t("clients.addClient")}
-        </button>
-      ) : null}
     </section>
   );
 }
@@ -381,6 +380,28 @@ function ClientRow({
               </p>
             ) : null}
 
+            <button
+              type="button"
+              onClick={onAddProject}
+              className={`${primaryButtonClass} flex items-center gap-1.5 self-start`}
+            >
+              <Icon name="add" className="size-4" />
+              {t("clients.addProject")}
+            </button>
+
+            <TransientDisclosure>
+              {addingProject ? (
+                <NameForm
+                  title={t("clients.newProject")}
+                  initialName=""
+                  busy={savingProject}
+                  error={formError}
+                  onSubmit={(name) => onSaveProject(null, name)}
+                  onCancel={onCancelProjectEdit}
+                />
+              ) : null}
+            </TransientDisclosure>
+
             {projectList.length === 0 && !projects.isLoading ? (
               <p className="text-sm text-ink-muted">
                 {t("clients.noProjects")}
@@ -404,29 +425,6 @@ function ClientRow({
               </ul>
             )}
 
-            <TransientDisclosure>
-              {addingProject ? (
-                <NameForm
-                  title={t("clients.newProject")}
-                  initialName=""
-                  busy={savingProject}
-                  error={formError}
-                  onSubmit={(name) => onSaveProject(null, name)}
-                  onCancel={onCancelProjectEdit}
-                />
-              ) : null}
-            </TransientDisclosure>
-
-            {!addingProject ? (
-              <button
-                type="button"
-                onClick={onAddProject}
-                className={`${primaryButtonClass} flex items-center gap-1.5 self-start`}
-              >
-                <Icon name="add" className="size-4" />
-                {t("clients.addProject")}
-              </button>
-            ) : null}
           </div>
         ) : null}
       </TransientDisclosure>

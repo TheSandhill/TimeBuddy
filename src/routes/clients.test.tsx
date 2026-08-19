@@ -353,6 +353,35 @@ describe("creating and renaming", () => {
     );
   });
 
+  it("offers the way in above the list rather than past the end of it", async () => {
+    // A hundred Clients is a plausible list and the bottom of one is nowhere:
+    // the way to add is where the screen already puts you, beside the search.
+    renderClients();
+    await screen.findByRole("button", { name: "Acme" });
+
+    const add = screen.getByRole("button", { name: "Klant toevoegen" });
+    const list = screen.getByRole("list");
+
+    expect(
+      add.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("does the same for a Client's Projects", async () => {
+    renderClients();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
+    const row = (await screen.findByText("Website")).closest(
+      "[data-client]",
+    ) as HTMLElement;
+    const add = within(row).getByRole("button", { name: "Project toevoegen" });
+
+    expect(
+      add.compareDocumentPosition(within(row).getByRole("list")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it("keeps a cancelled form on screen while it collapses", async () => {
     // The box animates its own height, and it used to animate an empty one:
     // React unmounted the form the instant `editing` went null, so closing was

@@ -22,6 +22,11 @@ now the sentence "a Project only means anything under a Client" rather than a ca
 first answer is the list of names, and a Client picked for you is a claim the screen has no way to
 make honestly.
 
+**The way in sits above the list**, both for a Client and for a Project inside a row. It used to sit
+under the last one, which is fine for four Clients and nowhere for a hundred — the bottom of a list
+that grows is not a place anyone can find twice. The top is where the search field already puts you,
+and search is the real answer to a long list; the button only has to be where you already are.
+
 ### Project
 
 A named piece of work belonging to exactly one Client. Carries an optional `hourly_rate` that
