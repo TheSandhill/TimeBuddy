@@ -483,6 +483,14 @@ select:open .select-caret {
       color var(--motion-quick);
   }
 
+  /* Rows sit apart rather than flush: two fills touching read as one block with
+     a line through it, and each option has a radius that needs somewhere to be
+     seen. On the sibling rather than the panel, so nothing about how the list
+     scrolls changes. */
+  select option + option {
+    margin-top: 0.125rem;
+  }
+
   /*
    * What is chosen and what is merely under the pointer are two different
    * things, so the highlight is not asked to say both. The selection keeps a
