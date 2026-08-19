@@ -14,6 +14,7 @@ import {
 import { Icon } from "../components/icon";
 import { NameForm } from "../components/name-form";
 import { RowMenu } from "../components/row-menu";
+import { TransientDisclosure } from "../components/transient";
 import {
   archiveClient,
   archiveProject,
@@ -214,24 +215,18 @@ export function Clients() {
         </ul>
       )}
 
-      <div
-        className={`grid transition-[grid-template-rows] motion-base ease-out-soft ${
-          addingClient ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
-      >
-        <div className="overflow-hidden">
-          {addingClient ? (
-            <NameForm
-              title={t("clients.newClient")}
-              initialName=""
-              busy={saveClient.isPending}
-              error={formError}
-              onSubmit={(name) => saveClient.mutate({ item: null, name })}
-              onCancel={() => setEditing(null)}
-            />
-          ) : null}
-        </div>
-      </div>
+      <TransientDisclosure>
+        {addingClient ? (
+          <NameForm
+            title={t("clients.newClient")}
+            initialName=""
+            busy={saveClient.isPending}
+            error={formError}
+            onSubmit={(name) => saveClient.mutate({ item: null, name })}
+            onCancel={() => setEditing(null)}
+          />
+        ) : null}
+      </TransientDisclosure>
 
       {!addingClient ? (
         <button
@@ -362,34 +357,24 @@ function ClientRow({
         />
       </div>
 
-      <div
-        className={`grid transition-[grid-template-rows] motion-base ease-out-soft ${
-          renaming ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
-      >
-        <div className="overflow-hidden">
-          {renaming ? (
-            <div className="px-4 pb-3">
-              <NameForm
-                key={client.id}
-                title={t("clients.renameClient")}
-                initialName={client.name}
-                busy={savingClient}
-                error={formError}
-                onSubmit={(name) => onSaveClient(client, name)}
-                onCancel={onCancelEdit}
-              />
-            </div>
-          ) : null}
-        </div>
-      </div>
+      <TransientDisclosure>
+        {renaming ? (
+          <div className="px-4 pb-3">
+            <NameForm
+              key={client.id}
+              title={t("clients.renameClient")}
+              initialName={client.name}
+              busy={savingClient}
+              error={formError}
+              onSubmit={(name) => onSaveClient(client, name)}
+              onCancel={onCancelEdit}
+            />
+          </div>
+        ) : null}
+      </TransientDisclosure>
 
-      <div
-        className={`grid transition-[grid-template-rows] motion-bounce ease-bounce-soft ${
-          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
-      >
-        <div className="overflow-hidden">
+      <TransientDisclosure>
+        {open ? (
           <div className="flex flex-col gap-2 px-4 py-3">
             {rowError?.target === "projects" ? (
               <p role="alert" className="text-sm text-danger">
@@ -420,24 +405,18 @@ function ClientRow({
               </ul>
             )}
 
-            <div
-              className={`grid transition-[grid-template-rows] motion-base ease-out-soft ${
-                addingProject ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-              }`}
-            >
-              <div className="overflow-hidden">
-                {addingProject ? (
-                  <NameForm
-                    title={t("clients.newProject")}
-                    initialName=""
-                    busy={savingProject}
-                    error={formError}
-                    onSubmit={(name) => onSaveProject(null, name)}
-                    onCancel={onCancelProjectEdit}
-                  />
-                ) : null}
-              </div>
-            </div>
+            <TransientDisclosure>
+              {addingProject ? (
+                <NameForm
+                  title={t("clients.newProject")}
+                  initialName=""
+                  busy={savingProject}
+                  error={formError}
+                  onSubmit={(name) => onSaveProject(null, name)}
+                  onCancel={onCancelProjectEdit}
+                />
+              ) : null}
+            </TransientDisclosure>
 
             {!addingProject ? (
               <button
@@ -451,8 +430,8 @@ function ClientRow({
               </button>
             ) : null}
           </div>
-        </div>
-      </div>
+        ) : null}
+      </TransientDisclosure>
     </li>
   );
 }
@@ -528,25 +507,19 @@ function ProjectRow({
         />
       </div>
 
-      <div
-        className={`grid transition-[grid-template-rows] motion-base ease-out-soft ${
-          renaming ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
-      >
-        <div className="overflow-hidden">
-          {renaming ? (
-            <NameForm
-              key={project.id}
-              title={t("clients.renameProject")}
-              initialName={project.name}
-              busy={savingProject}
-              error={formError}
-              onSubmit={onSave}
-              onCancel={onCancelEdit}
-            />
-          ) : null}
-        </div>
-      </div>
+      <TransientDisclosure>
+        {renaming ? (
+          <NameForm
+            key={project.id}
+            title={t("clients.renameProject")}
+            initialName={project.name}
+            busy={savingProject}
+            error={formError}
+            onSubmit={onSave}
+            onCancel={onCancelEdit}
+          />
+        ) : null}
+      </TransientDisclosure>
     </li>
   );
 }

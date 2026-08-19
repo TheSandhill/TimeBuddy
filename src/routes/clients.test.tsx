@@ -4,10 +4,11 @@ import {
   render,
   screen,
   waitFor,
+  waitForElementToBeRemoved,
   within,
 } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
 import type { Client, Project } from "../data/types";
 
@@ -26,6 +27,13 @@ const commands = vi.hoisted(() => ({
 vi.mock("../data/commands", () => commands);
 
 const { Clients } = await import("./clients");
+
+/**
+ * Where the motion tokens a stylesheet would have supplied are put. Without one
+ * every departure is instant, which is what the rest of these tests want and is
+ * useless to the one that watches something leave.
+ */
+const root = document.documentElement;
 
 const acme: Client = {
   id: 1,
@@ -101,6 +109,10 @@ beforeEach(() => {
   commands.updateProject.mockResolvedValue(website);
   commands.archiveProject.mockResolvedValue({ ...website, archivedAt: "x" });
   commands.restoreProject.mockResolvedValue(website);
+});
+
+afterEach(() => {
+  root.removeAttribute("style");
 });
 
 describe("the accordion", () => {
@@ -339,6 +351,25 @@ describe("creating and renaming", () => {
         92.5,
       ),
     );
+  });
+
+  it("keeps a cancelled form on screen while it collapses", async () => {
+    // The box animates its own height, and it used to animate an empty one:
+    // React unmounted the form the instant `editing` went null, so closing was
+    // 220ms of nothing. The form outlives the condition that opened it.
+    root.style.setProperty("--motion-quick", "60ms");
+    renderClients();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Klant toevoegen" }),
+    );
+    const form = await screen.findByRole("form", { name: "Nieuwe klant" });
+    fireEvent.click(within(form).getByRole("button", { name: "Annuleren" }));
+
+    // Its own pixels are what the collapsing box has in it. That the departing
+    // form is also out of reach is the mechanism's business, and tested there.
+    expect(screen.getByText("Annuleren")).toBeInTheDocument();
+    await waitForElementToBeRemoved(() => screen.queryByText("Annuleren"));
   });
 
   it("leaves the accordion alone when a form is cancelled", async () => {
