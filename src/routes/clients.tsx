@@ -149,18 +149,16 @@ export function Clients() {
 
   return (
     <section className="flex flex-col gap-4">
-      <header className="flex items-center justify-between">
+      <header className="flex items-center justify-between gap-3">
         <h2 className={quietLabelClass}>{t("clients.title")}</h2>
-        <label className={checkboxLabelClass}>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={showArchived}
-            onChange={(event) => setShowArchived(event.target.checked)}
-            className="switch-track"
-          />
-          {t("clients.showArchived")}
-        </label>
+        <button
+          type="button"
+          onClick={() => openForm("clients", null)}
+          className={`${primaryButtonClass} flex shrink-0 items-center gap-1.5`}
+        >
+          <Icon name="add" className="size-4" />
+          {t("clients.addClient")}
+        </button>
       </header>
 
       <input
@@ -171,20 +169,22 @@ export function Clients() {
         className={fieldClass}
       />
 
+      <label className={checkboxLabelClass}>
+        <input
+          type="checkbox"
+          role="switch"
+          checked={showArchived}
+          onChange={(event) => setShowArchived(event.target.checked)}
+          className="switch-track"
+        />
+        {t("clients.showArchived")}
+      </label>
+
       {rowError?.target === "clients" ? (
         <p role="alert" className="text-sm text-danger">
           {rowError.message}
         </p>
       ) : null}
-
-      <button
-        type="button"
-        onClick={() => openForm("clients", null)}
-        className={`${primaryButtonClass} flex items-center gap-1.5 self-start`}
-      >
-        <Icon name="add" className="size-4" />
-        {t("clients.addClient")}
-      </button>
 
       <TransientDisclosure>
         {addingClient ? (
@@ -300,6 +300,12 @@ function ClientRow({
 
   const menuItems = [
     {
+      label: t("clients.addProject"),
+      ariaLabel: t("clients.addProjectNamed", { name: client.name }),
+      icon: "add" as const,
+      onClick: onAddProject,
+    },
+    {
       label: t("clients.rename"),
       ariaLabel: t("clients.renameNamed", { name: client.name }),
       icon: "rename" as const,
@@ -379,15 +385,6 @@ function ClientRow({
                 {rowError.message}
               </p>
             ) : null}
-
-            <button
-              type="button"
-              onClick={onAddProject}
-              className={`${primaryButtonClass} flex items-center gap-1.5 self-start`}
-            >
-              <Icon name="add" className="size-4" />
-              {t("clients.addProject")}
-            </button>
 
             <TransientDisclosure>
               {addingProject ? (

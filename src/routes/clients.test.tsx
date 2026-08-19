@@ -299,9 +299,7 @@ describe("creating and renaming", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
     await screen.findByText("Website");
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Project toevoegen" }),
-    );
+    menuAction("Acme", "Project toevoegen aan Acme");
     typeName(await screen.findByRole("form", { name: "Nieuw project" }), "App");
 
     await waitFor(() =>
@@ -367,19 +365,19 @@ describe("creating and renaming", () => {
     ).toBeTruthy();
   });
 
-  it("does the same for a Client's Projects", async () => {
+  it("offers a Project through the Client it would belong to", async () => {
+    // Adding a Project is something done to a Client, so it is offered where
+    // the other two things done to a Client are — and the row carrying the menu
+    // is the top of the body, so it is never past a list of anything.
     renderClients();
 
     fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
-    const row = (await screen.findByText("Website")).closest(
-      "[data-client]",
-    ) as HTMLElement;
-    const add = within(row).getByRole("button", { name: "Project toevoegen" });
+    await screen.findByText("Website");
+    menuAction("Acme", "Project toevoegen aan Acme");
 
     expect(
-      add.compareDocumentPosition(within(row).getByRole("list")) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+      await screen.findByRole("form", { name: "Nieuw project" }),
+    ).toBeInTheDocument();
   });
 
   it("keeps a cancelled form on screen while it collapses", async () => {
@@ -407,9 +405,7 @@ describe("creating and renaming", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
     await screen.findByText("Website");
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Project toevoegen" }),
-    );
+    menuAction("Acme", "Project toevoegen aan Acme");
     const form = await screen.findByRole("form", { name: "Nieuw project" });
     fireEvent.click(within(form).getByRole("button", { name: "Annuleren" }));
 
@@ -519,9 +515,7 @@ describe("nothing in the UI touches the rate", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
     await screen.findByText("Website");
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Project toevoegen" }),
-    );
+    menuAction("Acme", "Project toevoegen aan Acme");
     const form = await screen.findByRole("form", { name: "Nieuw project" });
 
     expect(within(form).queryByLabelText(/tarief/i)).toBeNull();

@@ -22,10 +22,15 @@ now the sentence "a Project only means anything under a Client" rather than a ca
 first answer is the list of names, and a Client picked for you is a claim the screen has no way to
 make honestly.
 
-**The way in sits above the list**, both for a Client and for a Project inside a row. It used to sit
-under the last one, which is fine for four Clients and nowhere for a hundred — the bottom of a list
-that grows is not a place anyone can find twice. The top is where the search field already puts you,
-and search is the real answer to a long list; the button only has to be where you already are.
+**An action lives on the thing it acts on.** Adding a Client is something done to the screen, so it
+is in the screen's header beside the title; adding a Project is something done to a Client, so it is
+in that Client's own menu beside Rename and Archive. Both used to be buttons under the last row of a
+list, which is fine for four Clients and nowhere for a hundred — the bottom of a list that grows is
+not a place anyone can find twice. Neither is now reached by scrolling past the thing it belongs to,
+and the accordion's body went back to being only the Projects and the form that makes one.
+
+Search and the archived switch sit together under the header, because both are the same question:
+which of these am I being shown.
 
 ### Project
 
