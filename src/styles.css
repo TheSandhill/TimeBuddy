@@ -467,7 +467,24 @@ select:open .select-caret {
      * list can be read.
      */
     position-area: block-end span-all;
-    position-try-fallbacks: flip-block;
+    /*
+     * Downwards, always — no flip. On the Timer the picker sits low, under the
+     * dial and above today's entries, so there is often less room below it than
+     * the list needs, and the flip Chromium does by default sent the panel up
+     * over the countdown. A list that opens in whichever direction happens to
+     * fit is a list that opens somewhere different each time it is asked.
+     *
+     * What used to be the flip's job is done by the two lines under it instead:
+     * the panel takes what room there is below the field and scrolls inside it,
+     * rather than growing past the bottom of the window and being cut off.
+     */
+    position-try-fallbacks: none;
+    /* Both spellings: `stretch` is the standard one and `-webkit-fill-available`
+       is what a WebView2 behind the times still obeys — the same pair of
+       spellings the hidden scrollbar needs. */
+    max-height: -webkit-fill-available;
+    max-height: stretch;
+    overflow-y: auto;
     /*
      * The floating tab bar's shadow, and literally its utility rather than a
      * copy of the two offsets it resolves to: both are things laid over the

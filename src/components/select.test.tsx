@@ -189,8 +189,12 @@ describe("the open list wears the theme", () => {
     // The UA default lays the panel over the field, the way a native popup
     // does. On the Timer that covers the dial's own countdown.
     expect(panel).toContain("position-area: block-end span-all");
-    // Still allowed to flip: with no room below, up is where a list can be read.
-    expect(panel).toContain("position-try-fallbacks: flip-block");
+    // And no flip. Chromium's own fallback sent the Timer's list up over the
+    // countdown whenever the room below it was short of what the list wanted;
+    // taking the room there is and scrolling inside it is the answer instead.
+    expect(panel).toContain("position-try-fallbacks: none");
+    expect(panel).toContain("overflow-y: auto");
+    expect(panel).toContain("max-height: stretch");
   });
 
   it("gives High-contrast the edge it needs", () => {
