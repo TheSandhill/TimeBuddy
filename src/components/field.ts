@@ -61,8 +61,45 @@ export const selectCaretClass =
 /**
  * A checkbox and the sentence it belongs to. Full-size text, because the label
  * *is* the control's meaning — there is nothing else to read it against.
+ *
+ * `text-ink`, not muted: the lock screen wrote this list out by hand in
+ * `ink-muted`, which was drift rather than a decision — nothing distinguishes
+ * "remember me" from the four toggles in Settings, and a label that *is* the
+ * control's meaning is the last thing to quieten. Folded back in with #74.
  */
 export const checkboxLabelClass = "flex items-center gap-2 text-sm text-ink";
+
+/**
+ * The tick box and the dot, drawn rather than left to Windows (#74).
+ *
+ * Bare, these render as the OS control: square, hard-edged and ticked in the
+ * accent blue of whatever the desktop is set to — a control that stays blue
+ * through a theme change is announcing it is not part of the app. So
+ * `appearance: none` and draw them, exactly as `.switch-track` does.
+ *
+ * The shapes are split on purpose: round says *one of these*, cornered says *any
+ * of these*, and a radio that read as a rounded checkbox would lose the only
+ * thing telling them apart. `rounded-sm` rather than a raised radius because a
+ * squircle at 6px is not worth the name (see the `@supports` block) — a 1rem box
+ * on `rounded-md` would be very nearly the circle beside it.
+ *
+ * `soft-fill` is what makes them correct in all three themes without a rule per
+ * theme: it is the utility that already varies its *fidelity*, so High-contrast
+ * outlines these where Walnut and Sand fill them softly.
+ *
+ * What cannot be said in utilities — the mark itself, which is a pseudo-element
+ * with no class to hang one on — sits beside `.switch-track` in `styles.css`.
+ * Focus is the global `:focus-visible` ring, which follows both radii.
+ */
+const drawnControlClass =
+  "size-4 shrink-0 soft-fill transition-colors motion-quick " +
+  "disabled:opacity-40";
+
+/** A checkbox: a small box that fills with the accent and shows a tick. */
+export const checkboxClass = `checkbox-box rounded-sm ${drawnControlClass}`;
+
+/** A radio: the same, round, and marked with a dot rather than a tick. */
+export const radioClass = `radio-dot rounded-full ${drawnControlClass}`;
 
 /**
  * A named group of settings, divided from the last by a hairline rather than a
