@@ -93,18 +93,20 @@ describe("every shipped theme is readable", () => {
   it.each(themeNames)("%s draws the scrollbar thumb visibly", (theme) => {
     const tokens = tokensOf(theme);
 
-    // The thumb is the accent laid over whatever a screen is made of, and it
-    // is the app's only readout of the scroll position now that the native bar
-    // is hidden (#71). Not text, so the non-text bar — but a bar nobody can
-    // pick out of the background is the same defect as unreadable body text.
+    // The thumb floats over whatever a screen is made of, and it is the app's
+    // only readout of the scroll position now that the native bar is hidden
+    // (#71). Not text, so the non-text bar — but a mark nobody can pick out of
+    // the background is the same defect as unreadable body text. This is the
+    // gate the cream that reads beautifully on Walnut fails on Sand at 1.2:1,
+    // which is why the thumb has a token rather than a colour.
     for (const background of [
       "--color-surface",
       "--color-surface-raised",
       "--color-surface-soft",
     ]) {
       expect(
-        contrastRatio(tokens["--color-accent"], tokens[background]),
-        `--color-accent on ${background} in "${theme}"`,
+        contrastRatio(tokens["--color-scroll-thumb"], tokens[background]),
+        `--color-scroll-thumb on ${background} in "${theme}"`,
       ).toBeGreaterThanOrEqual(AA_NON_TEXT);
     }
   });

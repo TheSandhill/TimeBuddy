@@ -64,6 +64,7 @@
   --color-border: #4a3b30;
   --color-accent: #c8a87c;
   --color-danger: #c2705a;
+  --color-scroll-thumb: #e6dccd;
 }
 
 /*
@@ -245,6 +246,9 @@
   --color-border: #ded3c4;
   --color-accent: #8c6a43;
   --color-danger: #a85440;
+  /* Sand inverts it: the cream Walnut draws the thumb in is this theme's own
+     background, so a light theme needs the same mark in reverse. */
+  --color-scroll-thumb: #8f7f6a;
 }
 
 /*
@@ -296,6 +300,7 @@
   --color-border: #ffffff;
   --color-accent: #ffd400;
   --color-danger: #ff6b4a;
+  --color-scroll-thumb: #ffffff;
 }
 
 /*

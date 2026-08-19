@@ -328,8 +328,12 @@ viewport pushed every screen sideways, and a layout that moves because of how mu
 reads as a bug. The window is narrow and single-column, so reserving that width permanently — a
 stable gutter — is not affordable either.
 
-So: the native bar is hidden, and a thumb in the accent colour floats over the content's right edge,
-costing **zero width**. It **overlaps** rather than being made room for, which every screen can
+So: the native bar is hidden, and a thumb floats over the content's right edge, costing **zero
+width**. It has a **token of its own**, `--color-scroll-thumb`, rather than borrowing the accent or
+the ink: it is neither a thing to act on nor something to read, just a mark that has to be findable
+against whatever a screen is made of — and the cream that reads at 11:1 on Walnut is Sand's own
+background, so a light theme needs the same mark in reverse. Every theme answers, and every answer is
+held to the non-text contrast bar. It **overlaps** rather than being made room for, which every screen can
 afford because each already carries the same page padding. Vertical only; nothing in the app scrolls
 sideways.
 

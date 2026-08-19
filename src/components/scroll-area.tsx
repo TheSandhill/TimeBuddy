@@ -186,7 +186,7 @@ export function ScrollArea({ children, className = "" }: ScrollAreaProps) {
           onPointerMove={onDrag}
           onPointerUp={onRelease}
           onPointerCancel={onRelease}
-          className={`absolute right-1 w-1.5 cursor-grab rounded-full bg-accent transition-opacity motion-base active:cursor-grabbing ${
+          className={`absolute right-1 w-1.5 cursor-grab rounded-full bg-scroll-thumb transition-opacity motion-base active:cursor-grabbing ${
             visible ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         />

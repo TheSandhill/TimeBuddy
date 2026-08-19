@@ -20,6 +20,12 @@ export const colourTokens = [
   "--color-border",
   "--color-accent",
   "--color-danger",
+  // The floating scrollbar's thumb. Its own token rather than the accent or the
+  // ink, because it is neither: not a thing to act on and not something to
+  // read, just a mark that has to be findable against whatever a screen is made
+  // of. A theme that tuned the accent and dragged the scrollbar with it would
+  // be answering a question nobody asked.
+  "--color-scroll-thumb",
 ] as const;
 
 /** Raised radii, so `corner-shape: squircle` has something to round. */
