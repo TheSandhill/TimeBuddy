@@ -9,13 +9,28 @@
  * be told what it costs, stage it, relaunch. Because the swap happens at the
  * next launch, the honest end state of this screen is "prepared", never "done" —
  * so there is no success tick here, there is an instruction.
+ *
+ * It sits inside Settings' "Data and version" group — with the backup folder and
+ * the update check, the other two things on that screen that can fail — and is
+ * **boxed off inside it**. Everything else in the group is a line to read or a
+ * button to press again; this one replaces the database, re-locks the app with
+ * the password from the day the backup was made, and needs a relaunch. Giving it
+ * the same weight as its neighbours would be lying about that, so it wears a
+ * raised panel and a heading of its own rather than a hairline like theirs.
  */
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { momentLabel } from "../backup/moment-label";
 import { quietButtonClass } from "../components/button";
-import { fieldClass, labelClass, quietLabelClass } from "../components/field";
+import {
+  fieldClass,
+  labelClass,
+  quietHeadingClass,
+  setApartClass,
+} from "../components/field";
+import { Icon } from "../components/icon";
+import { StatusLine } from "../components/status-line";
 import { errorKey } from "../data/error-message";
 import { formatDuration } from "../entries/duration";
 import {
@@ -26,8 +41,6 @@ import {
   useRestorePreview,
   useStageRestore,
 } from "./use-restore";
-
-const sectionClass = "flex flex-col gap-4 border-t border-hairline pt-4";
 
 export function RestoreSection() {
   const { t, i18n } = useTranslation();
@@ -45,8 +58,13 @@ export function RestoreSection() {
   const when = (at: string) => momentLabel(at, i18n.language);
 
   return (
-    <section className={sectionClass} aria-label={t("restore.title")}>
-      <h2 className={quietLabelClass}>{t("restore.title")}</h2>
+    <section className={setApartClass} aria-label={t("restore.title")}>
+      <h2 className={quietHeadingClass}>
+        {/* Deliberately not the group's own `data` glyph: the heading above must
+            not look like the one dangerous control sitting inside it. */}
+        <Icon name="restore" />
+        {t("restore.title")}
+      </h2>
 
       {/*
         Read rather than announced, like backup staleness: a restore that worked
@@ -83,9 +101,7 @@ export function RestoreSection() {
               {t("restore.cancel")}
             </button>
             {cancel.isError ? (
-              <span role="alert" className="text-sm text-danger">
-                {t(errorKey(cancel.error))}
-              </span>
+              <StatusLine tone="error">{t(errorKey(cancel.error))}</StatusLine>
             ) : null}
           </div>
         </>
@@ -119,7 +135,7 @@ export function RestoreSection() {
               that acts on it, because that is the only order in which it is a
               warning rather than a receipt. */}
           {preview.data === undefined ? null : (
-            <p className="text-sm text-danger">
+            <StatusLine tone="warning">
               {preview.data.entriesSince === 0
                 ? t("restore.costNothing", {
                     when: when(preview.data.madeAt),
@@ -129,7 +145,7 @@ export function RestoreSection() {
                     entries: preview.data.entriesSince,
                     hours: formatDuration(preview.data.minutesSince),
                   })}
-            </p>
+            </StatusLine>
           )}
 
           {chosen === null ? null : (
@@ -144,10 +160,12 @@ export function RestoreSection() {
                   ? t("restore.preparing")
                   : t("restore.prepare")}
               </button>
+              {/* `error`, where the launch-time restore banner is `warning`
+                  (ADR-0014). Same feature, different question: that one reports
+                  a swap nobody asked for that did not happen, and this one
+                  answers the button just pressed. */}
               {stage.isError ? (
-                <span role="alert" className="text-sm text-danger">
-                  {t(errorKey(stage.error))}
-                </span>
+                <StatusLine tone="error">{t(errorKey(stage.error))}</StatusLine>
               ) : null}
             </div>
           )}

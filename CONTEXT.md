@@ -449,7 +449,7 @@ and the number on the Settings screen cannot come to disagree.
 
 The screen holds twelve controls, so it is read in **four named groups** rather than as one scroll:
 *Appearance* (theme, follow system, language), *Timer* (block and break length, chime, OS
-notifications), *System* (autostart), and *Data & version* (backup folder, staleness, Restore,
+notifications), *System* (autostart), and *Data and version* (backup folder, staleness, Restore,
 version, the button that checks again). The split is not tidiness — the last group is the only one
 whose contents can **fail**, and everything else on the screen is a preference that cannot.
 

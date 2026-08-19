@@ -14,6 +14,9 @@
 /** A quiet label or section heading, on its own. */
 export const quietLabelClass = "text-xs font-medium text-ink-muted";
 
+/** The same, carrying a glyph: a group's legend, a set-apart block's heading. */
+export const quietHeadingClass = `flex items-center gap-2 ${quietLabelClass}`;
+
 /** The same, wrapping the field it names. */
 export const labelClass = `flex flex-col gap-1 ${quietLabelClass}`;
 
@@ -37,3 +40,20 @@ export const pickerClass =
  * *is* the control's meaning — there is nothing else to read it against.
  */
 export const checkboxLabelClass = "flex items-center gap-2 text-sm text-ink";
+
+/**
+ * A named group of settings, divided from the last by a hairline rather than a
+ * rule. The Settings screen is read as four of these.
+ */
+export const groupClass = "flex flex-col gap-4 border-t border-hairline pt-4";
+
+/**
+ * The one thing inside a group that is not like its neighbours — Restore.
+ *
+ * A raised panel rather than another hairline: a hairline says "next", and this
+ * has to say "not the same kind of thing as the lines above it". The line round
+ * it is the hairline the groups use, so the panel reads as lifted rather than
+ * outlined.
+ */
+export const setApartClass =
+  "flex flex-col gap-4 rounded-lg border border-hairline bg-surface-raised p-4";

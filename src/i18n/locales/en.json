@@ -132,6 +132,7 @@
     "notifications": "Windows notification at the end of a block",
     "system": "System",
     "autostart": "Start TimeBuddy with Windows",
+    "data": "Data and version",
     "backupFolder": "Backup folder",
     "backupFolderDefault": "The app's own data folder",
     "chooseFolder": "Choose…",
@@ -143,7 +144,6 @@
     "loadFailed": "Settings could not be loaded."
   },
   "backup": {
-    "title": "Backups",
     "hint": "TimeBuddy copies the database here once a day and keeps the last seven. A folder that syncs — OneDrive, Dropbox — means a broken laptop is not a lost year.",
     "reading": "Checking the backup folder…",
     "never": "No backup has been made yet.",
