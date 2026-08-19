@@ -126,7 +126,9 @@ error in one sentence.
   bottom is `pb-20` of nothing, so the pixels passing over the bar are transparent. Worth knowing before
   anything opaque is put down there.
 - The Clients disclosures still close badly, with a known fix. #77.
-- **The shipped route transition has not been watched in a running window.** It builds, the tokens
-  resolve in the emitted CSS, and the direction is tested — but nobody has seen it slide, and the two
-  top-layer rules above were both found by reading rather than by looking. Given this ADR has already
-  had one conclusion reversed for exactly that reason, treat this as the open item and not a formality.
+- **Watched in a running window on 2026-08-19, and correct.** The lean goes the right way, the clip
+  holds at the window's edge, the tab bar's spring keeps running underneath the top layer, and the
+  tray's navigation crosses without leaning. Recorded because the rest of this ADR is a record of what
+  reasoning alone got wrong twice: the accordion claim, and the route conclusion this document is now
+  named for. The two top-layer rules above were also found by reading rather than looking, and they
+  happened to be right — that is luck the next decision should not spend.
