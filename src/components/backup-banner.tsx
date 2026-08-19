@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { momentLabel } from "../backup/moment-label";
 import type { Instant } from "../data/types";
+import { Icon } from "./icon";
 
 interface BackupBannerProps {
   /** The newest backup that did work. `null` when there is none at all. */
@@ -32,7 +33,12 @@ export function BackupBanner({
       role="alert"
       className="flex shrink-0 items-center justify-between gap-4 border-b border-danger bg-surface-raised px-6 py-2"
     >
-      <span className="text-sm text-danger">
+      <span className="flex min-w-0 items-center gap-2 text-sm text-danger">
+        {/*
+          `warning` rather than `error` (ADR-0014): the backup runs unbidden and
+          the sentence beside this names the copy that is still good.
+        */}
+        <Icon name="warning" className="size-4 shrink-0" />
         {lastBackupAt === null
           ? t("backup.failedWithNone")
           : t("backup.failedWithLast", {

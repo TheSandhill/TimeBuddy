@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
+import { glyphOf, pathsIn } from "../test/glyph";
 import { UpdateBanner } from "./update-banner";
 
 function renderBanner(
@@ -76,5 +77,21 @@ describe("the update offer", () => {
     renderBanner();
 
     expect(screen.getByRole("status")).toHaveTextContent(/opnieuw/i);
+  });
+});
+
+describe("the shape a failed install wears", () => {
+  it("is `error`: the user pressed this one", () => {
+    renderBanner({ failed: true });
+
+    expect(pathsIn(screen.getByRole("alert"))).toEqual(glyphOf("error"));
+  });
+
+  it("draws no glyph anywhere in the offer, which is not a failure of anything", () => {
+    // The set has no `update` or `download`, and inventing one is a change to
+    // the set with its own reasoning — not something a banner decides.
+    renderBanner();
+
+    expect(pathsIn(screen.getByRole("status"))).toEqual([]);
   });
 });

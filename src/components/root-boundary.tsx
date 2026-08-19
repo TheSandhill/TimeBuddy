@@ -15,7 +15,10 @@
  *   screen must not need the i18n runtime it may be reporting the failure of, and
  *   importing the same files keeps the wording where the parity test can see it;
  * - `document.documentElement.lang`, set before the first render;
- * - `data-tauri-drag-region`, which is a DOM attribute the webview reads.
+ * - `data-tauri-drag-region`, which is a DOM attribute the webview reads;
+ * - `Icon`, which is path data and an `<svg>` — no state, no runtime, nothing to
+ *   fail. It draws `error` here: the fallback test decides between `error` and
+ *   `warning` (ADR-0014), and a crash has no older screen to fall back to.
  *
  * No hooks, no providers, no commands. Whatever broke, this can still draw.
  */
@@ -26,6 +29,7 @@ import nl from "../i18n/locales/nl.json";
 // A constant string, so the crash screen still dresses its button the way the
 // rest of the app does without depending on anything that can fail.
 import { quietButtonClass } from "./button";
+import { Icon } from "./icon";
 import { ScrollArea } from "./scroll-area";
 
 interface Props {
@@ -86,7 +90,10 @@ export class RootBoundary extends Component<Props, State> {
             role="alert"
             className="flex max-w-md flex-col gap-3 rounded-lg border border-danger bg-surface-raised p-5"
           >
-            <p className="text-sm font-medium text-danger">{words.title}</p>
+            <p className="flex items-center gap-2 text-sm font-medium text-danger">
+              <Icon name="error" className="size-4 shrink-0" />
+              {words.title}
+            </p>
             <p className="text-sm text-ink-muted">{words.hint}</p>
 
             <details className="text-xs text-ink-muted">

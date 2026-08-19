@@ -3,6 +3,7 @@ import { I18nextProvider } from "react-i18next";
 import { describe, expect, it } from "vitest";
 import { createI18n } from "../i18n/config";
 import type { RestoreFault } from "../data/types";
+import { glyphOf, pathsIn } from "../test/glyph";
 import { RestoreBanner } from "./restore-banner";
 
 const show = (fault: RestoreFault) =>
@@ -57,5 +58,15 @@ describe("saying a restore did not happen", () => {
     show("swapFailed");
 
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+});
+
+describe("the shape a failed restore wears", () => {
+  it("is `warning`: the message is that the current database was left alone", () => {
+    // ADR-0008 makes the fallback intact by construction, and ADR-0014 makes
+    // that the test — a gap in protection rather than a loss.
+    show("swapFailed");
+
+    expect(pathsIn(screen.getByRole("alert"))).toEqual(glyphOf("warning"));
   });
 });

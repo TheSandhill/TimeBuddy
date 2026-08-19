@@ -8,6 +8,7 @@ import { windowOf } from "../entries/window";
 import { formatClock } from "../timer/clock";
 import { linkButtonClass, linkDangerButtonClass } from "./button";
 import { quietLabelClass } from "./field";
+import { Icon } from "./icon";
 
 interface EntryListProps {
   days: EntryDay[];
@@ -82,16 +83,18 @@ export function EntryList({
                       type="button"
                       aria-label={t("entries.editEntry", { project })}
                       onClick={() => onEdit(entry)}
-                      className={linkButtonClass}
+                      className={`${linkButtonClass} flex items-center gap-1`}
                     >
+                      <Icon name="rename" className="size-4" />
                       {t("entries.edit")}
                     </button>
                     <button
                       type="button"
                       aria-label={t("entries.deleteEntry", { project })}
                       onClick={() => onDelete(entry)}
-                      className={linkDangerButtonClass}
+                      className={`${linkDangerButtonClass} flex items-center gap-1`}
                     >
+                      <Icon name="delete" className="size-4" />
                       {t("entries.delete")}
                     </button>
                   </span>

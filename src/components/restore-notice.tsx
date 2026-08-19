@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { momentLabel } from "../backup/moment-label";
 import type { Instant } from "../data/types";
+import { Icon } from "./icon";
 
 /**
  * Why the app is asking for a password it was not asking for yesterday.
@@ -17,16 +18,20 @@ export function RestoreNotice({ restoredFrom }: { restoredFrom: Instant }) {
   return (
     <div
       role="status"
-      className="mx-auto mb-6 max-w-sm rounded-lg bg-surface-raised px-4 py-3"
+      className="mx-auto mb-6 flex max-w-sm items-start gap-2.5 rounded-lg bg-surface-raised px-4 py-3"
     >
-      <p className="text-sm text-ink">
-        {t("restore.doneFrom", {
-          when: momentLabel(restoredFrom, i18n.language),
-        })}
-      </p>
-      <p className="mt-1 text-xs text-ink-muted">
-        {t("restore.passwordIsFromThen")}
-      </p>
+      {/* The restore was asked for and it happened, so `success` (ADR-0014). */}
+      <Icon name="success" className="mt-0.5 size-4 shrink-0" />
+      <div className="min-w-0">
+        <p className="text-sm text-ink">
+          {t("restore.doneFrom", {
+            when: momentLabel(restoredFrom, i18n.language),
+          })}
+        </p>
+        <p className="mt-1 text-xs text-ink-muted">
+          {t("restore.passwordIsFromThen")}
+        </p>
+      </div>
     </div>
   );
 }
