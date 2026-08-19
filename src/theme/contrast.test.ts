@@ -2,7 +2,13 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { AA_BODY_TEXT, contrastRatio, luminance, parseHex } from "./contrast";
+import {
+  AA_BODY_TEXT,
+  AA_NON_TEXT,
+  contrastRatio,
+  luminance,
+  parseHex,
+} from "./contrast";
 import { defaultTheme, themeNames, type ThemeName } from "./tokens";
 
 const srcDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -81,6 +87,27 @@ describe("every shipped theme is readable", () => {
         contrastRatio(tokens["--color-ink"], tokens[background]),
         `--color-ink on ${background} in "${theme}"`,
       ).toBeGreaterThanOrEqual(AA_BODY_TEXT);
+    }
+  });
+
+  it.each(themeNames)("%s draws the scrollbar thumb visibly", (theme) => {
+    const tokens = tokensOf(theme);
+
+    // The thumb floats over whatever a screen is made of, and it is the app's
+    // only readout of the scroll position now that the native bar is hidden
+    // (#71). Not text, so the non-text bar — but a mark nobody can pick out of
+    // the background is the same defect as unreadable body text. This is the
+    // gate the cream that reads beautifully on Walnut fails on Sand at 1.2:1,
+    // which is why the thumb has a token rather than a colour.
+    for (const background of [
+      "--color-surface",
+      "--color-surface-raised",
+      "--color-surface-soft",
+    ]) {
+      expect(
+        contrastRatio(tokens["--color-scroll-thumb"], tokens[background]),
+        `--color-scroll-thumb on ${background} in "${theme}"`,
+      ).toBeGreaterThanOrEqual(AA_NON_TEXT);
     }
   });
 

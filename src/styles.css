@@ -64,6 +64,7 @@
   --color-border: #4a3b30;
   --color-accent: #c8a87c;
   --color-danger: #c2705a;
+  --color-scroll-thumb: #e6dccd;
 }
 
 /*
@@ -151,6 +152,22 @@
 }
 
 /*
+ * The native scrollbar, removed so the app can draw its own — why, in
+ * `CONTEXT.md` → Scrollbar and in `ScrollArea`.
+ *
+ * Both spellings, because they are read by different Chromiums:
+ * `scrollbar-width` is the standard one and the pseudo-element is what a
+ * WebView2 behind the times still obeys.
+ */
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/*
  * How a field or a quiet control is grouped without a line drawn round it.
  *
  * A utility rather than `bg-surface-soft` written into the vocabulary, because
@@ -229,6 +246,9 @@
   --color-border: #ded3c4;
   --color-accent: #8c6a43;
   --color-danger: #a85440;
+  /* Sand inverts it: the cream Walnut draws the thumb in is this theme's own
+     background, so a light theme needs the same mark in reverse. */
+  --color-scroll-thumb: #8f7f6a;
 }
 
 /*
@@ -280,6 +300,7 @@
   --color-border: #ffffff;
   --color-accent: #ffd400;
   --color-danger: #ff6b4a;
+  --color-scroll-thumb: #ffffff;
 }
 
 /*
@@ -439,8 +460,8 @@ body {
  *
  * It clips, too. These pseudo-elements are painted in the top layer, so nothing
  * in the page holds them: without this the screen's 12px lean would slide out
- * over the window's own rounded edge, where `overflow-y-auto` on `<main>` used
- * to contain it. Clipping at the group is clipping at that same box.
+ * over the window's own rounded edge, where the scrolling body's own
+ * `overflow-y-auto` used to contain it. Clipping at the group is clipping at that same box.
  */
 ::view-transition-group(screen) {
   animation-duration: var(--motion-page);

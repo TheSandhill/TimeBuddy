@@ -321,6 +321,31 @@ and its neighbours slide aside, so the one animation the bar has is driven by wh
 rather than added on top of it. It also settles the language: "Tijdregistratie" and "Instellingen"
 never have to fit beside each other, because only one label is ever on screen.
 
+### Scrollbar
+
+The app draws its own, because the classic one **takes layout width**: a list growing past the
+viewport pushed every screen sideways, and a layout that moves because of how much data is in it
+reads as a bug. The window is narrow and single-column, so reserving that width permanently — a
+stable gutter — is not affordable either.
+
+So: the native bar is hidden, and a thumb floats over the content's right edge, costing **zero
+width**. It has a **token of its own**, `--color-scroll-thumb`, rather than borrowing the accent or
+the ink: it is neither a thing to act on nor something to read, just a mark that has to be findable
+against whatever a screen is made of — and the cream that reads at 11:1 on Walnut is Sand's own
+background, so a light theme needs the same mark in reverse. Every theme answers, and every answer is
+held to the non-text contrast bar. It **overlaps** rather than being made room for, which every screen can
+afford because each already carries the same page padding. Vertical only; nothing in the app scrolls
+sideways.
+
+Quiet by default — transparent at rest, up while scrolling and while the pointer is over the body,
+faded out once scrolling settles, and untouchable whenever it is invisible. No track: a permanent
+groove down the right of every screen is exactly the noise the soft fill and the hairline exist to
+remove. It has a minimum height so a very long list still leaves something grabbable, and it can be
+dragged, because a bar that only reports and cannot be grabbed is a decoration.
+
+One component, `ScrollArea`, and every scrolling screen is a consumer — the same reason the control
+vocabulary lives in two files: the copies disagree by the fourth one.
+
 ### Motion
 
 How the app moves between one state and the next. Part of the Theme, for the reason above.

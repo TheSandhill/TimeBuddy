@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { RestoreNotice } from "../components/restore-notice";
+import { ScrollArea } from "../components/scroll-area";
 import { WindowFrame } from "../components/window-frame";
 import { useRestoreOutcome } from "../restore/use-restore";
 import { Unlock } from "./unlock";
@@ -103,5 +104,5 @@ export function Gate({ children }: { children: ReactNode }) {
 
 /** The scrolling body the lock screen and the wizard both sit in. */
 function Setting({ children }: { children: ReactNode }) {
-  return <main className="min-h-0 flex-1 overflow-y-auto p-6">{children}</main>;
+  return <ScrollArea className="p-6">{children}</ScrollArea>;
 }
