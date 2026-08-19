@@ -75,8 +75,11 @@ reason these are here.
 
 A block's length is **frozen when it starts**. Raising the default — from either screen — must never
 move the finish line of a block already under way, so the presets go dead while one is running rather
-than change something the user cannot see. Dead **and saying why**: a control that stops answering
-without explaining itself is indistinguishable from a broken one.
+than change something the user cannot see. Dead **and saying nothing**: the rule here used to be that
+a control which stops answering has to explain itself, and on this screen it earns nothing — the dial
+directly above the four is visibly counting down, which is the explanation, and a sentence under them
+was one more grey line on a screen whose whole redesign was subtraction. The rule still holds wherever
+a dead control has no such neighbour.
 
 The Timer screen carries five things — the dial, the presets, the Break banner, the Project picker and
 today's entries — and the **dial owns it**. Flat, they read as a settings page with a large circle on
