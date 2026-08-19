@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { Day, Project, TimeEntry, TimeEntryEdit } from "../data/types";
 import { primaryButtonClass } from "./button";
 import { fieldClass, labelClass } from "./field";
+import { Select } from "./select";
 import {
   durationErrorKey,
   formatDuration,
@@ -104,7 +105,7 @@ export function EntryForm({
       <div className="grid grid-cols-2 gap-4">
         <label className={labelClass}>
           {t("entries.project")}
-          <select
+          <Select
             className={fieldClass}
             value={projectId ?? ""}
             onChange={(event) => setProjectId(Number(event.target.value))}
@@ -114,7 +115,7 @@ export function EntryForm({
                 {project.name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
 
         <label className={labelClass}>

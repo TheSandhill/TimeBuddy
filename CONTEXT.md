@@ -346,6 +346,43 @@ dragged, because a bar that only reports and cannot be grabbed is a decoration.
 One component, `ScrollArea`, and every scrolling screen is a consumer — the same reason the control
 vocabulary lives in two files: the copies disagree by the fourth one.
 
+### Dropdown
+
+A `<select>`'s closed field was themed and its **open list was not**: the popup belongs to the
+operating system, so it arrived as a square grey panel in the system font with the highlight in
+Windows' battleship grey — a different application briefly borrowing the window, and the same in all
+three themes, because the OS panel does not know a theme exists. `option { background: … }` is not a
+fix; in a native popup the padding, the radius, the hover shape and the panel's own fill are drawn by
+the platform and out of reach.
+
+So the app opts into **Chromium's customizable `<select>`** — `appearance: base-select` on the select
+*and* on `::picker(select)` — which replaces the OS popup with an in-page one the theme can style. The
+same bet as `corner-shape: squircle` (ADR-0004): real in evergreen Chromium, which is what WebView2 is,
+and everywhere else the native popup renders exactly as it did before. **Enhancement, never a
+dependency.**
+
+It **stays a `<select>`**. The arrows, Home/End, typeahead, Enter and Escape and the accessibility tree
+come free from the platform, and a hand-rolled listbox would pay for the look with all of them. The
+panel is what a card is — a raised fill on a radius token, no line in Walnut or Sand, an edge where
+High-contrast needs one — and the highlight is `--color-accent`, the app's own, with `surface-raised` as
+the ink because it is the one pairing that clears AA on the accent in every shipped theme. What is
+*chosen* keeps a quiet fill and a check of its own, so the highlight is not asked to say two things —
+and in High-contrast, where a quiet fill is not one, it takes the edge instead.
+
+It opens **below its field and nowhere else**, carrying the floating tab bar's shadow — both are things
+laid over the screen rather than part of it. The user agent's own behaviour is to lay the panel over the
+field and flip it above when the room below is short, and on the Timer, where the picker sits low under
+the dial, that flip put the list on top of the countdown. A list that opens in whichever direction
+happens to fit is a list that opens somewhere different each time it is asked. Nothing has to make room
+for it — it is in the top layer, so it is drawn over today's entries and the tab bar at whatever height
+the list needs, rather than being clamped to the gap below the field and made to scroll inside itself.
+
+One component, `Select`, and one place each for the two halves of the dressing: `field.ts` for what a
+class can reach and `styles.css` for what only a pseudo-element can. The markup half of the enhancement
+is asked for in JavaScript rather than left to `@supports`, because a parser that has never heard of
+`<selectedcontent>` hoists the button out of the select and leaves a stray control on the screen —
+worse than the popup being replaced.
+
 ### Motion
 
 How the app moves between one state and the next. Part of the Theme, for the reason above.

@@ -36,6 +36,7 @@ import {
 } from "../components/field";
 import { FormError } from "../components/form-error";
 import { Icon, type IconName } from "../components/icon";
+import { Select } from "../components/select";
 import { StatusLine } from "../components/status-line";
 import { updateSettings } from "../data/commands";
 import { errorKey } from "../data/error-message";
@@ -200,7 +201,7 @@ export function Settings() {
 
         <label className={labelClass}>
           {t("settings.language")}
-          <select
+          <Select
             className={fieldClass}
             value={shown.language}
             onChange={(event) =>
@@ -212,7 +213,7 @@ export function Settings() {
                 {t(languageLabels[language])}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       </Group>
 

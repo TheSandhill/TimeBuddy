@@ -389,6 +389,180 @@ body {
   cursor: default;
 }
 
+/*
+ * The dropdown's open list (#72). Why this rather than a hand-rolled listbox,
+ * and what the panel is meant to look like, is in `CONTEXT.md` → Dropdown.
+ *
+ * It is here rather than in `field.ts` because a pseudo-element has no class to
+ * hang a utility on: `::picker(select)`, `option` and `::checkmark` are out of
+ * Tailwind's reach entirely. `Select` is the only `<select>` in the app, so an
+ * element selector is the whole of the dropdown vocabulary rather than a
+ * shortcut past one.
+ */
+select,
+select::picker(select) {
+  appearance: base-select;
+}
+
+/* The field's own button carries the chevron, so the UA icon has no work left. */
+select::picker-icon {
+  display: none;
+}
+
+/* The selected option's text, mirrored into the closed field: it takes the room
+   the caret does not, and truncates rather than pushing it off the end. */
+select > button > selectedcontent {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* One glyph turning. `selectCaretClass` points it down; open turns it back. */
+select:open .select-caret {
+  rotate: 0deg;
+}
+
+/*
+ * Everything below is gated, and the gate is doing two jobs rather than being
+ * belt and braces. Unguarded, these rules would reach the options of a *native*
+ * popup too, on a platform that honours some of them and ignores the rest — a
+ * half-applied treatment being the thing this change exists to remove. And the
+ * width below would resize a field this change is meant to leave exactly as it
+ * is. Gated, an engine without `base-select` keeps today's field and today's
+ * popup, unchanged.
+ */
+@supports (appearance: base-select) {
+  /* The one thing `base-select` rebases that has to be said out loud: the field
+     stops sizing to the widest option and takes the width of whatever is
+     selected — so left alone it would change width as the selection does. */
+  select {
+    width: 100%;
+  }
+
+  /*
+   * The panel is what a card in this app is: a raised fill on a radius token,
+   * with no line round it. High-contrast promises nothing is soft, so it — and
+   * only it — gets an edge, the same way `soft-fill` does.
+   */
+  select::picker(select) {
+    border: 0;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface-raised);
+    color: var(--color-ink);
+    padding: 0.25rem;
+    /* Off the field rather than flush against it, which is half the complaint
+       this fixes. One side would do now that the panel only ever opens
+       downwards; both, so the gap survives whoever changes that. */
+    margin-block: 0.25rem;
+    /*
+     * Below the field, aligned to its edge, and nowhere else.
+     *
+     * The user agent lays the panel over the field the way a native popup does,
+     * and flips it above when the room below is short of what the list wants. On
+     * the Timer, where the picker sits low — under the dial, over today's
+     * entries — that flip put the list on top of the one number the screen
+     * exists to show. A list that opens in whichever direction happens to fit is
+     * a list that opens somewhere different each time it is asked.
+     *
+     * So: no flip, and nothing below has to make room for it. The panel is in the
+     * top layer, so it is drawn *over* today's entries and the tab bar at
+     * whatever height the list needs — which is why there is no max-height here
+     * clamping it to the gap below the field and no scroller inside it. Where a
+     * list is long enough to reach the bottom of the window, the user agent's own
+     * sizing is what catches it.
+     *
+     * `span-inline-end` rather than `span-all`: the region starts at the field's
+     * own inline-start edge, so the panel lines up with the field rather than
+     * being centred in whatever the containing block turns out to be.
+     */
+    position-area: block-end span-inline-end;
+    position-try-fallbacks: none;
+    /*
+     * The floating tab bar's shadow, and literally its utility rather than a
+     * copy of the two offsets it resolves to: both are things laid over the
+     * screen rather than part of it, and a panel that is over the content
+     * without saying so leaves the list looking pasted into the page. `@apply`
+     * because a pseudo-element has no class to put `shadow-lg` on.
+     */
+    @apply shadow-lg;
+  }
+
+  [data-theme="high-contrast"] select::picker(select) {
+    outline: 1px solid var(--color-border);
+  }
+
+  /*
+   * The options are addressed as `select option` rather than as descendants of
+   * the panel, and the reason is the build: Lightning CSS models
+   * `::picker(select)` as an ordinary pseudo-element, so it drops any rule that
+   * puts a selector *after* one. The panel's own rules survive; a descendant of
+   * it was thrown away silently, which is how three rules once built green and
+   * shipped nothing.
+   */
+  select option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--color-ink);
+    cursor: pointer;
+    transition:
+      background-color var(--motion-quick),
+      color var(--motion-quick);
+  }
+
+  /* Rows sit apart rather than flush: two fills touching read as one block with
+     a line through it, and each option has a radius that needs somewhere to be
+     seen. On the sibling rather than the panel, so nothing about how the list
+     scrolls changes. */
+  select option + option {
+    margin-top: 0.125rem;
+  }
+
+  /*
+   * What is chosen and what is merely under the pointer are two different
+   * things, so the highlight is not asked to say both. The selection keeps a
+   * quiet fill and carries the check; High-contrast, where that fill is 1.04:1
+   * on the panel, gets the edge instead — the same answer `soft-fill` gives.
+   */
+  select option:checked {
+    background-color: var(--color-surface-soft);
+  }
+
+  [data-theme="high-contrast"] select option:checked {
+    outline: 1px solid var(--color-border);
+  }
+
+  /* Trailing rather than leading, so no option's text is indented past
+     another's. No colour of its own: it inherits, so it follows the ink onto
+     the accent. */
+  select option::checkmark {
+    order: 1;
+    margin-left: auto;
+  }
+
+  /*
+   * The highlight is the app's accent — the one the switch track and the focus
+   * ring already use — so the open list reads as this application's rather than
+   * the system's. `surface-raised` is the ink on it: the same pairing the switch
+   * thumb relies on, and the only one that clears AA on the accent in all three
+   * shipped themes (`contrast.test.ts`).
+   *
+   * Last, and `:is()` rather than `:where()`, because the row this has to beat
+   * is `option:checked` — which is the row the keyboard lands on the moment the
+   * list opens. A zero-specificity highlight would lose to it there, leaving the
+   * one option you are most likely to be on unhighlighted.
+   */
+  select option:is(:hover, :focus, :active) {
+    background-color: var(--color-accent);
+    color: var(--color-surface-raised);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-quick: 1ms;
