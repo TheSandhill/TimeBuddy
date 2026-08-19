@@ -18,6 +18,13 @@ last. Its Projects live inside it. This replaces a master list beside a detail p
 on every row spent what was left. Containment says what the pane was there to say, so the layout is
 now the sentence "a Project only means anything under a Client" rather than a caption under it.
 
+**The screen reads every Project once** and gives each row its slice, rather than a row asking for
+its own when it opens. A body then has no loading state to show: the disclosure measures its true
+height on the frame it opens, instead of an empty list that fills mid-animation. The Clients and the
+Projects are **one arrival** — no row is offered before both have landed, since a row offered early
+can be opened onto a body with nothing in it yet, and an empty list is not yet grounds for saying
+there is nothing. It is a local read, of the same two lists the pickers already ask for.
+
 **Nothing is open on arrival**, and which row was open is forgotten on the way out. The screen's
 first answer is the list of names, and a Client picked for you is a claim the screen has no way to
 make honestly.
