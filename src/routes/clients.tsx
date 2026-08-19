@@ -61,30 +61,47 @@ export function Clients() {
     queryFn: () => listClients(showArchived),
   });
 
+  /**
+   * Every Project on the screen, in one read. A row that fetched its own would
+   * render its body empty on the first open — the height the disclosure
+   * measures — and fill it mid-animation, landing on a size it never animated
+   * to. Held here, the body is at its true height before it is ever measured.
+   *
+   * These are the two lists the Timer and the Entries screen already ask for,
+   * so they are asked for under the same two names: one cache, and one
+   * invalidation that reaches every screen showing a Project.
+   */
   const allProjects = useQuery({
-    queryKey: ["all-projects", showArchived],
+    queryKey: ["projects", showArchived ? "all" : "offerable"],
     queryFn: () => listProjects({ includeArchived: showArchived }),
-    enabled: search.length > 0,
   });
 
-  const all = clients.data ?? [];
+  const projects = allProjects.data ?? [];
+  const allClients = clients.data ?? [];
   const term = search.toLowerCase();
   const filtered = term
-    ? all.filter(
+    ? allClients.filter(
         (c) =>
           c.name.toLowerCase().includes(term) ||
-          (allProjects.data ?? []).some(
+          projects.some(
             (p) =>
               p.clientId === c.id && p.name.toLowerCase().includes(term),
           ),
       )
-    : all;
+    : allClients;
+
+  /**
+   * The screen has one arrival, not two. A row offered before its Projects have
+   * landed can be opened onto a body that has nothing in it yet, which is the
+   * measurement this change is here to stop — and an empty list is not yet
+   * grounds for saying there is nothing.
+   */
+  const loading = clients.isPending || allProjects.isPending;
 
   const refresh = () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: ["clients"] }),
       queryClient.invalidateQueries({ queryKey: ["projects"] }),
-      queryClient.invalidateQueries({ queryKey: ["all-projects"] }),
     ]);
 
   const saveClient = useMutation({
@@ -212,7 +229,7 @@ export function Clients() {
         ) : null}
       </TransientDisclosure>
 
-      {filtered.length === 0 ? (
+      {loading ? null : filtered.length === 0 ? (
         <p className="text-sm text-ink-muted">{t("clients.noClients")}</p>
       ) : (
         <ul className="flex flex-col gap-2">
@@ -220,11 +237,11 @@ export function Clients() {
             <ClientRow
               key={client.id}
               client={client}
+              projects={projects.filter((p) => p.clientId === client.id)}
               open={expanded === client.id}
               onToggle={() =>
                 setExpanded(expanded === client.id ? null : client.id)
               }
-              showArchived={showArchived}
               editing={editing}
               formError={formError}
               rowError={rowError}
@@ -262,9 +279,9 @@ export function Clients() {
 
 function ClientRow({
   client,
+  projects,
   open,
   onToggle,
-  showArchived,
   editing,
   formError,
   rowError,
@@ -283,9 +300,9 @@ function ClientRow({
   movingProject,
 }: {
   client: Client;
+  projects: Project[];
   open: boolean;
   onToggle: () => void;
-  showArchived: boolean;
   editing: Editing | null;
   formError: string | null;
   rowError: { target: Target; message: string } | null;
@@ -310,15 +327,6 @@ function ClientRow({
     editing?.target === "projects" &&
     editing.item === null &&
     editing.clientId === client.id;
-
-  const projects = useQuery({
-    queryKey: ["projects", client.id, showArchived],
-    queryFn: () =>
-      listProjects({ clientId: client.id, includeArchived: showArchived }),
-    enabled: open,
-  });
-
-  const projectList = projects.data ?? [];
 
   const menuItems = [
     {
@@ -421,13 +429,13 @@ function ClientRow({
               ) : null}
             </TransientDisclosure>
 
-            {projectList.length === 0 && !projects.isLoading ? (
+            {projects.length === 0 ? (
               <p className="text-sm text-ink-muted">
                 {t("clients.noProjects")}
               </p>
             ) : (
               <ul className="flex flex-col gap-1">
-                {projectList.map((project) => (
+                {projects.map((project) => (
                   <ProjectRow
                     key={project.id}
                     project={project}

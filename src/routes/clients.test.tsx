@@ -124,7 +124,6 @@ describe("the accordion", () => {
     expect(
       within(row).getByRole("button", { name: "Acme" }),
     ).toHaveAttribute("aria-expanded", "false");
-    expect(commands.listProjects).not.toHaveBeenCalled();
   });
 
   it("reveals a client's projects when opened", async () => {
@@ -134,26 +133,39 @@ describe("the accordion", () => {
 
     expect(await screen.findByText("Website")).toBeInTheDocument();
     expect(commands.listProjects).toHaveBeenCalledWith({
-      clientId: acme.id,
       includeArchived: false,
     });
+  });
+
+  it("has a client's projects before the row is opened to show them", async () => {
+    // The body's height is measured on the frame it opens. Fetched on open,
+    // the list it measures is empty and the box lands on a height it never
+    // animated to — once per row, until the fetch is cached (#80).
+    renderClients();
+    await screen.findByRole("button", { name: "Acme" });
+    await waitFor(() =>
+      expect(commands.listProjects).toHaveBeenCalledWith({
+        includeArchived: false,
+      }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Acme" }));
+
+    expect(screen.getByText("Website")).toBeInTheDocument();
   });
 
   it("closes the open client when a second is opened", async () => {
     const beta: Client = { ...acme, id: 3, name: "Beta" };
     commands.listClients.mockResolvedValue([acme, beta]);
+    commands.listProjects.mockResolvedValue([
+      website,
+      { ...website, id: 10, name: "Mobile", clientId: beta.id },
+    ]);
     renderClients();
 
     fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
     await screen.findByText("Website");
 
-    const betaProject: Project = {
-      ...website,
-      id: 10,
-      name: "Mobile",
-      clientId: beta.id,
-    };
-    commands.listProjects.mockResolvedValue([betaProject]);
     fireEvent.click(screen.getByRole("button", { name: "Beta" }));
 
     await waitFor(() =>
@@ -171,7 +183,13 @@ describe("the accordion", () => {
     renderClients();
 
     await screen.findByText("Acme");
-    expect(commands.listProjects).not.toHaveBeenCalled();
+    for (const name of ["Acme", "Beta"]) {
+      expect(screen.getByRole("button", { name })).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      );
+    }
+    expect(screen.queryByText("Website")).toBeNull();
   });
 
   it("says so when a client has no projects", async () => {
@@ -185,12 +203,52 @@ describe("the accordion", () => {
     ).toBeInTheDocument();
   });
 
-  it("asks for no projects at all when there is no client to ask about", async () => {
+  it("says so when there are no clients at all", async () => {
     commands.listClients.mockResolvedValue([]);
     renderClients();
 
     expect(await screen.findByText("Nog geen klanten.")).toBeInTheDocument();
-    expect(commands.listProjects).not.toHaveBeenCalled();
+  });
+
+  it("offers no row to open before its projects have landed", async () => {
+    // The screen has one arrival. A row offered while the Projects are still
+    // in flight can be opened onto a body with nothing in it yet — the same
+    // empty measurement, moved from once per row to once per screen (#80).
+    let land: (projects: Project[]) => void = () => {};
+    commands.listProjects.mockReturnValue(
+      new Promise<Project[]>((resolve) => {
+        land = resolve;
+      }),
+    );
+    renderClients();
+
+    await waitFor(() => expect(commands.listProjects).toHaveBeenCalled());
+    expect(screen.queryByRole("button", { name: "Acme" })).toBeNull();
+    expect(screen.queryByText("Nog geen klanten.")).toBeNull();
+
+    land([website]);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
+    expect(screen.getByText("Website")).toBeInTheDocument();
+  });
+
+  it("asks for every project once rather than once per row", async () => {
+    // One list, sliced per row. A row asking for its own is what made the
+    // first open of each one measure an empty body (#80).
+    commands.listClients.mockResolvedValue([acme, { ...acme, id: 3, name: "Beta" }]);
+    renderClients();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
+    await screen.findByText("Website");
+    fireEvent.click(screen.getByRole("button", { name: "Beta" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Beta" })).toHaveAttribute(
+        "aria-expanded",
+        "true",
+      ),
+    );
+    expect(commands.listProjects).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -208,7 +266,6 @@ describe("the show-archived switch", () => {
     );
     await waitFor(() =>
       expect(commands.listProjects).toHaveBeenCalledWith({
-        clientId: acme.id,
         includeArchived: true,
       }),
     );
