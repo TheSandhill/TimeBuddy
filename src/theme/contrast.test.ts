@@ -2,7 +2,13 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { AA_BODY_TEXT, contrastRatio, luminance, parseHex } from "./contrast";
+import {
+  AA_BODY_TEXT,
+  AA_NON_TEXT,
+  contrastRatio,
+  luminance,
+  parseHex,
+} from "./contrast";
 import { defaultTheme, themeNames, type ThemeName } from "./tokens";
 
 const srcDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -81,6 +87,25 @@ describe("every shipped theme is readable", () => {
         contrastRatio(tokens["--color-ink"], tokens[background]),
         `--color-ink on ${background} in "${theme}"`,
       ).toBeGreaterThanOrEqual(AA_BODY_TEXT);
+    }
+  });
+
+  it.each(themeNames)("%s draws the scrollbar thumb visibly", (theme) => {
+    const tokens = tokensOf(theme);
+
+    // The thumb is the accent laid over whatever a screen is made of, and it
+    // is the app's only readout of the scroll position now that the native bar
+    // is hidden (#71). Not text, so the non-text bar — but a bar nobody can
+    // pick out of the background is the same defect as unreadable body text.
+    for (const background of [
+      "--color-surface",
+      "--color-surface-raised",
+      "--color-surface-soft",
+    ]) {
+      expect(
+        contrastRatio(tokens["--color-accent"], tokens[background]),
+        `--color-accent on ${background} in "${theme}"`,
+      ).toBeGreaterThanOrEqual(AA_NON_TEXT);
     }
   });
 

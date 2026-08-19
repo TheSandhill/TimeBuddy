@@ -6,6 +6,7 @@ import { requestTimerPause, requestTimerToggle } from "../tray/toggle-request";
 import { useUpdatePrompt } from "../update/use-update";
 import { BackupBanner } from "./backup-banner";
 import { RestoreBanner } from "./restore-banner";
+import { ScrollArea } from "./scroll-area";
 import { TabBar } from "./tab-bar";
 import { TransientBanner } from "./transient";
 import { UpdateBanner } from "./update-banner";
@@ -62,9 +63,16 @@ export function AppShell({ children }: { children: ReactNode }) {
        * above it and the tab bar below stay live and untouched — which is why
        * the name sits here rather than on the document.
        */}
-      <main className="screen-slide relative min-h-0 flex-1 overflow-y-auto pb-20">
+      {/*
+       * The transition name stays on the scrolling body rather than moving up
+       * to the frame around it, so the snapshotted box is the same one it was
+       * before the body gained a scrollbar of its own. That leaves the thumb
+       * outside the snapshot, which is where it belongs: it reports the live
+       * screen's scroll position, not the outgoing screen's frozen image.
+       */}
+      <ScrollArea className="screen-slide relative pb-20">
         <div className="p-6">{children}</div>
-      </main>
+      </ScrollArea>
 
       <TabBar />
     </WindowFrame>

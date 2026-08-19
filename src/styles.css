@@ -151,6 +151,22 @@
 }
 
 /*
+ * The native scrollbar, removed so the app can draw its own — why, in
+ * `CONTEXT.md` → Scrollbar and in `ScrollArea`.
+ *
+ * Both spellings, because they are read by different Chromiums:
+ * `scrollbar-width` is the standard one and the pseudo-element is what a
+ * WebView2 behind the times still obeys.
+ */
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/*
  * How a field or a quiet control is grouped without a line drawn round it.
  *
  * A utility rather than `bg-surface-soft` written into the vocabulary, because
@@ -439,8 +455,8 @@ body {
  *
  * It clips, too. These pseudo-elements are painted in the top layer, so nothing
  * in the page holds them: without this the screen's 12px lean would slide out
- * over the window's own rounded edge, where `overflow-y-auto` on `<main>` used
- * to contain it. Clipping at the group is clipping at that same box.
+ * over the window's own rounded edge, where the scrolling body's own
+ * `overflow-y-auto` used to contain it. Clipping at the group is clipping at that same box.
  */
 ::view-transition-group(screen) {
   animation-duration: var(--motion-page);

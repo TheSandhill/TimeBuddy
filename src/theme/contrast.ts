@@ -10,6 +10,12 @@
 /** The AA threshold for body text. Large text may go as low as 3. */
 export const AA_BODY_TEXT = 4.5;
 
+/**
+ * The AA threshold for something that is not text but still has to be seen:
+ * the scrollbar thumb, a focus ring, the dial's arc. WCAG 1.4.11.
+ */
+export const AA_NON_TEXT = 3;
+
 /** Parses `#rgb` or `#rrggbb` into 0–255 channels. */
 export function parseHex(colour: string): [number, number, number] {
   const digits = colour.trim().replace(/^#/, "");

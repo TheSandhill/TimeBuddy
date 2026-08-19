@@ -26,6 +26,7 @@ import nl from "../i18n/locales/nl.json";
 // A constant string, so the crash screen still dresses its button the way the
 // rest of the app does without depending on anything that can fail.
 import { quietButtonClass } from "./button";
+import { ScrollArea } from "./scroll-area";
 
 interface Props {
   children: ReactNode;
@@ -80,7 +81,7 @@ export class RootBoundary extends Component<Props, State> {
           className="h-10 shrink-0 border-b border-border bg-surface-raised"
         />
 
-        <main className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto p-6">
+        <ScrollArea className="flex items-center justify-center p-6">
           <div
             role="alert"
             className="flex max-w-md flex-col gap-3 rounded-lg border border-danger bg-surface-raised p-5"
@@ -103,7 +104,7 @@ export class RootBoundary extends Component<Props, State> {
               {words.reload}
             </button>
           </div>
-        </main>
+        </ScrollArea>
       </div>
     );
   }
