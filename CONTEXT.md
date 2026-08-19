@@ -325,6 +325,11 @@ variable. It is one config in TypeScript, imported wherever it is needed. Two mo
 as two: CSS for state transitions, springs for layout. A token only one library can read would be a
 token in name.
 
+**Two, and not three.** The platform's own view transitions were prototyped and turned down: they take
+the tokens beautifully — the pseudo-elements inherit them, so reduced motion is already applied without
+a line of JavaScript — but only one runs at a time, and the exclusive accordion wants two. See ADR-0015,
+which keeps the part worth reopening on.
+
 **Transient UI arrives and leaves.** The undo toast and the three banners across the top — a failed
 Backup, a failed staged Restore, an offered Update — animate on the way out as well as in, which is
 the thing plain CSS cannot do: an element that animates as it goes has to outlive the condition that

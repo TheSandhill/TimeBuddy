@@ -27,7 +27,6 @@ import {
   updateProject,
 } from "../data/commands";
 import { errorKey } from "../data/error-message";
-import { withViewTransition } from "../theme/view-transition";
 import type { Client, Project } from "../data/types";
 
 type Target = "clients" | "projects";
@@ -139,14 +138,11 @@ export function Clients() {
   const clearRowError = (target: Target) =>
     setRowError((current) => (current?.target === target ? null : current));
 
-  const openForm = (target: Target, item: { id: number; name: string } | null) =>
-    withViewTransition(() => {
-      setFormError(null);
-      clearRowError(target);
-      setEditing({ target, item });
-    });
-
-  const closeForm = () => withViewTransition(() => setEditing(null));
+  const openForm = (target: Target, item: { id: number; name: string } | null) => {
+    setFormError(null);
+    clearRowError(target);
+    setEditing({ target, item });
+  };
 
   const addingClient = editing?.target === "clients" && editing.item === null;
 
@@ -190,16 +186,14 @@ export function Clients() {
               client={client}
               open={expanded === client.id}
               onToggle={() =>
-                withViewTransition(() =>
-                  setExpanded(expanded === client.id ? null : client.id),
-                )
+                setExpanded(expanded === client.id ? null : client.id)
               }
               showArchived={showArchived}
               editing={editing}
               formError={formError}
               rowError={rowError}
               onEditClient={() => openForm("clients", client)}
-              onCancelEdit={closeForm}
+              onCancelEdit={() => setEditing(null)}
               onSaveClient={(item, name) =>
                 saveClient.mutate({ item, name })
               }
@@ -208,7 +202,7 @@ export function Clients() {
               movingClient={moveClient.isPending}
               onEditProject={(project) => openForm("projects", project)}
               onAddProject={() => openForm("projects", null)}
-              onCancelProjectEdit={closeForm}
+              onCancelProjectEdit={() => setEditing(null)}
               onSaveProject={(item, name) =>
                 saveProject.mutate({ item, name, clientId: client.id })
               }
@@ -221,7 +215,7 @@ export function Clients() {
       )}
 
       <div
-        className={`grid [view-transition-name:add-client] transition-[grid-template-rows] motion-base ease-out-soft ${
+        className={`grid transition-[grid-template-rows] motion-base ease-out-soft ${
           addingClient ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
         }`}
       >
@@ -233,7 +227,7 @@ export function Clients() {
               busy={saveClient.isPending}
               error={formError}
               onSubmit={(name) => saveClient.mutate({ item: null, name })}
-              onCancel={closeForm}
+              onCancel={() => setEditing(null)}
             />
           ) : null}
         </div>
@@ -391,7 +385,6 @@ function ClientRow({
       </div>
 
       <div
-        style={{ viewTransitionName: `client-${client.id}` }}
         className={`grid transition-[grid-template-rows] motion-bounce ease-bounce-soft ${
           open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
         }`}
