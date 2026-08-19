@@ -24,7 +24,9 @@ make honestly.
 
 **An action lives on the thing it acts on.** Adding a Client is something done to the screen, so it
 is in the screen's header beside the title; adding a Project is something done to a Client, so it is
-in that Client's own menu beside Rename and Archive. Both used to be buttons under the last row of a
+in that Client's own menu beside Rename and Archive. Choosing it on a closed row opens that row:
+the menu is reachable closed and the form it raises is not, so opening is part of the action rather
+than a step asked of the user. Both used to be buttons under the last row of a
 list, which is fine for four Clients and nowhere for a hundred — the bottom of a list that grows is
 not a place anyone can find twice. Neither is now reached by scrolling past the thing it belongs to,
 and the accordion's body went back to being only the Projects and the form that makes one.

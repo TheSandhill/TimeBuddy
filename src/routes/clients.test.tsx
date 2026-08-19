@@ -365,6 +365,27 @@ describe("creating and renaming", () => {
     ).toBeTruthy();
   });
 
+  it("opens the Client it is adding to, so the form has somewhere to be", async () => {
+    // The menu that offers this sits on the row, which is reachable closed;
+    // the form it raises is inside the body, which is not.
+    renderClients();
+    await screen.findByRole("button", { name: "Acme" });
+    expect(screen.getByRole("button", { name: "Acme" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+
+    menuAction("Acme", "Project toevoegen aan Acme");
+
+    expect(
+      await screen.findByRole("form", { name: "Nieuw project" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Acme" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+  });
+
   it("offers a Project through the Client it would belong to", async () => {
     // Adding a Project is something done to a Client, so it is offered where
     // the other two things done to a Client are — and the row carrying the menu

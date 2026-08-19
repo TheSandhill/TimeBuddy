@@ -224,7 +224,13 @@ export function Clients() {
               onMoveClient={() => moveClient.mutate(client)}
               movingClient={moveClient.isPending}
               onEditProject={(project) => openForm("projects", project)}
-              onAddProject={() => openForm("projects", null)}
+              onAddProject={() => {
+                // The menu is on the row and the form it raises is inside the
+                // body, so a closed row would raise it nowhere. Opening is
+                // part of the action rather than a step asked of the user.
+                setExpanded(client.id);
+                openForm("projects", null);
+              }}
               onCancelProjectEdit={() => setEditing(null)}
               onSaveProject={(item, name) =>
                 saveProject.mutate({ item, name, clientId: client.id })
