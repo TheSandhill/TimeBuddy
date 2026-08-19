@@ -27,12 +27,14 @@ import { momentLabel } from "../backup/moment-label";
 import { useBackupStatus, useRunBackup } from "../backup/use-backup";
 import { primaryButtonClass, quietButtonClass } from "../components/button";
 import {
+  checkboxClass,
   checkboxLabelClass,
   fieldClass,
   groupClass,
   labelClass,
   quietHeadingClass,
   quietLabelClass,
+  radioClass,
 } from "../components/field";
 import { FormError } from "../components/form-error";
 import { Icon, type IconName } from "../components/icon";
@@ -173,6 +175,7 @@ export function Settings() {
           {themeNames.map((theme) => (
             <label key={theme} className={checkboxLabelClass}>
               <input
+                className={radioClass}
                 type="radio"
                 name="theme"
                 value={theme}
@@ -189,6 +192,7 @@ export function Settings() {
 
         <label className={checkboxLabelClass}>
           <input
+            className={checkboxClass}
             type="checkbox"
             checked={shown.followSystem}
             onChange={(event) => edit({ followSystem: event.target.checked })}
@@ -248,6 +252,7 @@ export function Settings() {
 
         <label className={checkboxLabelClass}>
           <input
+            className={checkboxClass}
             type="checkbox"
             checked={shown.chimeEnabled}
             onChange={(event) => edit({ chimeEnabled: event.target.checked })}
@@ -257,6 +262,7 @@ export function Settings() {
 
         <label className={checkboxLabelClass}>
           <input
+            className={checkboxClass}
             type="checkbox"
             checked={shown.notificationsEnabled}
             onChange={(event) =>
@@ -270,6 +276,7 @@ export function Settings() {
       <Group group={groups.system}>
         <label className={checkboxLabelClass}>
           <input
+            className={checkboxClass}
             type="checkbox"
             checked={shown.autostart}
             onChange={(event) => edit({ autostart: event.target.checked })}

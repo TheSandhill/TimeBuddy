@@ -51,6 +51,17 @@ const paths = {
   close:
     "M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z",
 
+  /**
+   * The bare tick, which is the checkbox's mark (#74).
+   *
+   * It is the one glyph the stylesheet also needs: a checkbox has no element
+   * inside it to hang an `<Icon>` on, so the tick is masked into `::after` from
+   * a data URI in `styles.css`. That copy is not a second drawing — it carries
+   * this exact `d`, and `field.test.tsx` fails if the two ever drift.
+   */
+  check:
+    "M232.49 80.49l-128 128a12 12 0 0 1-17 0l-56-56a12 12 0 1 1 17-17L96 183.03l119.51-119.52a12 12 0 0 1 17 17Z",
+
   // Transport. Solid rather than bold: a play triangle drawn as an outline
   // reads as a button waiting to be pressed twice.
   play: "M240 128a15.74 15.74 0 0 1-7.6 13.51L88.32 229.65a16 16 0 0 1-16.2.3A15.86 15.86 0 0 1 64 216.13V39.87a15.86 15.86 0 0 1 8.12-13.82a16 16 0 0 1 16.2.3l144.08 88.14A15.74 15.74 0 0 1 240 128",

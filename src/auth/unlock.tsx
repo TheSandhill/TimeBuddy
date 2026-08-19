@@ -15,7 +15,12 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { primaryButtonClass } from "../components/button";
-import { fieldClass, labelClass } from "../components/field";
+import {
+  checkboxClass,
+  checkboxLabelClass,
+  fieldClass,
+  labelClass,
+} from "../components/field";
 import { FormError } from "../components/form-error";
 import { resetAccountPassword, unlockAccount } from "../data/commands";
 import { errorKey } from "../data/error-message";
@@ -155,8 +160,9 @@ export function Unlock({ onOpen }: { onOpen: (token: string | null) => void }) {
             />
           </label>
 
-          <label className="flex items-center gap-2 text-sm text-ink-muted">
+          <label className={checkboxLabelClass}>
             <input
+              className={checkboxClass}
               type="checkbox"
               checked={remember}
               onChange={(event) => setRemember(event.target.checked)}

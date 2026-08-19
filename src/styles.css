@@ -390,6 +390,91 @@ body {
 }
 
 /*
+ * The checkbox and the radio (#74). Why they are drawn at all, and why the two
+ * shapes are kept apart, is on `checkboxClass` in `components/field.ts`.
+ *
+ * Only what a utility cannot say lives here: `appearance`, and the mark, which
+ * is a pseudo-element and so has no class to hang one on. The box itself — its
+ * size, its radius, its fill and its tier — is on the class strings, so a
+ * screen's control is dressed the way every other field on it is.
+ *
+ * Every colour is a theme token, as on the switch above: a user-authored theme
+ * recolours these the same way it would a button, and the checked fill is the
+ * accent precisely so that a theme swap is visible on them.
+ */
+.checkbox-box,
+.radio-dot {
+  appearance: none;
+  position: relative;
+  cursor: pointer;
+}
+
+.checkbox-box:checked,
+.radio-dot:checked {
+  background-color: var(--color-accent);
+}
+
+.checkbox-box:disabled,
+.radio-dot:disabled {
+  cursor: default;
+}
+
+/*
+ * The global ring, restated for the same reason the switch restates it: in
+ * High-contrast the outline `soft-fill` puts back is a compound selector, so it
+ * outranks a bare `:focus-visible` and a focused control would keep its hairline
+ * instead of its ring. Said here, it is the same weight and lands later.
+ */
+.checkbox-box:focus-visible,
+.radio-dot:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/*
+ * The mark. `surface-raised` is the ink for it: that is the one value that clears
+ * AA on the accent in all three themes, which `contrast.test.ts` gates for the
+ * dropdown's highlighted option and this now leans on too.
+ *
+ * It fades rather than travels, and the checked state is the fill plus the glyph
+ * rather than the fade — so reduced motion collapsing the tier to 1ms costs
+ * nothing that has to be read (ADR-0004).
+ */
+.checkbox-box::after,
+.radio-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background-color: var(--color-surface-raised);
+  transition: opacity var(--motion-quick);
+}
+
+.checkbox-box:checked::after,
+.radio-dot:checked::after {
+  opacity: 1;
+}
+
+/*
+ * The tick is Phosphor `check` (ADR-0014), masked rather than drawn: a mask takes
+ * the token colour above, where an inline `fill` would be a raw hex smuggled into
+ * the stylesheet. The `d` is the icon set's own — `field.test.tsx` fails if this
+ * copy and `paths.check` ever drift.
+ */
+.checkbox-box::after {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M232.49 80.49l-128 128a12 12 0 0 1-17 0l-56-56a12 12 0 1 1 17-17L96 183.03l119.51-119.52a12 12 0 0 1 17 17Z'/%3E%3C/svg%3E");
+  mask-size: 0.75rem;
+  mask-position: center;
+  mask-repeat: no-repeat;
+}
+
+/* A dot, not a rounded tick: the radio's whole job is to look unlike the box. */
+.radio-dot::after {
+  inset: 0.25rem;
+  border-radius: var(--radius-full);
+}
+
+/*
  * The dropdown's open list (#72). Why this rather than a hand-rolled listbox,
  * and what the panel is meant to look like, is in `CONTEXT.md` → Dropdown.
  *

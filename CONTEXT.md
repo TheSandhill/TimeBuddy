@@ -383,6 +383,30 @@ is asked for in JavaScript rather than left to `@supports`, because a parser tha
 `<selectedcontent>` hoists the button out of the select and leaves a stray control on the screen —
 worse than the popup being replaced.
 
+### Checkbox and radio
+
+The Dropdown's complaint one control over, and settled the plain way. Six ticks and dots across
+Settings and the lock screen carried no class at all, so they rendered as bare Windows controls —
+square, hard-edged, and ticked in whatever accent blue the desktop is set to. A control that stays blue
+through a theme change is announcing it is not part of the app.
+
+No bet was needed here, which is why this is separate from the Dropdown: the app fully controls these
+inputs, so it is `appearance: none` and draw them, exactly as the archived filter's **switch** was drawn
+first. They stay real `<input>`s — the labelling, the keyboard, and a radio group still being one group
+are the platform's, and there is nothing to hand-roll.
+
+**Round says *one of these*, cornered says *any of these*.** That is the only thing telling the two
+apart once the OS is no longer drawing them, so the radio is on the full radius with a filled dot and
+the checkbox on the small one with a tick — never a radio that reads as a checkbox with soft corners.
+The tick is the icon set's own `check` (ADR-0014), masked rather than inlined so it takes a token
+colour; `surface-raised` on the accent, the same pairing the Dropdown's highlight leans on and contrast
+is gated for. Checked is a **fill plus a glyph**, so reduced motion collapsing the fade costs nothing
+that has to be read.
+
+`soft-fill` carries the theme fidelity: High-contrast outlines what Walnut and Sand fill softly, with
+no rule per theme. The focus ring is restated locally for the one reason the switch restates it — that
+outline is a compound selector and outranks a bare `:focus-visible`.
+
 ### Motion
 
 How the app moves between one state and the next. Part of the Theme, for the reason above.
