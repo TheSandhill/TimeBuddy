@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { glyphOf, pathsIn } from "../test/glyph";
 import { RootBoundary } from "./root-boundary";
 
 /** A child that fails the way the real ones did: throwing during render. */
@@ -99,5 +100,22 @@ describe("when a render throws", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "TimeBuddy could not draw this screen.",
     );
+  });
+});
+
+describe("the shape a crash wears", () => {
+  const crash = () =>
+    render(
+      <RootBoundary>
+        <Throws message="restoredFrom is not a date" />
+      </RootBoundary>,
+    );
+
+  it("is `error` even though the app initiated it: there is no older screen to fall back to", () => {
+    // The fallback test decides between `error` and `warning` (ADR-0014), and a
+    // crash has no fallback — the alternative to this screen is a blank window.
+    crash();
+
+    expect(pathsIn(screen.getByRole("alert"))).toEqual(glyphOf("error"));
   });
 });

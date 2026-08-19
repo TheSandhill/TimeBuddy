@@ -3,6 +3,7 @@ import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
 import type { Instant } from "../data/types";
+import { glyphOf, pathsIn } from "../test/glyph";
 import { BackupBanner } from "./backup-banner";
 
 function renderBanner(lastBackupAt: Instant | null, retrying = false) {
@@ -61,5 +62,15 @@ describe("the backup warning", () => {
     renderBanner(null);
 
     expect(screen.getAllByRole("button")).toHaveLength(1);
+  });
+});
+
+describe("the shape a failed backup wears", () => {
+  it("is `warning` rather than `error`: the backup ran unbidden and a copy is still good", () => {
+    // ADR-0014: `error` is for something the user asked for. Nobody asked for
+    // this backup, and the banner beside the glyph names the copy that survived.
+    renderBanner("2026-07-29T09:00:00Z");
+
+    expect(pathsIn(screen.getByRole("alert"))).toEqual(glyphOf("warning"));
   });
 });

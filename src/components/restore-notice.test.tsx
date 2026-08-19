@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it } from "vitest";
 import { createI18n, type Language } from "../i18n/config";
+import { glyphOf, pathsIn } from "../test/glyph";
 import { RestoreNotice } from "./restore-notice";
 
 const show = (language: Language) =>
@@ -36,5 +37,13 @@ describe("explaining the lock screen after a restore", () => {
     const said = screen.getByRole("status").textContent ?? "";
     expect(said).not.toContain("2026-08-03T07:30:00Z");
     expect(said).toMatch(/Aug/);
+  });
+});
+
+describe("the shape a finished restore wears", () => {
+  it("is `success`: the restore was asked for and it happened", () => {
+    show("nl");
+
+    expect(pathsIn(screen.getByRole("status"))).toEqual(glyphOf("success"));
   });
 });

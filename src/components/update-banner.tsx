@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Icon } from "./icon";
 
 interface UpdateBannerProps {
   /** The version on offer. Named, so the bar is about something. */
@@ -49,7 +50,12 @@ export function UpdateBanner({
 
       <span className="flex shrink-0 items-center gap-4">
         {failed ? (
-          <span role="alert" className="text-sm text-danger">
+          <span
+            role="alert"
+            className="flex items-center gap-1.5 text-sm text-danger"
+          >
+            {/* `error`: the install is a thing the user just pressed. */}
+            <Icon name="error" className="size-4 shrink-0" />
             {t("update.installFailed")}
           </span>
         ) : null}

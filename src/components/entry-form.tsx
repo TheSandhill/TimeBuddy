@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { Day, Project, TimeEntry, TimeEntryEdit } from "../data/types";
 import { primaryButtonClass } from "./button";
 import { fieldClass, labelClass } from "./field";
+import { Icon } from "./icon";
 import { Select } from "./select";
 import {
   durationErrorKey,
@@ -158,7 +159,12 @@ export function EntryForm({
       ) : null}
 
       <div className="flex items-center gap-2">
-        <button type="submit" disabled={busy} className={primaryButtonClass}>
+        <button
+          type="submit"
+          disabled={busy}
+          className={`${primaryButtonClass} flex items-center gap-1.5`}
+        >
+          <Icon name="save" className="size-4" />
           {t("entries.save")}
         </button>
         <button

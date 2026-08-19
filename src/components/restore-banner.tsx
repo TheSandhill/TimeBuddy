@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { RestoreFault } from "../data/types";
+import { Icon } from "./icon";
 
 /** One catalogue key per fault. A code, never a sentence from Rust. */
 const faultLabels = {
@@ -28,7 +29,11 @@ export function RestoreBanner({ fault }: { fault: RestoreFault }) {
       role="alert"
       className="flex shrink-0 items-center gap-4 border-b border-danger bg-surface-raised px-6 py-2"
     >
-      <span className="text-sm text-danger">{t(faultLabels[fault])}</span>
+      <span className="flex min-w-0 items-center gap-2 text-sm text-danger">
+        {/* `warning`: the whole message is that the database was left alone. */}
+        <Icon name="warning" className="size-4 shrink-0" />
+        {t(faultLabels[fault])}
+      </span>
       <span className="text-sm text-ink-muted">
         {t("restore.dataUntouched")}
       </span>
