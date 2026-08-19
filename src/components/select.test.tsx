@@ -183,6 +183,16 @@ describe("the open list wears the theme", () => {
     expect(panel).toContain("border: 0");
   });
 
+  it("opens below the field rather than over it", () => {
+    const panel = ruleFor("select::picker(select)");
+
+    // The UA default lays the panel over the field, the way a native popup
+    // does. On the Timer that covers the dial's own countdown.
+    expect(panel).toContain("position-area: block-end span-all");
+    // Still allowed to flip: with no room below, up is where a list can be read.
+    expect(panel).toContain("position-try-fallbacks: flip-block");
+  });
+
   it("gives High-contrast the edge it needs", () => {
     const edge = ruleFor('[data-theme="high-contrast"] select::picker(select)');
 

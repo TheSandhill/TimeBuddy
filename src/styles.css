@@ -452,9 +452,22 @@ select:open .select-caret {
     background-color: var(--color-surface-raised);
     color: var(--color-ink);
     padding: 0.25rem;
-    /* Both sides, because the panel may open above the field as easily as
-       below, and flush against it is the complaint this fixes. */
+    /* Both sides, because the panel may still open above the field where there
+       is no room below, and flush against it is the complaint this fixes. */
     margin-block: 0.25rem;
+    /*
+     * Below the field, spanning its width — not laid over it, which is the
+     * user-agent default and what a native popup does. On the Timer the picker
+     * sits under the dial with today's entries beneath it, so a panel opening
+     * upwards covers the one number the screen exists to show. Every screen gets
+     * the same answer: a list belongs under the thing it is a list for.
+     *
+     * The flip is kept, because "downwards" stops being the kind answer for a
+     * field near the bottom of the window; without room below, up is where the
+     * list can be read.
+     */
+    position-area: block-end span-all;
+    position-try-fallbacks: flip-block;
   }
 
   [data-theme="high-contrast"] select::picker(select) {
