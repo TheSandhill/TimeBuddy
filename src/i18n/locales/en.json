@@ -85,6 +85,7 @@
     "renameClient": "Rename client",
     "noClients": "No clients yet.",
     "addProject": "Add project",
+    "addProjectNamed": "Add project to {{name}}",
     "newProject": "New project",
     "renameProject": "Rename project",
     "actionsNamed": "Actions for {{name}}",

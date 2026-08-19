@@ -85,6 +85,7 @@
     "renameClient": "Klant hernoemen",
     "noClients": "Nog geen klanten.",
     "addProject": "Project toevoegen",
+    "addProjectNamed": "Project toevoegen aan {{name}}",
     "newProject": "Nieuw project",
     "renameProject": "Project hernoemen",
     "actionsNamed": "Acties voor {{name}}",

@@ -4,10 +4,11 @@ import {
   render,
   screen,
   waitFor,
+  waitForElementToBeRemoved,
   within,
 } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "../i18n/config";
 import type { Client, Project } from "../data/types";
 
@@ -26,6 +27,13 @@ const commands = vi.hoisted(() => ({
 vi.mock("../data/commands", () => commands);
 
 const { Clients } = await import("./clients");
+
+/**
+ * Where the motion tokens a stylesheet would have supplied are put. Without one
+ * every departure is instant, which is what the rest of these tests want and is
+ * useless to the one that watches something leave.
+ */
+const root = document.documentElement;
 
 const acme: Client = {
   id: 1,
@@ -101,6 +109,10 @@ beforeEach(() => {
   commands.updateProject.mockResolvedValue(website);
   commands.archiveProject.mockResolvedValue({ ...website, archivedAt: "x" });
   commands.restoreProject.mockResolvedValue(website);
+});
+
+afterEach(() => {
+  root.removeAttribute("style");
 });
 
 describe("the accordion", () => {
@@ -287,9 +299,7 @@ describe("creating and renaming", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
     await screen.findByText("Website");
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Project toevoegen" }),
-    );
+    menuAction("Acme", "Project toevoegen aan Acme");
     typeName(await screen.findByRole("form", { name: "Nieuw project" }), "App");
 
     await waitFor(() =>
@@ -341,15 +351,90 @@ describe("creating and renaming", () => {
     );
   });
 
+  it("offers the way in above the list rather than past the end of it", async () => {
+    // A hundred Clients is a plausible list and the bottom of one is nowhere:
+    // the way to add is where the screen already puts you, beside the search.
+    renderClients();
+    await screen.findByRole("button", { name: "Acme" });
+
+    const add = screen.getByRole("button", { name: "Klant toevoegen" });
+    const list = screen.getByRole("list");
+
+    expect(
+      add.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("opens the Client it is adding to, so the form has somewhere to be", async () => {
+    // The menu that offers this sits on the row, which is reachable closed;
+    // the form it raises is inside the body, which is not.
+    renderClients();
+    await screen.findByRole("button", { name: "Acme" });
+    expect(screen.getByRole("button", { name: "Acme" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+
+    menuAction("Acme", "Project toevoegen aan Acme");
+
+    expect(
+      await screen.findByRole("form", { name: "Nieuw project" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Acme" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+  });
+
+  it("does not hand a pending Project to a different Client", async () => {
+    // The form belongs to the Client it was raised on. Opening another row is
+    // not a way to change its mind about which Client that was — the one thing
+    // a form asking only for a name cannot say for itself.
+    const beta: Client = { ...acme, id: 3, name: "Beta" };
+    commands.listClients.mockResolvedValue([acme, beta]);
+    renderClients();
+    await screen.findByRole("button", { name: "Acme" });
+
+    menuAction("Acme", "Project toevoegen aan Acme");
+    await screen.findByRole("form", { name: "Nieuw project" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Beta" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Beta" })).toHaveAttribute(
+        "aria-expanded",
+        "true",
+      ),
+    );
+    expect(screen.queryByRole("form", { name: "Nieuw project" })).toBeNull();
+  });
+
+  it("keeps a cancelled form on screen while it collapses", async () => {
+    // The box animates its own height, and it used to animate an empty one:
+    // React unmounted the form the instant `editing` went null, so closing was
+    // 220ms of nothing. The form outlives the condition that opened it.
+    root.style.setProperty("--motion-quick", "60ms");
+    renderClients();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Klant toevoegen" }),
+    );
+    const form = await screen.findByRole("form", { name: "Nieuwe klant" });
+    fireEvent.click(within(form).getByRole("button", { name: "Annuleren" }));
+
+    // Its own pixels are what the collapsing box has in it. That the departing
+    // form is also out of reach is the mechanism's business, and tested there.
+    expect(screen.getByText("Annuleren")).toBeInTheDocument();
+    await waitForElementToBeRemoved(() => screen.queryByText("Annuleren"));
+  });
+
   it("leaves the accordion alone when a form is cancelled", async () => {
     renderClients();
 
     fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
     await screen.findByText("Website");
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Project toevoegen" }),
-    );
+    menuAction("Acme", "Project toevoegen aan Acme");
     const form = await screen.findByRole("form", { name: "Nieuw project" });
     fireEvent.click(within(form).getByRole("button", { name: "Annuleren" }));
 
@@ -459,9 +544,7 @@ describe("nothing in the UI touches the rate", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Acme" }));
     await screen.findByText("Website");
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Project toevoegen" }),
-    );
+    menuAction("Acme", "Project toevoegen aan Acme");
     const form = await screen.findByRole("form", { name: "Nieuw project" });
 
     expect(within(form).queryByLabelText(/tarief/i)).toBeNull();

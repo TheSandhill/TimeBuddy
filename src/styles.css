@@ -71,13 +71,6 @@
  * for them yet, and so the token-contract test can keep reading @theme as a
  * flat block.
  */
-@keyframes disclose {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-}
-
 @keyframes steam {
   0%,
   100% {

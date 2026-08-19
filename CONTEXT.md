@@ -22,6 +22,18 @@ now the sentence "a Project only means anything under a Client" rather than a ca
 first answer is the list of names, and a Client picked for you is a claim the screen has no way to
 make honestly.
 
+**An action lives on the thing it acts on.** Adding a Client is something done to the screen, so it
+is in the screen's header beside the title; adding a Project is something done to a Client, so it is
+in that Client's own menu beside Rename and Archive. Choosing it on a closed row opens that row:
+the menu is reachable closed and the form it raises is not, so opening is part of the action rather
+than a step asked of the user. Both used to be buttons under the last row of a
+list, which is fine for four Clients and nowhere for a hundred — the bottom of a list that grows is
+not a place anyone can find twice. Neither is now reached by scrolling past the thing it belongs to,
+and the accordion's body went back to being only the Projects and the form that makes one.
+
+Search and the archived switch sit together under the header, because both are the same question:
+which of these am I being shown.
+
 ### Project
 
 A named piece of work belonging to exactly one Client. Carries an optional `hourly_rate` that
@@ -315,9 +327,10 @@ allowed to be slow enough to notice, the Mug pouring out when a block is stopped
 room for its return leg and reads as a glitch rather than as spring.
 
 Five **easings** — soft out for arrivals, quick in for departures, soft in-out for the breath, and
-two overshoots: soft for a panel, snappier for a control. A route change also carries a **travel**,
-the short distance it moves along the tab bar's order; it is a length rather than a duration, but it
-is turned down by the same hands.
+two overshoots: soft for the undo toast, snappier for a control. The soft one carried the accordion
+too, until the accordion moved to `base` with the rest of the disclosures. A route change also
+carries a **travel**, the short distance it moves along the tab bar's order; it is a length rather
+than a duration, but it is turned down by the same hands.
 
 The **spring is not a token**. The floating tab bar's active pill widens to fit its label and its
 neighbours slide aside, and that is a spring, which is not a cubic-bézier and cannot be a CSS
@@ -332,9 +345,17 @@ records why form disclosures did not follow the route change onto it.
 **Transient UI arrives and leaves.** The undo toast and the three banners across the top — a failed
 Backup, a failed staged Restore, an offered Update — animate on the way out as well as in, which is
 the thing plain CSS cannot do: an element that animates as it goes has to outlive the condition that
-raised it. That is what the motion library is for, and those four are its first consumers. Banners
+raised it. That is what the motion library is for, and those four were its first consumers. Banners
 open and close on their height, the toast on an overshoot, because five seconds is not long to be
 noticed in.
+
+**A disclosure is the same shape**, and every one on the Clients screen is now the same mechanism:
+the add-client form, the add-project form, both rename forms, and the accordion body. They used to
+animate `grid-template-rows` while React unmounted the content the instant the condition went false,
+so opening looked right and closing was an empty box collapsing. They open on `base` and close on
+`quick`, the same asymmetry as everything else here — including the accordion, which used to open on
+the overshoot tier for no reason anyone chose. A closed row's Projects are now out of the document
+rather than clipped inside it, so nothing collapsed is still tab-reachable.
 
 A **departure never delays what it describes.** The delete still commits on its own schedule and the
 undo window is still five seconds; the element is only seeing itself out. Nothing waits for it — and
