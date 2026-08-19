@@ -233,7 +233,6 @@ export function Clients() {
           type="button"
           onClick={() => openForm("clients", null)}
           className={`${primaryButtonClass} flex items-center gap-1.5 self-start`}
-          style={{ animation: "disclose var(--motion-base) var(--ease-out-soft)" }}
         >
           <Icon name="add" className="size-4" />
           {t("clients.addClient")}
@@ -423,7 +422,6 @@ function ClientRow({
                 type="button"
                 onClick={onAddProject}
                 className={`${primaryButtonClass} flex items-center gap-1.5 self-start`}
-                style={{ animation: "disclose var(--motion-base) var(--ease-out-soft)" }}
               >
                 <Icon name="add" className="size-4" />
                 {t("clients.addProject")}

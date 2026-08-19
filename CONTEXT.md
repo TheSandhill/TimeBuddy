@@ -345,6 +345,11 @@ so opening looked right and closing was an empty box collapsing. They open on `b
 the overshoot tier for no reason anyone chose. A closed row's Projects are now out of the document
 rather than clipped inside it, so nothing collapsed is still tab-reachable.
 
+The **add button that takes a form's place has no arrival of its own**. It used to fade and drop in,
+which was fair when the box collapsing above it was empty and nothing else was moving. Now the form
+is what moves, and the button only rides up under it — two animations competing in adjacent space is
+one too many.
+
 A **departure never delays what it describes.** The delete still commits on its own schedule and the
 undo window is still five seconds; the element is only seeing itself out. Nothing waits for it — and
 what is leaving is a *picture* of itself: out of the accessibility tree and out of reach the moment
