@@ -187,15 +187,19 @@ export function PomodoroDial({
          * Nothing is lost when it does collapse. The glyph, the drained digits
          * and the muted ring are all still there; only the arrival stops moving.
          *
-         * `text-ink` — the clock's own colour, not the accent. The two trade
-         * places when a block is held: the digits drain to muted and the glyph
-         * takes the full ink, so the brightest thing in the circle is always
-         * whichever one is currently the point.
+         * `text-ink-muted` — **the paused ring's own colour**, which is what
+         * makes held one language rather than three: the arc goes
+         * `stroke-ink-muted`, the digits go `text-ink-muted`, and the glyph is
+         * drawn in the same ink. Held is "this screen is in muted ink now".
+         *
+         * The glyph still dominates despite sharing the digits' colour, because
+         * it sits *above* the scrim and they sit under it. Position does the
+         * work that a brighter colour was doing before.
          */}
         <div
           data-held={paused ? "on" : "off"}
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-20 grid place-items-center text-ink"
+          className="pointer-events-none absolute inset-0 z-20 grid place-items-center text-ink-muted"
         >
           {/*
            * The scrim: the circle's inside, dimmed. `bg-surface` at an alpha

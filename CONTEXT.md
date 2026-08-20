@@ -565,8 +565,9 @@ The deferral is **over**. What it left behind, and what the mark is now held to:
 - A **held** block dims the circle's inside behind a **large pause glyph**, with the digits drained to
   muted ink under it, a flat muted ring, the Mug greyed out, and the word *paused* in the titlebar's
   pill and the tray tooltip. The dimming stops at the ring's track rather than covering it: the ring is
-  what says *how much is left*, and that stays true while a block is held. The glyph takes the clock's own full ink while the digits give theirs up: the brightest
-  thing in the circle is always whichever of the two is currently the point.
+  what says *how much is left*, and that stays true while a block is held. Everything in the circle goes to **muted ink** together — the arc, the digits and
+  the glyph — so held is one language rather than three. The glyph still dominates, because it sits
+  above the dimming and they sit under it: position carries it, not a brighter colour.
 
   The word used to sit in the circle between the digits and the mark, and it is what the glyph
   replaced. It did not simply go: **a glyph cannot speak** — the icon set is `aria-hidden` with no way

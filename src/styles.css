@@ -397,9 +397,14 @@
  * overlap subtracts it, and five of them at Walnut's density is a smudge however
  * warm the colour. Tone alone was not enough here — the density is part of the
  * same decision, which is why it sits with it rather than in the knobs above.
+ *
+ * **The two Sand knobs, together.** Overlap compounds them: three plumes at 0.45
+ * cover about 83% of the way to `--color-steam`, so a small move here is a large
+ * move on screen. Too dark or too dense reads as smoke; too light or too sparse
+ * and it vanishes into the cream. Both failures have already happened once.
  */
 [data-theme="sand"] .mug-steam {
-  --steam-opacity: 0.3;
+  --steam-opacity: 0.45;
 }
 
 /*
@@ -553,10 +558,14 @@
   --color-scroll-thumb: #8f7f6a;
 
   /* Sand inverts it, and this is the token's whole reason for existing. On a
-   * bright surface vapour is not white — white on cream is invisible — it is
-   * a faint warm haze slightly *darker* than what is behind it. Pulled far
-   * back from the muted ink this used to borrow, which read as smoke. */
-  --color-steam: #d6cabb;
+   * bright surface vapour is not white — white on cream is invisible — it is a
+   * faint warm haze slightly *darker* than what is behind it.
+   *
+   * Third value here, and the two before it bracket the answer: the muted ink
+   * (#6f6157) read as black smoke, and #d6cabb at a third of the density was
+   * invisible. Both hue and density had been moved the same way at once, which
+   * is how you cross a target twice. This sits between them. */
+  --color-steam: #c9baa8;
 }
 
 /*

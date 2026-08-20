@@ -197,6 +197,22 @@ describe("the dial", () => {
     expect(heldScrimOf(idle)).toHaveClass("opacity-0");
   });
 
+  it("draws the whole held circle in one ink", () => {
+    // The arc, the digits and the glyph all go muted together, so held reads as
+    // one language rather than three unrelated changes. The glyph still
+    // dominates — it is above the dimming and they are under it, so position
+    // carries it rather than a brighter colour.
+    const { container } = showDial({
+      running: true,
+      paused: true,
+      remaining: 0.5,
+    });
+
+    expect(arcOf(container)).toHaveClass("stroke-ink-muted");
+    expect(digitsOf(container)).toHaveClass("text-ink-muted");
+    expect(heldOf({ container })).toHaveClass("text-ink-muted");
+  });
+
   it("dims only the circle's inside, so the ring stays readable", () => {
     // The ring is the one thing that says *how much is left*, and that stays
     // true while a block is held. The scrim stops at the track: `rounded-full`
