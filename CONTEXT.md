@@ -294,8 +294,11 @@ re-decides (ADR-0004). Labels are sentence case; the wall of tracked capitals is
 A Theme may also change an asset's **fidelity and not only its hue**: High-contrast wants an outline
 where Walnut wants something soft, and recolouring a soft thing to yellow would honour the token while
 breaking the promise. That is why a *drawn* asset is a token set rather than a file. The [Mug](#mug)
-is the exception that proves the shape of the rule — it is a raster, so its fidelity cannot vary by
-degree, and High-contrast drops it instead. Varying fidelity includes varying it to nothing.
+is both halves of the rule: its *body* is a raster, so fidelity cannot vary by degree and High-contrast
+drops it instead — varying fidelity includes varying it to nothing — while its *steam* is drawn, and
+varies per theme exactly as the rule intends. Steam is the one thing whose tone has to invert against
+the surface: lighter than a dark room, a faint darker haze against a bright one, which is why it has a
+token of its own and why Sand takes less of it.
 
 Shipped: **Walnut** (dark, default), **Sand** (light), **High-contrast**, plus an opt-in
 "follow system".
@@ -559,9 +562,10 @@ The deferral is **over**. What it left behind, and what the mark is now held to:
   knowingly fails.
 - Each slot names **its own width, in one line**, and derives nothing. `AppMark` takes a width and knows
   the asset's aspect; what a mark should measure in a given place is a perceptual value every time.
-- A **held** block is a **large pause glyph projected over the dial**, the digits drained to muted ink
-  under it, a flat muted ring, the Mug greyed out, and the word *paused* in the titlebar's pill and the
-  tray tooltip. The glyph takes the clock's own full ink while the digits give theirs up: the brightest
+- A **held** block dims the circle's inside behind a **large pause glyph**, with the digits drained to
+  muted ink under it, a flat muted ring, the Mug greyed out, and the word *paused* in the titlebar's
+  pill and the tray tooltip. The dimming stops at the ring's track rather than covering it: the ring is
+  what says *how much is left*, and that stays true while a block is held. The glyph takes the clock's own full ink while the digits give theirs up: the brightest
   thing in the circle is always whichever of the two is currently the point.
 
   The word used to sit in the circle between the digits and the mark, and it is what the glyph

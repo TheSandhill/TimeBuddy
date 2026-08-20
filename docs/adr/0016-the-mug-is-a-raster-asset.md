@@ -204,5 +204,21 @@ rule naming only the image would leave plumes rising out of nothing.
   knobs; the comment says so at both ends.
 - Cost: the turbulence and displacement repaint every frame the plumes move, over a filter region about
   twice the mark's box. Cheap at 88px on one screen; not a pattern to spread.
+- **The steam takes a theme token, and the mug's body still cannot.** `--color-steam` joins the colour
+  contract, because steam is the one thing whose tone relative to the surface has to invert — lighter
+  than a dark room, a faint darker haze against a bright one. On `--color-ink-muted`, which it borrowed
+  first, Sand got black smoke. Sand also takes a lower `--steam-opacity`: a haze that subtracts light
+  accumulates where one that adds it does not.
+
+  Worth noting what this means for the ADR above. The decision "the Mug is a raster, so its fidelity
+  cannot vary" is intact for the *body* and now plainly false for the mark as a whole. The drawn half
+  varies per theme exactly as ADR-0004's provision always said a drawn asset should, and it is the
+  first thing in the app to do so.
+- **A held block dims the circle.** A scrim covers the ring's inside — `bg-surface` at an alpha, so it
+  pulls everything back towards whatever the theme's surface already is and reads correctly on a dark
+  theme and a light one with no branch. It stops at the track on purpose: the ring is the one thing that
+  says *how much is left*, and that stays true while a block is held. The glyph sits above it, and the
+  two animate on different tiers — `bounce` for the glyph, which overshoots, and `base` for the scrim,
+  because a dimming is a disclosure and a scrim swelling out of the middle reads as a bubble.
 - Cost: thirteen values, and the look is the sum of them. Nobody can review this by reading the diff —
   it has to be looked at in the running app, which is the same exposure the mug itself had.

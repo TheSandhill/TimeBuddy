@@ -9,6 +9,9 @@ const RING_RADIUS = 106;
 const RING_STROKE = 9;
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
+/** The circle's inside, which is what the held scrim covers and no more. */
+const RING_INNER = 2 * (RING_RADIUS - RING_STROKE / 2);
+
 /**
  * The Mug's drawn width, and **the one line to tune it** — a perceptual value,
  * set by the owner's eye rather than derived from anything here.
@@ -171,11 +174,15 @@ export function PomodoroDial({
          * this has to sit over them — it is the one thing on this screen allowed
          * to.
          *
+         * Two layers: a scrim over the circle's inside, and the glyph above it.
+         *
          * Mounted always and toggled, for the same reason the steam layer is:
          * something that appears from nothing has nothing to animate from, and
-         * both directions are supposed to move. `bounce` because it arrives on an
-         * overshoot, which is the tier's whole definition — and a tier rather
-         * than a number, so reduced motion collapses it without a branch here.
+         * both directions are supposed to move. The glyph arrives on `bounce`
+         * because it overshoots, which is that tier's whole definition; the scrim
+         * takes plain `base`, since a dimming is a disclosure and not a bounce.
+         * Tiers rather than numbers, so reduced motion collapses both with no
+         * branch here.
          *
          * Nothing is lost when it does collapse. The glyph, the drained digits
          * and the muted ring are all still there; only the arrival stops moving.
@@ -188,11 +195,35 @@ export function PomodoroDial({
         <div
           data-held={paused ? "on" : "off"}
           aria-hidden="true"
-          className={`pointer-events-none absolute inset-0 z-20 grid place-items-center text-ink transition-[opacity,scale] motion-bounce ease-bounce-soft ${
-            paused ? "scale-100 opacity-100" : "scale-75 opacity-0"
-          }`}
+          className="pointer-events-none absolute inset-0 z-20 grid place-items-center text-ink"
         >
-          <Icon name="pause" className={HELD_GLYPH} />
+          {/*
+           * The scrim: the circle's inside, dimmed. `bg-surface` at an alpha
+           * rather than a black wash, so it dims by pulling everything back
+           * towards whatever the theme's surface already is — darker on Walnut,
+           * paler on Sand, and correct in both without a branch.
+           *
+           * `rounded-full` at exactly the ring's inner diameter, so it stops at
+           * the track and never covers it. The ring still has to be readable
+           * through the hold: it is the one thing here that says *how much is
+           * left*, and that stays true whether or not the block is running.
+           *
+           * It fades and does not scale. Only the glyph scales — a scrim
+           * growing from 75% reads as a bubble swelling out of the middle.
+           */}
+          <div
+            style={{ width: RING_INNER, height: RING_INNER }}
+            className={`absolute rounded-full bg-surface/70 transition-opacity motion-base ease-out-soft ${
+              paused ? "opacity-100" : "opacity-0"
+            }`}
+          />
+
+          <Icon
+            name="pause"
+            className={`relative ${HELD_GLYPH} transition-[opacity,scale] motion-bounce ease-bounce-soft ${
+              paused ? "scale-100 opacity-100" : "scale-75 opacity-0"
+            }`}
+          />
         </div>
       </div>
 

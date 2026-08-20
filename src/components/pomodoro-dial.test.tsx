@@ -59,6 +59,13 @@ const digitsOf = (container: HTMLElement) =>
 const heldOf = ({ container }: { container: HTMLElement }) =>
   container.querySelector("[data-held]") as HTMLElement;
 
+/** Its two layers: the circle-wide dimming, and the glyph above it. */
+const heldScrimOf = (container: HTMLElement) =>
+  container.querySelector("[data-held] > div") as HTMLElement;
+
+const heldGlyphOf = (container: HTMLElement) =>
+  container.querySelector("[data-held] > svg") as SVGElement;
+
 /** The arc that carries progress, as opposed to the track behind it. */
 const arcOf = (container: HTMLElement) =>
   container.querySelector("circle + circle") as SVGCircleElement;
@@ -167,15 +174,40 @@ describe("the dial", () => {
     expect(held.querySelector("svg")).not.toBeNull();
   });
 
-  it("animates the glyph in and out rather than snapping it on", () => {
+  it("animates both layers in and out rather than snapping them on", () => {
     // Mounted always and toggled, so both directions have something to move
     // from — the same reason the steam layer is never mounted into its on state.
-    // `bounce` because it arrives on an overshoot, and a tier rather than a
-    // number so reduced motion collapses it with no branch in the component.
-    const held = heldOf(showDial({ running: true, paused: true }));
+    //
+    // Two tiers, because they are two gestures: the glyph overshoots, which is
+    // what `bounce` is for, and the scrim is a dimming, which is a disclosure.
+    // Tiers rather than numbers, so reduced motion collapses both with no branch
+    // in the component.
+    const held = showDial({ running: true, paused: true }).container;
 
-    expect(held).toHaveClass("motion-bounce", "ease-bounce-soft");
-    expect(heldOf(showDial())).toHaveClass("opacity-0");
+    expect(heldGlyphOf(held)).toHaveClass(
+      "motion-bounce",
+      "ease-bounce-soft",
+      "scale-100",
+      "opacity-100",
+    );
+    expect(heldScrimOf(held)).toHaveClass("motion-base", "opacity-100");
+
+    const idle = showDial().container;
+    expect(heldGlyphOf(idle)).toHaveClass("scale-75", "opacity-0");
+    expect(heldScrimOf(idle)).toHaveClass("opacity-0");
+  });
+
+  it("dims only the circle's inside, so the ring stays readable", () => {
+    // The ring is the one thing that says *how much is left*, and that stays
+    // true while a block is held. The scrim stops at the track: `rounded-full`
+    // at exactly the ring's inner diameter.
+    const scrim = heldScrimOf(showDial({ running: true, paused: true }).container);
+
+    expect(scrim).toHaveClass("rounded-full");
+    // Pulled towards the theme's own surface rather than washed with black, so
+    // it dims correctly on a dark theme and a light one without a branch.
+    expect(scrim.className).toMatch(/bg-surface\//);
+    expect(scrim.style.width).toBe(`${2 * (106 - 9 / 2)}px`);
   });
 
   it("still says the word out loud, since a glyph cannot speak", () => {

@@ -70,6 +70,10 @@
   --color-accent: #c8a87c;
   --color-danger: #c2705a;
   --color-scroll-thumb: #e6dccd;
+
+  /* Vapour over dark walnut: lighter than the room it is in, which is what
+   * steam looks like anywhere you have actually seen it. */
+  --color-steam: #e8dfd0;
 }
 
 /*
@@ -355,9 +359,9 @@
   pointer-events: none;
 
   /* `currentColor` all the way down, so no artwork names a colour (ADR-0014).
-   * Muted ink rather than the accent: steam is not a state, and the accent is
-   * how this screen says *running*. */
-  color: var(--color-ink-muted);
+   * Its own token rather than the muted ink it started on: the ink is dark on
+   * Sand, and five overlapping plumes of dark-on-cream is smoke, not steam. */
+  color: var(--color-steam);
 
   /*
    * Off by default, and it **fades** rather than appears.
@@ -383,6 +387,19 @@
   transition:
     opacity var(--motion-deliberate) var(--ease-in-out-soft),
     visibility var(--motion-deliberate);
+}
+
+/*
+ * Sand needs **less** steam as well as a different tone.
+ *
+ * A haze that is darker than its background is doing something a light one is
+ * not: on Walnut the plumes add light and pile up harmlessly, but on Sand every
+ * overlap subtracts it, and five of them at Walnut's density is a smudge however
+ * warm the colour. Tone alone was not enough here — the density is part of the
+ * same decision, which is why it sits with it rather than in the knobs above.
+ */
+[data-theme="sand"] .mug-steam {
+  --steam-opacity: 0.3;
 }
 
 /*
@@ -534,6 +551,12 @@
   /* Sand inverts it: the cream Walnut draws the thumb in is this theme's own
      background, so a light theme needs the same mark in reverse. */
   --color-scroll-thumb: #8f7f6a;
+
+  /* Sand inverts it, and this is the token's whole reason for existing. On a
+   * bright surface vapour is not white — white on cream is invisible — it is
+   * a faint warm haze slightly *darker* than what is behind it. Pulled far
+   * back from the muted ink this used to borrow, which read as smoke. */
+  --color-steam: #d6cabb;
 }
 
 /*
@@ -586,6 +609,9 @@
   --color-accent: #ffd400;
   --color-danger: #ff6b4a;
   --color-scroll-thumb: #ffffff;
+
+  /* Declared for the contract only: this theme shows no mark, so no steam. */
+  --color-steam: #ffffff;
 }
 
 /*

@@ -43,7 +43,9 @@ reference tokens; **a raw value in a component is a defect** — a hex, a durati
 
 A Theme covers three token classes:
 
-- **Colour** — `--color-surface`, `--color-ink`, `--color-accent`, …
+- **Colour** — `--color-surface`, `--color-ink`, `--color-accent`, … and `--color-steam`, which is the
+  odd one: not a colour anything is drawn *in* so much as the one value that has to flip its relation
+  to the background per theme. See *Themed assets vary fidelity*.
 - **Shape** — `--radius-sm|md|lg|xl`, and squircle corners where the engine has them.
 - **Motion** — five durations, five easings, two looping animations.
 
@@ -148,9 +150,18 @@ wants something soft, and recolouring a soft thing to yellow would honour the to
 theme's promise that nothing is soft. This is why a themed asset is a token set rather than a file.
 
 Narrowed by ADR-0016 to **drawn** assets, where a token set is what makes varying fidelity possible.
-The Mug is not one — it is a raster — so it answers this the only way left: **High-contrast shows no
-mark at all**. Varying fidelity includes varying it to nothing, and the test the mark had to pass is
-that dropping it loses nothing, which holds because it is decorative.
+The Mug's *body* is not one — it is a raster — so it answers this the only way left: **High-contrast
+shows no mark at all**. Varying fidelity includes varying it to nothing, and the test the mark had to
+pass is that dropping it loses nothing, which holds because it is decorative.
+
+**The Mug's steam is the provision's first real exerciser**, and it needed to be. Steam is the one thing
+in the app whose tone *relative to the surface* has to invert: vapour is lighter than a dark room, and
+against a bright one it is no more than a faint haze slightly darker than what is behind it. Borrowing
+`--color-ink-muted` gave Walnut something plausible and gave Sand five overlapping plumes of dark on
+cream, which reads as black smoke. So `--color-steam` is a token, and Sand additionally takes **less**
+of it: a haze that subtracts light piles up where one that adds it does not, so tone and density are one
+decision rather than two. Fidelity, varying declaratively, on an asset that is drawn — which is exactly
+what this section was written for and waited two ADRs to get.
 
 The provision's other exerciser is the **control fill**, described further up under *One control
 vocabulary*: High-contrast outlines what the other themes fill softly. That one is a treatment rather
