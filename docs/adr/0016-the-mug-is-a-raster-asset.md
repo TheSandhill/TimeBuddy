@@ -1,5 +1,9 @@
 # ADR-0016: The Mug is a raster asset, and the first static file in the bundle
 
+> The title is half the story since the 2026-08-20 steam amendment: the mug's **body** is a raster and
+> the steam over it is drawn. Kept as-is because the body is what the decision was about, and renaming
+> an accepted ADR loses every reference to it.
+
 - **Status**: Accepted
 - **Date**: 2026-08-20
 - **Amends**: ADR-0004, whose fourth token class — the Mug — was deferred, and whose provision that a
@@ -40,7 +44,9 @@ icon source with alpha intact and committed. It is the same mug as the app icon,
 one face, one file lineage, no second drawing to keep in sync.
 
 **Two slots, one component.** `AppMark` is the only thing that draws it — the dial's centre and the
-titlebar's left cell both call it and decide nothing but a width. The reason is the one ADR-0004 gives
+titlebar's left cell both call it. A caller decided nothing but a width when this was written; since
+the steam amendment it also says whether the mark is greyed and whether it steams, and the titlebar
+answers no to both. The reason is the one ADR-0004 gives
 for the control vocabulary living in two files: the copies disagree, and by the time anyone notices
 there are four of them.
 
@@ -220,5 +226,17 @@ rule naming only the image would leave plumes rising out of nothing.
   says *how much is left*, and that stays true while a block is held. The glyph sits above it, and the
   two animate on different tiers — `bounce` for the glyph, which overshoots, and `base` for the scrim,
   because a dimming is a disclosure and a scrim swelling out of the middle reads as a bubble.
+- **No test guards the steam's visibility, and one was tried on paper and rejected.** The obvious move
+  is the `--color-scroll-thumb` precedent — a contrast floor, because "a mark nobody can pick out of the
+  background is the same defect as unreadable body text". It does not transfer. The thumb has only a
+  lower bound; steam has an upper one too, and it is not symmetric between themes: Walnut ships at about
+  10.5:1 and reads as vapour, while Sand's smoke failure was only 4.5:1. A guard would need a floor, a
+  ceiling depending on whether the theme is light or dark, and three thresholds reverse-engineered from
+  the two failures — a test encoding this history rather than a rule. The bracket is recorded in the
+  `styles.css` comment instead, which is what the next person actually needs.
+- **A held countdown is deliberately below the contrast floor.** Drained ink under a 70% scrim is about
+  1.7:1 on Walnut and 1.5:1 on Sand, where the app holds large text to 3:1. Three legible alternatives
+  were measured and the look was chosen over them; see `CONTEXT.md` → Mug. Recorded because an
+  unexplained sub-floor value is indistinguishable from a mistake.
 - Cost: thirteen values, and the look is the sum of them. Nobody can review this by reading the diff —
   it has to be looked at in the running app, which is the same exposure the mug itself had.

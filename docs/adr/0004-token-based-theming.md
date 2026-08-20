@@ -97,8 +97,9 @@ which is why the tab indicator stayed behind when the screen underneath it left.
 **No state is signalled by motion alone.** This is the constraint that makes motion safe to tokenise:
 because reduced motion — the OS's, or High-contrast's own token values — sets the loops to `none` and
 the durations to a millisecond, any state that only moved would vanish. So the pause glyph, the Mug's
-greyness (a level, not a movement), the drained digits and the word *paused* each carry the state on
-their own, and motion is the pleasure rather than the message. The held overlay animates in on
+greyness (a level, not a movement) and the drained digits each carry the state on their own — the word
+*paused* survives too, but screen-reader-only since the glyph replaced it, so it is not what makes this
+safe for a sighted person, and motion is the pleasure rather than the message. The held overlay animates in on
 `bounce`; collapse that to a millisecond and the glyph is simply *there*, which is the whole test. The mug's *coffee* level was the original example
 and is gone with the drawing (ADR-0016); that its replacement is still a level and not a movement is
 the part of it that mattered.

@@ -401,7 +401,16 @@
  * **The two Sand knobs, together.** Overlap compounds them: three plumes at 0.45
  * cover about 83% of the way to `--color-steam`, so a small move here is a large
  * move on screen. Too dark or too dense reads as smoke; too light or too sparse
- * and it vanishes into the cream. Both failures have already happened once.
+ * and it vanishes into the cream. Both failures have already happened once, and
+ * measured against the surface with three plumes stacked they bracket the answer:
+ *
+ *   #6f6157 @ 0.62  ->  4.5:1  — read as black smoke
+ *   #c9baa8 @ 0.45  ->  1.5:1  — shipped
+ *   #d6cabb @ 0.30  ->  1.2:1  — invisible
+ *
+ * Those numbers are the whole guard. There is no test, and ADR-0016 records why:
+ * Walnut ships at about 10.5:1 and reads as vapour, so any floor-and-ceiling
+ * covering both themes would be constants fitted to the two failures above.
  */
 [data-theme="sand"] .mug-steam {
   --steam-opacity: 0.45;

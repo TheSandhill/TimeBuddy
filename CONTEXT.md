@@ -517,7 +517,9 @@ bar's left cell and does **not** steam there for this reason; only the dial's do
 **No state is ever signalled by motion alone.** This is the rule that makes the rest safe. Reduced
 motion — the operating system's, or High-contrast's own token values — sets the loops to `none` and
 collapses the durations to a millisecond, and *nothing is lost*, because the pause glyph, the drained
-digits, the Mug's own greyness and the word *paused* each say it without moving. The loops go to `none` rather than to a
+digits and the Mug's own greyness each say it without moving — the word *paused* is still said, but only
+to a screen reader since the glyph replaced it, so it is not what carries this for a sighted person. The
+loops go to `none` rather than to a
 millisecond: a breath that fast is a flicker, which is worse than stillness. Enforced by a test, the
 way the string catalogues are — a rule about what may not appear in a component is worth exactly what
 it costs to break it.
@@ -568,6 +570,15 @@ The deferral is **over**. What it left behind, and what the mark is now held to:
   what says *how much is left*, and that stays true while a block is held. Everything in the circle goes to **muted ink** together — the arc, the digits and
   the glyph — so held is one language rather than three. The glyph still dominates, because it sits
   above the dimming and they sit under it: position carries it, not a brighter colour.
+
+  **A held countdown is deliberately hard to read**, and this was decided with the numbers in hand.
+  Drained ink under the dimming puts the digits at about 1.7:1 on Walnut and 1.5:1 on Sand, against the
+  3:1 the app holds large text to everywhere else. Legible alternatives were available and measured —
+  leaving the digits at full ink, lifting them above the scrim, or a scrim at 30% rather than 70% — and
+  the look was chosen over the legibility on purpose. The countdown is still on screen, and the
+  titlebar's pill states it at full contrast on every screen. What a held dial is *for* is saying "not
+  now", and it says that by receding. Do not "fix" this without asking: it is a decision, not an
+  oversight.
 
   The word used to sit in the circle between the digits and the mark, and it is what the glyph
   replaced. It did not simply go: **a glyph cannot speak** — the icon set is `aria-hidden` with no way
