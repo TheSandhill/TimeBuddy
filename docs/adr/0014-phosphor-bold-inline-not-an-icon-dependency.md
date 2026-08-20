@@ -6,6 +6,8 @@
   worth the bundle or the licence". That sentence is narrowed rather than deleted — see *What survives*.
 - **Amended**: 2026-08-18 — which of `error` and `warning` a failure takes is now a rule rather than a
   judgement call per banner. Amended in place: nothing here was reversed.
+- **Amended**: 2026-08-20 — one sentence under *What survives* said ADR-0004's fidelity provision was
+  unexercised and waiting for the Mug. ADR-0016 ended both. Nothing about the icon set changed.
 
 ## Context
 
@@ -116,9 +118,13 @@ that sentence was written.
 component is a defect holds for artwork too, with no exception carved out. A guard reads the source and
 fails on a hex.
 
-**Themed assets vary fidelity, not only hue** (ADR-0004) is untouched and still unexercised. An icon
-inherits its colour and is the same shape in every theme; it is not a themed asset in that sense. The
-provision still waits for the Mug.
+**Themed assets vary fidelity, not only hue** (ADR-0004) is untouched by this ADR. An icon inherits its
+colour and is the same shape in every theme; it is not a themed asset in that sense.
+
+*Amended 2026-08-20:* this paragraph used to end "the provision still waits for the Mug". It does not
+any more — ADR-0016 brought the Mug in as a raster, narrowed the provision to *drawn* assets, and
+answered it for this one by having High-contrast show no mark at all. The sentence above still holds
+for the icon set; only the waiting is over.
 
 ## Consequences
 

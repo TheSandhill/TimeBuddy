@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fg from "fast-glob";
 import { describe, expect, it } from "vitest";
+import { stylesheet } from "../test/stylesheet";
 import {
   defaultTheme,
   motionTiers,
@@ -12,7 +13,6 @@ import {
 } from "./tokens";
 
 const srcDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const stylesheet = readFileSync(path.join(srcDir, "styles.css"), "utf8");
 
 describe("theme tokens", () => {
   it("declares the default theme's tokens in the Tailwind @theme block", () => {

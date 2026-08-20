@@ -2,7 +2,15 @@ import { useTranslation } from "react-i18next";
 import { formatCountdown, isPaused, remainingSeconds } from "../timer/block";
 import type { RunningBlock } from "../timer/lifecycle";
 import { closeWindow, minimizeWindow } from "../tray/window-buttons";
+import { AppMark } from "./app-mark";
 import { closeButtonClass, minimizeButtonClass } from "./button";
+
+/**
+ * The mark's drawn width in the left cell. Perceptual, like the dial's: the bar
+ * is 40px tall, so the ceiling is what sits beside the wordmark without
+ * crowding it or growing the bar.
+ */
+const MARK_WIDTH = 22;
 
 /**
  * The glyphs, inline rather than an icon dependency: two paths is not a library,
@@ -42,8 +50,9 @@ function Glyph({ d }: { d: string }) {
  * element it meets on the way up and never consults an ancestor. That is what
  * lets the buttons be 28x28 targets inside the region rather than beside it.
  *
- * Three cells: the wordmark alone on the left — there is no mark, and the slot
- * is left for one — the block's countdown centred, and the two buttons right.
+ * Three cells: the **mark and the wordmark** on the left, the block's countdown
+ * centred, and the two buttons right. The left cell was the wordmark alone
+ * while the Mug was deferred; ADR-0016 fills it.
  *
  * There is no maximize button, and that is the point: dropping native
  * decorations forfeits Snap Layouts and double-click-to-maximize, and offering
@@ -64,8 +73,16 @@ export function Titlebar({ block, now }: RunningBlock) {
       data-tauri-drag-region="deep"
       className="grid h-10 shrink-0 grid-cols-3 items-center border-b border-border bg-surface-raised px-3"
     >
-      <span className="text-sm font-medium tracking-wide text-ink">
-        {t("app.name")}
+      {/*
+       * The same mark as the dial's, at the size a 40px bar has room for. It
+       * never dims here: the pill beside it carries held, and a bar that is on
+       * every screen is the wrong place to say a thing twice.
+       */}
+      <span className="flex items-center gap-1.5">
+        <AppMark width={MARK_WIDTH} />
+        <span className="text-sm font-medium tracking-wide text-ink">
+          {t("app.name")}
+        </span>
       </span>
 
       {/*

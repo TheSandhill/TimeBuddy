@@ -291,10 +291,11 @@ frame of the window. The treatments that use them are the app's **control vocabu
 buttons and one of fields, labels and quiet headings, which every screen imports and no screen
 re-decides (ADR-0004). Labels are sentence case; the wall of tracked capitals is gone.
 
-A Theme may also change an asset's **fidelity and not only its hue**, which is why a themed asset is
-a token set rather than a file: High-contrast wants an outline where Walnut wants something soft, and
-recolouring a soft thing to yellow would honour the token while breaking the promise. Nothing
-exercises that yet — see [Mug](#mug).
+A Theme may also change an asset's **fidelity and not only its hue**: High-contrast wants an outline
+where Walnut wants something soft, and recolouring a soft thing to yellow would honour the token while
+breaking the promise. That is why a *drawn* asset is a token set rather than a file. The [Mug](#mug)
+is the exception that proves the shape of the rule — it is a raster, so its fidelity cannot vary by
+degree, and High-contrast drops it instead. Varying fidelity includes varying it to nothing.
 
 Shipped: **Walnut** (dark, default), **Sand** (light), **High-contrast**, plus an opt-in
 "follow system".
@@ -431,7 +432,9 @@ How the app moves between one state and the next. Part of the Theme, for the rea
 Five **durations**, and a sixth is a sign one of these should have been reused: `quick` for hover,
 colour and focus; `base` for disclosure — the accordion, a form opening, the tab indicator; `bounce`
 for anything on an overshoot curve; `page` for a route change; `deliberate` for the one animation
-allowed to be slow enough to notice, the Mug pouring out when a block is stopped by hand.
+allowed to be slow enough to notice. That tier was written for the Mug pouring out when a block is
+stopped by hand, which a raster mark cannot do; it is **unspent** until something else earns it, and a
+tier nothing uses is worth keeping only as long as that stays true.
 
 `bounce` is a tier of its own rather than a use of `base` because an overshoot inside 220ms has no
 room for its return leg and reads as a glitch rather than as spring.
@@ -479,18 +482,22 @@ Restating them would give High-contrast and reduced motion a second place to be 
 second place to be forgotten. So there is no reduced-motion branch in any component: the cascade has
 already answered by the time the value is read.
 
-Two **loops**, and only two: the Mug's steam, and the dial ring's breath. They run at deliberately
-different periods — two things breathing in step read as machinery. The breath is slow, near four and
-a half seconds, because a heartbeat cadence means urgency and this is a tool for twenty-five
-uninterrupted minutes.
+Two **loops** were declared, and only two: the Mug's steam, and the dial ring's breath. They run at
+deliberately different periods — two things breathing in step read as machinery. The breath is slow,
+near four and a half seconds, because a heartbeat cadence means urgency and this is a tool for
+twenty-five uninterrupted minutes.
+
+The **steam has nothing to rise from**: the Mug arrived as a raster, and animating a wisp over a
+photograph is not the same drawing. `--animate-steam` stays declared by all three themes, unspent
+alongside `deliberate`, for the same reason and with the same expiry — see [Mug](#mug).
 
 **Nothing is on the titlebar.** The countdown pill is on every screen, so an animation there would be
 in the corner of the eye permanently and become the thing the app is remembered for.
 
 **No state is ever signalled by motion alone.** This is the rule that makes the rest safe. Reduced
 motion — the operating system's, or High-contrast's own token values — sets the loops to `none` and
-collapses the durations to a millisecond, and *nothing is lost*, because the digits, the Mug's coffee
-level and the word *paused* each say it without moving. The loops go to `none` rather than to a
+collapses the durations to a millisecond, and *nothing is lost*, because the digits, the Mug's own
+dimness and the word *paused* each say it without moving. The loops go to `none` rather than to a
 millisecond: a breath that fast is a flicker, which is worse than stillness. Enforced by a test, the
 way the string catalogues are — a rule about what may not appear in a component is worth exactly what
 it costs to break it.
@@ -510,26 +517,48 @@ way past.
 
 ### Mug
 
-The app's intended face: a smiling coffee mug. **Deferred, not abandoned** — three prototype attempts
-at drawing one as hand-authored SVG were all rejected, the last because the mouth ellipse was nearly
-as wide as the body and the thing read as a bowl of coffee with a face on it. Getting a mark that
-carries the app's name needs a different method than an agent drawing paths blind, so nothing about it
-is settled and the app currently ships no mark at all.
+The app's face: a coffee mug, and **the same mug as the app icon**. Cream cup, dark coffee, seen from
+slightly above. It is a **raster** — one asset, not a drawing on tokens — and that is the whole of why
+it exists at all: three attempts at hand-authoring it as SVG were rejected, and the honest diagnosis
+was the method rather than the drawing. An agent drawing paths it never sees render is a bad loop. See
+ADR-0016.
 
-What survives the deferral, because it was never really about the mug:
+The deferral is **over**. What it left behind, and what the mark is now held to:
 
-- The **titlebar's left cell** is the wordmark alone. A mark joins it when there is one worth having.
-- The **dial's centre** is the digits, and whatever goes under them must never grow enough to compete
-  with them. That was the rule that killed the largest of the prototype variants.
-- A **held** block is currently the word *paused* in the pill and the tray tooltip, plus a flat muted
-  ring. That is enough, and the word is not motion — but it is two signals where there were five, so
-  there is no spare. Whatever replaces the mug should carry one.
-- The **tray icon is fixed** whatever it becomes. A live one would mean redrawing and re-registering a
-  bitmap on a timer, for sixteen pixels, and the tooltip already carries the minutes.
+- The **dial's centre** is the digits with the mark under them, and **the digits are what the screen is
+  about**. That is a rule about weight rather than about size: they are the largest *type* in the app,
+  they are the thing that changes every second, and they are the only thing in the circle a screen
+  reader is given. The mark is subordinate because it sits under them, says nothing and never moves —
+  not because it is smaller. It is 88px wide against 60px digits, and is the wider of the two.
 
-The idea worth keeping from the attempts: the mug's **coffee level** as a static state indicator —
-static being the point, since a level survives reduced motion where a movement does not. It was never
-a gauge, only something a glance gets, and the ring and the digits carried the truth throughout.
+  This is the rule that killed the largest prototype variant, a 190px mug with **no ring at all**, and
+  restating it this way is closer to what that variant actually failed: it replaced the dial instead of
+  sitting inside it. What stays checkable is containment — the ring is there, and the digits and the
+  mark share its inside without pushing each other out. Sizes past that are tuned by eye in the running
+  app.
+
+  Earlier wording was that the mark must "never grow enough to compete with the digits". The shipped
+  88px breaks that read literally, so it was reworded rather than left standing as a rule the app
+  knowingly fails.
+- Each slot names **its own width, in one line**, and derives nothing. `AppMark` takes a width and knows
+  the asset's aspect; what a mark should measure in a given place is a perceptual value every time.
+- A **held** block is the word *paused* in the pill and the tray tooltip, a flat muted ring, and now
+  **the Mug dimmed in the dial**. Three signals where the mug design once had five — the spare it was
+  owed is the mark, and the mark has paid it.
+- The dimming is a **level, not a movement**, which is the one thing the parked coffee-level idea was
+  really about: reduced motion sets both loops to `none`, and held has to survive that. A raster cannot
+  drain, so the level it carries is its own opacity.
+- **High-contrast shows no mark.** A shaded cream photograph cannot flatten to an outline and means
+  nothing recoloured, so the fidelity that varies for this asset is *absence*. Nothing is lost: the
+  mark says nothing the digits and the word do not.
+- The **titlebar's left cell** is the mark **and** the wordmark, the mark at 22px in a 40px bar. It does
+  not dim there: the countdown pill beside it carries held, and a bar that is on every screen is the
+  wrong place to say a thing the dial already says three ways.
+- The **tray icon is fixed**. A live one would mean redrawing and re-registering a bitmap on a timer,
+  for sixteen pixels, and the tooltip already carries the minutes.
+
+The mark is **decorative everywhere** — no label, `aria-hidden`. Anything it could say, the countdown
+and the word *paused* already said.
 
 The tagline — *good time, great work* — appears **once**, on the first step of the first-run wizard.
 That is the only moment the app is introducing itself; anywhere else it is a slogan in the way.

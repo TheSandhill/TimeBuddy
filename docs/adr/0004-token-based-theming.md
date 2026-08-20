@@ -11,6 +11,14 @@
 - **Narrowed**: 2026-08-17 by ADR-0014 — the app takes an icon set, and two more loops join the motion
   tokens. The no-icon-dependency sentence below survives for the titlebar's two glyphs only. This is
   the first amendment that reverses rather than adds, which is why it is an ADR of its own.
+- **Narrowed**: 2026-08-20 by ADR-0016 — the Mug arrives, as a **raster** rather than as this ADR's
+  fourth token class. Its nine colour tokens are never written; the fidelity provision below is
+  narrowed to *drawn* assets and answered for this one by High-contrast dropping the mark. Two motion
+  tokens are left unspent by the same change — see the note under *Motion*.
+- **Amended**: 2026-08-20 — **`--text-dial` goes 66px to 60px**, to make room under the digits for the
+  mark ADR-0016 puts there. The token is unchanged in kind and still the only size in the contract;
+  what changed is that the digits are no longer the largest *thing* in the dial, only the largest type.
+  Recorded here because a theme token changing value silently is how a contract stops being one.
 
 ## Context
 
@@ -21,7 +29,9 @@ colours, which native Windows decorations cannot do.
 The 2026-08-12 amendment answers a second question the original left open. The app shipped with no
 motion at all: every state change snapped, because nothing in the token set described how long
 anything takes. The same amendment gives the app a logo — a smiling coffee mug — which is both an
-identity and, once its coffee level tracks the block, a state indicator.
+identity and, once its coffee level tracks the block, a state indicator. *(The coffee level was
+retired by ADR-0016 along with the drawing; the mark that shipped says held by dimming instead. This
+paragraph is kept as the context the decision was taken in.)*
 
 ## Decision
 
@@ -38,10 +48,10 @@ Motion belongs *inside* this decision rather than beside it in an ADR of its own
 documents would answer "what is a theme made of", and a user-authored theme would have to consult
 both.
 
-A fourth class — **the Mug** — was specified and is **deferred**: three attempts at drawing it were
-rejected, so the app ships no mark and the titlebar's left cell is the wordmark alone. The provision
-it left behind is the one below about fidelity, which is what a themed *asset* would need whenever one
-arrives. See `CONTEXT.md` → Mug.
+A fourth class — **the Mug** — was specified and then **abandoned as a token class** (ADR-0016). Three
+attempts at drawing it were rejected; the mark that shipped instead is the app icon's own PNG, which
+has no tokens to declare. The mark is in both slots now — the dial's centre and the titlebar's left
+cell. The fidelity provision below survives, narrowed to drawn assets. See `CONTEXT.md` → Mug.
 
 Shipped presets: **Walnut** (dark, default), **Sand** (light), **High-contrast**, plus an opt-in
 "follow system" — off by default, because an app silently flipping to a light theme at sunset is a
@@ -52,6 +62,11 @@ bug, not a feature. The selection persists in the database.
 Five durations — `quick`, `base`, `bounce`, `page`, `deliberate` — five easings, and two loops, the
 Mug's steam and the dial ring's breath. Values and rationale are in `CONTEXT.md`; what this ADR fixes
 is where they live and what may not be written without them.
+
+**`deliberate` and `--animate-steam` are unspent since ADR-0016.** Both were written for a drawn mug —
+the pour-out on a manual stop, and the wisps — and a raster does neither. They stay declared rather
+than deleted: removing a tier reshapes every duration around it, and three lines is the cheaper
+honesty.
 
 Tailwind v4 has `--ease-*` and `--animate-*` theme namespaces but **no duration namespace**, so
 `duration-150` is a bare value that reads nothing. Durations are therefore plain `--motion-*` custom
@@ -70,9 +85,11 @@ which is why the tab indicator stayed behind when the screen underneath it left.
 
 **No state is signalled by motion alone.** This is the constraint that makes motion safe to tokenise:
 because reduced motion — the OS's, or High-contrast's own token values — sets the loops to `none` and
-the durations to a millisecond, any state that only moved would vanish. So the Mug's coffee level (a
+the durations to a millisecond, any state that only moved would vanish. So the Mug's dimness (a
 level, not a movement), the countdown digits and the word *paused* each carry the state on their own,
-and motion is the pleasure rather than the message.
+and motion is the pleasure rather than the message. The mug's *coffee* level was the original example
+and is gone with the drawing (ADR-0016); that its replacement is still a level and not a movement is
+the part of it that mattered.
 
 ### Shape, and type
 
@@ -120,8 +137,15 @@ A Theme may vary an asset's **fidelity, not only its hue**: High-contrast wants 
 wants something soft, and recolouring a soft thing to yellow would honour the token while breaking that
 theme's promise that nothing is soft. This is why a themed asset is a token set rather than a file.
 
-Nothing exercises it yet — it was written for the Mug, which is deferred — so treat it as the rule any
-future mark is held to rather than as a description of something shipping.
+Narrowed by ADR-0016 to **drawn** assets, where a token set is what makes varying fidelity possible.
+The Mug is not one — it is a raster — so it answers this the only way left: **High-contrast shows no
+mark at all**. Varying fidelity includes varying it to nothing, and the test the mark had to pass is
+that dropping it loses nothing, which holds because it is decorative.
+
+The provision's other exerciser is the **control fill**, described further up under *One control
+vocabulary*: High-contrast outlines what the other themes fill softly. That one is a treatment rather
+than an asset, which is why both are named here — between them they are the whole of what "fidelity"
+has ever meant in this ADR.
 
 ### The window chrome
 
@@ -144,7 +168,9 @@ the middle of an empty desktop. There is nothing for the width to do.
 
 - Switching a theme swaps variable values at runtime. No rebuild, no class-name permutations.
 - User-authored themes become "read a token set from a row instead of a constant" — additive, not a
-  refactor. That now includes motion and the Mug, so an author can make the app calmer or stiller.
+  refactor. That now includes motion. It does **not** include the Mug: since ADR-0016 the mark is a
+  file, so an author can make the app calmer or stiller but cannot restyle its face — only show or
+  hide it, which is what High-contrast does.
 - The titlebar is themeable and matches the app, which is the whole reason for `decorations: false`.
 - Cost: dropping native decorations forfeits Windows Snap Layouts, double-click-to-maximize and
   drag-to-edge snapping. Mitigated by offering **no maximize at all** — the window is resizable with
@@ -160,6 +186,9 @@ the middle of an empty desktop. There is nothing for the width to do.
   no network cost for it.
 - A themed asset costs one deliberate authoring per theme, not one asset and two tints — the mug
   attempts proved that much: on Sand a cream mug on a cream surface is simply invisible, so it had to
-  become a dark object on a light table. Worth knowing before the next mark is attempted.
+  become a dark object on a light table. **The shipped mark does not pay that cost and so is exposed to
+  it**: it is one cream raster, and Sand's surface is within a few points of its body. Looked at on
+  Sand on 2026-08-20 it reads — the coffee and the shading are enough — but it is the theme to check
+  first if the asset is ever replaced, and a second file for Sand is the fix.
 - Windows only for v1. macOS puts these buttons on the left in a different order; that work is pure
   cost until someone else needs it.
