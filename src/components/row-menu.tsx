@@ -41,9 +41,14 @@ export function RowMenu({
 
   /**
    * Closing the menu is two things, and only one of them is always wanted: the
-   * row is where the user was, so Escape and choosing an item come back to the
-   * trigger — but a click elsewhere is the user already somewhere else, and
+   * row is where the user was, so Escape, Tab and choosing an item come back to
+   * the trigger — but a click elsewhere is the user already somewhere else, and
    * dragging them back would undo the move they just made.
+   *
+   * Callers that hand focus back do it *before* running the item's own handler,
+   * so a handler which focuses something wins. Rename and "Project toevoegen"
+   * raise a `NameForm` whose input autofocuses, and the other order would steal
+   * focus straight back off the form the choice just raised.
    */
   const close = (returnFocus: boolean) => {
     setOpen(false);
@@ -85,6 +90,23 @@ export function RowMenu({
   }, [open]);
 
   const onMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    /**
+     * Tab closes rather than walking out of the menu, because the portal puts
+     * the items at the end of `document.body` — tabbing off the last one would
+     * otherwise leave the menu standing open somewhere behind the focus, with
+     * only a mouse left to dismiss it.
+     *
+     * The default is deliberately not prevented: focus moves to the trigger
+     * during the keydown, and the browser picks the next element to visit after
+     * the handlers have run, so Tab lands on the row's neighbour and Shift+Tab
+     * on what precedes it. Where that is not honoured the focus still ends up
+     * on the trigger, which is the row the user was on either way.
+     */
+    if (e.key === "Tab") {
+      close(true);
+      return;
+    }
+
     const focusable = focusableItems(menuRef.current);
     if (focusable.length === 0) return;
 
@@ -98,7 +120,9 @@ export function RowMenu({
     // a slip rather than an instruction to stop.
     if (e.key === "ArrowDown") moveTo(at < 0 ? 0 : (at + 1) % focusable.length);
     else if (e.key === "ArrowUp")
-      moveTo(at < 0 ? focusable.length - 1 : (at - 1 + focusable.length) % focusable.length);
+      moveTo(
+        at < 0 ? focusable.length - 1 : (at - 1 + focusable.length) % focusable.length,
+      );
     else if (e.key === "Home") moveTo(0);
     else if (e.key === "End") moveTo(focusable.length - 1);
   };

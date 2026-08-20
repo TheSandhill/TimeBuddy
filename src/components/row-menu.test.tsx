@@ -2,8 +2,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { RowMenu } from "./row-menu";
 
-function showMenu(overrides: Partial<{ disabled: boolean }> = {}) {
-  const chosen = vi.fn();
+function showMenu(
+  overrides: Partial<{ disabled: boolean; onFirst: () => void }> = {},
+) {
+  const chosen = vi.fn(overrides.onFirst);
   render(
     <RowMenu
       label="Acme acties"
@@ -96,6 +98,49 @@ describe("reaching the row's actions from the keyboard", () => {
     fireEvent.mouseDown(elsewhere);
 
     expect(screen.queryByRole("menu")).toBeNull();
+    expect(trigger).not.toHaveFocus();
+    elsewhere.remove();
+  });
+
+  it("closes on Tab, so a menu is never left open behind the focus", () => {
+    const { open, trigger } = showMenu();
+    open();
+    const menu = screen.getByRole("menu");
+
+    fireEvent.keyDown(menu, { key: "Tab" });
+
+    expect(screen.queryByRole("menu")).toBeNull();
+    // The trigger is where the browser then counts from, so what Tab reaches
+    // next is the row's neighbour rather than the end of the document.
+    expect(trigger).toHaveFocus();
+  });
+
+  it("closes on Shift+Tab the same way", () => {
+    const { open, trigger } = showMenu();
+    open();
+    const menu = screen.getByRole("menu");
+
+    fireEvent.keyDown(menu, { key: "Tab", shiftKey: true });
+
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(trigger).toHaveFocus();
+  });
+
+  /**
+   * Rename and "Project toevoegen" raise a `NameForm`, whose input autofocuses.
+   * The trigger has to be handed focus *before* the item's own handler runs, so
+   * that a handler which focuses something wins — otherwise the trigger steals
+   * focus back off the form the click just raised.
+   */
+  it("lets the chosen action take focus off the trigger it just restored", () => {
+    const elsewhere = document.createElement("input");
+    document.body.append(elsewhere);
+    const { open, trigger } = showMenu({ onFirst: () => elsewhere.focus() });
+    open();
+
+    fireEvent.click(items()[0]);
+
+    expect(elsewhere).toHaveFocus();
     expect(trigger).not.toHaveFocus();
     elsewhere.remove();
   });
