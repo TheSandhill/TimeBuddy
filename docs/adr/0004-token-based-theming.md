@@ -15,8 +15,9 @@
   fourth token class. Its nine colour tokens are never written; the fidelity provision below is
   narrowed to *drawn* assets and answered for this one by High-contrast dropping the mark. Two motion
   tokens are left unspent by the same change — see the note under *Motion*.
-- **Amended**: 2026-08-20 — the Mug gains drawn steam (ADR-0016 amendment), which spends
-  `--animate-steam` and retunes it from 3.2s to 5.4s. The loops are still two.
+- **Amended**: 2026-08-20 — the Mug gains drawn steam (ADR-0016 amendment), which spends both tokens the
+  parked mug had left stranded: `--animate-steam`, retuned from 3.2s to 5.4s, and `deliberate`, on the
+  steam's fade in and out. The loops are still two, and every duration is in use again.
 - **Amended**: 2026-08-20 — **`--text-dial` goes 66px to 60px**, to make room under the digits for the
   mark ADR-0016 puts there. The token is unchanged in kind and still the only size in the contract;
   what changed is that the digits are no longer the largest *thing* in the dial, only the largest type.
@@ -65,9 +66,10 @@ Five durations — `quick`, `base`, `bounce`, `page`, `deliberate` — five easi
 Mug's steam and the dial ring's breath. Values and rationale are in `CONTEXT.md`; what this ADR fixes
 is where they live and what may not be written without them.
 
-**`deliberate` is unspent since ADR-0016.** It was written for the mug pouring out on a manual stop,
-which a raster mark cannot do. It stays declared rather than deleted: removing a tier reshapes every
-duration around it, and three lines is the cheaper honesty.
+**`deliberate` is spent again.** It was written for the mug pouring out on a manual stop, which a raster
+mark cannot do, and was briefly unspent for that reason. ADR-0016's steam amendment gives it the same
+moment back: the steam fades in on Start and dissipates on Stop, slow enough to notice, which is the
+whole of what that tier was ever for. **All five durations are in use.**
 
 **`--animate-steam` was unspent and now is not.** ADR-0016's 2026-08-20 amendment gives the mark drawn
 steam, and slows the loop from 3.2s to 5.4s — at this scale the original read as a twitch rather than as

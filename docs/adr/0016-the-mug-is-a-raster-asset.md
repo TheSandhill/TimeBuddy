@@ -90,11 +90,10 @@ That is the debt paid. Three signals, and the mark is the third.
 - **The Mug's nine colour tokens are never written.** ADR-0004's fourth token class does not arrive; it
   is answered by a file instead. A user-authored theme cannot restyle the mark — it can only be shown or
   hidden, which is what High-contrast does.
-- **One motion token is left unspent.** `deliberate` was written for the mug pouring out on a manual
-  stop, which a raster cannot do. It stays declared by all three themes rather than being deleted,
-  because removing a tier reshapes every duration around it. Recorded in `CONTEXT.md` → Motion so it
-  does not read as an oversight. `--animate-steam` was the second one; the 2026-08-20 amendment spends
-  it.
+- **No motion token is left unspent.** Both that this ADR stranded — `--animate-steam` and
+  `deliberate` — are spent by the 2026-08-20 steam amendment: the loop on the plumes, the tier on their
+  fade in and out. The mug's nine *colour* tokens are still the ones never written, and they never will
+  be.
 - **Sand needs no second file, and the reason is measurable.** ADR-0004 recorded the cost that killed
   the earlier attempts — "on Sand a cream mug on a cream surface is simply invisible, so it had to
   become a dark object on a light table" — and the shipped raster cannot invert. Measured against
@@ -130,7 +129,7 @@ That is the debt paid. Three signals, and the mark is the third.
 
 ## Amendment, 2026-08-20: the steam is drawn
 
-The mark now steams while a block runs. The body is unchanged; the steam is three soft ellipses in an
+The mark now steams while a block runs. The body is unchanged; the steam is five soft ellipses in an
 inline SVG over it.
 
 **Why this is not a fourth attempt at drawing the mug.** The rejected attempts were the *cup* — a
@@ -149,8 +148,12 @@ thing somebody would later "simplify" back out:
   instead gives three identically-distorted shapes, which is the particle look again.
 - **They spread as they rise.** Something that only translates reads as an object moving. Vapour
   expands and thins, so scale and opacity travel with the position.
-- **They are out of phase.** Staggered by thirds of the loop, with different drifts, widths and
-  stretches, so no frame has the three agreeing with each other.
+- **They are out of phase.** Staggered by fifths of the loop, with different drifts, widths and
+  stretches, so no frame has them agreeing with each other. Negative delays start each one already
+  mid-rise, so the column is continuous from the first frame rather than building up over a period.
+- **There are enough of them.** Three left countable gaps in the column at this size, and anything you
+  can count reads as particles. Five is the number the owner's eye settled on; the plume count is a look
+  to tune, not a constant with a reason, and the test holds a floor rather than a figure.
 
 **The turbulence is static, and that is a constraint rather than a compromise.** Animating a filter
 primitive means SMIL, and **SMIL does not read CSS** — the exact defect ADR-0014 moved the spinner and
@@ -181,6 +184,16 @@ rule naming only the image would leave plumes rising out of nothing.
   the corner of the eye permanently. `AppMark` takes `steaming`, and only the dial passes it.
 - **The steam follows the ring, not the block.** A held cup that went on steaming is the same
   disagreement as a ring breathing over a stopped countdown.
+- **It fades rather than appears, and that spends `deliberate`.** Start and Stop are the moment that
+  tier was written for — "the one animation allowed to be slow enough to notice, the Mug pouring out
+  when a block is stopped by hand". The pour-out is not available to a photograph; the steam
+  dissipating is, and it is the same beat. Soft in-out both ways rather than the usual quick-in on the
+  way out, because an abrupt departure is the thing being fixed.
+- **The layer is mounted before Start is pressed**, faded out rather than absent. A layer that arrived
+  on Start would snap, for the reason the prototype recorded about disclosures: rebuilt already-open,
+  there is no `0fr` to spring from. `visibility` is transitioned alongside the opacity so the hidden
+  state still costs nothing — otherwise the turbulence repaints behind a transparent layer on an idle
+  Timer screen.
 - **The digits needed a stacking order.** The steam rises past them and the mark comes later in the
   tree, so painting order alone would put vapour over the countdown. The digits are `relative z-10`.
 - **The optical offset moved from the image to its wrapper** when the mark steams, so the plumes and

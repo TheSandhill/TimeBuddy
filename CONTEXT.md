@@ -432,9 +432,12 @@ How the app moves between one state and the next. Part of the Theme, for the rea
 Five **durations**, and a sixth is a sign one of these should have been reused: `quick` for hover,
 colour and focus; `base` for disclosure — the accordion, a form opening, the tab indicator; `bounce`
 for anything on an overshoot curve; `page` for a route change; `deliberate` for the one animation
-allowed to be slow enough to notice. That tier was written for the Mug pouring out when a block is
-stopped by hand, which a raster mark cannot do; it is **unspent** until something else earns it, and a
-tier nothing uses is worth keeping only as long as that stays true.
+allowed to be slow enough to notice — the Mug's steam fading in when a block starts and dissipating
+when one is stopped by hand.
+
+That tier was written for the mug *pouring out* on a manual stop. The pour-out went with the drawing
+when the mark became a photograph, and the steam is its heir: the same moment, the same permission to
+be slow, the nearest thing the mark can actually do. Every duration is spent again.
 
 `bounce` is a tier of its own rather than a use of `base` because an overshoot inside 220ms has no
 room for its return leg and reads as a glitch rather than as spring.
@@ -488,11 +491,15 @@ a half seconds, because a heartbeat cadence means urgency and this is a tool for
 uninterrupted minutes. The steam is slower still, at five and a bit, because vapour that hurries reads
 as smoke.
 
-The steam is **three plumes drifting up through a fixed distortion**, so each is a different shape at
+The steam is **five plumes drifting up through a fixed distortion**, so each is a different shape at
 every height and the group never repeats. That is what separates it from a few wisps pulsing in place,
 which is what it looked like first and was rejected as. The distortion does not move, and that is
 deliberate: animating it would need SMIL, and SMIL cannot read the tokens, so a theme turning the loop
 off would be ignored by exactly the part of the drawing that makes it convincing.
+
+It **fades rather than appears**, on `deliberate`, so Start and Stop are not a switch being thrown.
+That needs the layer mounted before Start is ever pressed — something faded in from nothing has
+nothing to fade from, which is the prototype's disclosure bug wearing a different hat.
 
 It is also the **one loop that is removed rather than stilled**. Everything else here is built so that
 stopping the motion costs the pleasure and not the message — a spinner that does not turn is still a

@@ -146,11 +146,14 @@ export function PomodoroDial({
            * went on steaming would be the same disagreement as a ring still
            * breathing over a stopped countdown. It is pleasure, not signal —
            * held is already said three ways without it.
+           *
+           * `"off"` rather than dropping the prop, so the layer is mounted
+           * before Start is ever pressed and has something to fade from.
            */}
           <AppMark
             width={MARK_WIDTH}
             dimmed={paused}
-            steaming={running && !paused}
+            steam={running && !paused ? "on" : "off"}
           />
         </div>
       </div>

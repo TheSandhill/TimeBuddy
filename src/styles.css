@@ -307,7 +307,7 @@
  *   2. **They spread as they rise.** A shape that only translates reads as an
  *      object moving. Vapour expands and thins, so `scale` and `opacity` go
  *      with the travel.
- *   3. **They are out of phase and out of step.** Three plumes on one delay is
+ *   3. **They are out of phase and out of step.** Five plumes on one delay is
  *      a pulse. Staggered by thirds of the loop, with different drifts and
  *      widths, there is no moment where the group agrees with itself.
  *
@@ -327,19 +327,23 @@
    * the knob to check first** — the steam paints over the mug, so too low and
    * the plumes sit on the ceramic. */
   --steam-lift: 86%;
-  --steam-width: 54px;
-  --steam-height: 66px;
+  --steam-width: 68px;
+  --steam-height: 78px;
 
   /* How far a plume travels and how much it opens out, in viewBox units. Rise
    * is bounded by the gap to the digits: it fades behind them, never over. */
-  --steam-rise: 42px;
-  --steam-spread: 2.1;
-  --steam-stretch: 2.4;
+  --steam-rise: 50px;
+  --steam-spread: 2.4;
+  --steam-stretch: 2.8;
 
-  /* Peak opacity of one plume. The single strongest knob: past ~0.6 the steam
-   * starts competing with the digits, which is what `CONTEXT.md` → Mug forbids
-   * anything down here from doing. */
-  --steam-opacity: 0.5;
+  /* Peak opacity of one plume, before five of them overlap. **The strongest
+   * knob**, and the one to pull on for more or less steam before touching
+   * anything else.
+   *
+   * The ceiling is `CONTEXT.md` → Mug: nothing under the digits may compete with
+   * them. Diffuse and behind them, this has more room than a solid shape would,
+   * but that is where the limit comes from if it starts to feel like too much. */
+  --steam-opacity: 0.62;
 
   position: absolute;
   bottom: var(--steam-lift);
@@ -354,6 +358,44 @@
    * Muted ink rather than the accent: steam is not a state, and the accent is
    * how this screen says *running*. */
   color: var(--color-ink-muted);
+
+  /*
+   * Off by default, and it **fades** rather than appears.
+   *
+   * `deliberate` is the tier written for this moment and no other: "the one
+   * animation allowed to be slow enough to notice, the Mug pouring out when a
+   * block is stopped by hand". The pour-out went with the drawing, and steam
+   * dissipating when Stop is pressed is its heir — so the tier is spent here
+   * rather than left waiting for a mug that will never drain.
+   *
+   * Soft in-out rather than the usual quick-in on the way out: an abrupt
+   * departure is exactly what this is meant to stop doing. Atmosphere leaves
+   * the way the breath moves, not the way a menu closes.
+   *
+   * `visibility` rides along so the hidden state costs nothing — the plumes'
+   * turbulence would otherwise keep repainting behind a transparent layer on an
+   * idle Timer screen. It flips instantly on the way in and only at the end of
+   * the fade on the way out, which is the whole reason it is transitioned
+   * rather than just set.
+   */
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--motion-deliberate) var(--ease-in-out-soft),
+    visibility var(--motion-deliberate);
+}
+
+/*
+ * Mounted always, toggled by attribute — never mounted *into* the on state.
+ *
+ * The prototype recorded this as a bug to not repeat in React: a panel rebuilt
+ * already-open has nothing to animate from, so the transition never plays. A
+ * steam layer that arrived the moment Start was pressed would snap on for the
+ * same reason, which is the thing this whole rule exists to prevent.
+ */
+.mug-steam[data-steaming="on"] {
+  opacity: 1;
+  visibility: visible;
 }
 
 .mug-steam__plume {
@@ -363,25 +405,48 @@
 }
 
 /*
- * Thirds of the loop, so the group never breathes in step, plus a drift each.
- * Fractions of the period rather than durations of their own — retuning
- * `--animate-steam` should not need these touched.
+ * **Fifths** of the loop, so the group never breathes in step, plus a drift, a
+ * spread and a stretch each. Negative delays start every plume already mid-rise,
+ * so the column is continuous from the first frame instead of building up over
+ * one full period.
+ *
+ * Fractions of the period rather than durations of their own: retuning
+ * `--animate-steam` should not need these touched, only re-divided.
+ *
+ * Five rather than three. Three left visible gaps in the column at this size —
+ * you could count them, which is the particle read returning by the back door.
+ * Adding a plume means one ellipse in `app-mark.tsx` and one rule here; the
+ * delays want re-spacing to match, and nothing else does.
  */
 .mug-steam__plume:nth-child(1) {
-  --steam-drift: -7px;
+  --steam-drift: -9px;
   animation-delay: 0s;
 }
 
 .mug-steam__plume:nth-child(2) {
-  --steam-drift: 4px;
-  animation-delay: -1.8s;
-  --steam-spread: 1.7;
+  --steam-drift: 5px;
+  --steam-spread: 1.9;
+  animation-delay: -1.08s;
 }
 
 .mug-steam__plume:nth-child(3) {
-  --steam-drift: 9px;
-  animation-delay: -3.6s;
-  --steam-stretch: 2.9;
+  --steam-drift: 11px;
+  --steam-stretch: 3.2;
+  animation-delay: -2.16s;
+}
+
+.mug-steam__plume:nth-child(4) {
+  --steam-drift: -4px;
+  --steam-spread: 2.8;
+  --steam-stretch: 2.4;
+  animation-delay: -3.24s;
+}
+
+.mug-steam__plume:nth-child(5) {
+  --steam-drift: 2px;
+  --steam-spread: 2.1;
+  --steam-stretch: 3.4;
+  animation-delay: -4.32s;
 }
 
 /*

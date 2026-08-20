@@ -37,17 +37,23 @@ interface AppMarkProps {
   /** Held. Dims the mark — see the note below on why it is a level. */
   dimmed?: boolean;
   /**
-   * A block is running. Adds the steam.
+   * Whether this slot has steam, and whether it is currently rising.
    *
-   * Off by default, and the titlebar leaves it off: `CONTEXT.md` → Motion says
-   * **nothing is on the titlebar**, because the bar is on every screen and an
-   * animation there would be in the corner of the eye permanently.
+   * Three states rather than two, and the distinction matters: **omitted** means
+   * no steam layer at all, which is what the titlebar passes — `CONTEXT.md` →
+   * Motion says nothing is on the titlebar, because the bar is on every screen
+   * and an animation there would sit in the corner of the eye permanently.
+   *
+   * `"off"` means the layer is there and faded out. A caller that has steam at
+   * all should pass `"off"` rather than dropping the prop, because the fade
+   * needs something mounted to fade *from* — see the note on the toggle rule in
+   * `styles.css`.
    */
-  steaming?: boolean;
+  steam?: "on" | "off";
 }
 
 /**
- * Steam: three plumes drifting up through a fixed noise field.
+ * Steam: five plumes drifting up through a fixed noise field.
  *
  * The shapes are soft radial ellipses — deliberately dull on their own. What
  * makes them read as vapour is that the `feDisplacementMap` is *stationary* while
@@ -55,18 +61,30 @@ interface AppMarkProps {
  * and the group never repeats. See the long note on `.mug-steam` in
  * `styles.css`, which owns every value except the two above.
  *
+ * **Five, not three.** Three left countable gaps in the column, and anything you
+ * can count reads as particles rather than as vapour. Each needs a matching
+ * `:nth-child` rule in the stylesheet for its delay and drift; a plume without
+ * one inherits the base timing and pulses in step with the first, which is
+ * exactly the look this is avoiding.
+ *
  * Static turbulence specifically: animating it would mean SMIL, and **SMIL does
  * not read CSS** (ADR-0014), so a themed `--animate-steam: none` and
  * `prefers-reduced-motion` would both be ignored by it.
  *
+ * Always mounted where there is steam at all, and turned on by attribute rather
+ * than by mounting: the fade needs something to fade from, and a layer that
+ * arrived on Start would snap. The prototype recorded that mistake in its other
+ * form — a disclosure panel rebuilt already-open has no `0fr` to spring from.
+ *
  * The gradient and the filter carry instance-free ids because only the dial ever
- * renders this — the titlebar passes no `steaming`, so there is never a second
- * copy in the document to collide with.
+ * renders this — the titlebar passes no `steam`, so there is never a second copy
+ * in the document to collide with.
  */
-function Steam() {
+function Steam({ state }: { state: "on" | "off" }) {
   return (
     <svg
       className="mug-steam"
+      data-steaming={state}
       viewBox="0 0 64 80"
       aria-hidden="true"
       focusable="false"
@@ -110,14 +128,16 @@ function Steam() {
 
       {/*
        * The filter is on the group, not on each plume — that is what makes the
-       * noise field shared and stationary. Per-plume filters would give three
+       * noise field shared and stationary. Per-plume filters would give five
        * shapes each distorted the same way at every height, which is the
        * particle look again with extra cost.
        */}
       <g filter="url(#mug-steam-wisp)" fill="url(#mug-steam-plume)">
-        <ellipse className="mug-steam__plume" cx="27" cy="68" rx="8" ry="11" />
-        <ellipse className="mug-steam__plume" cx="34" cy="70" rx="10" ry="9" />
-        <ellipse className="mug-steam__plume" cx="31" cy="66" rx="7" ry="12" />
+        <ellipse className="mug-steam__plume" cx="26" cy="68" rx="9" ry="12" />
+        <ellipse className="mug-steam__plume" cx="34" cy="70" rx="11" ry="10" />
+        <ellipse className="mug-steam__plume" cx="30" cy="66" rx="8" ry="13" />
+        <ellipse className="mug-steam__plume" cx="38" cy="69" rx="9" ry="11" />
+        <ellipse className="mug-steam__plume" cx="22" cy="70" rx="8" ry="10" />
       </g>
     </svg>
   );
@@ -146,6 +166,10 @@ function Steam() {
  *   state is signalled by motion alone). Which is what lets reduced motion
  *   remove it outright rather than freeze it — there is no still form of steam
  *   worth having.
+ * - **It does not snap the steam on and off.** Start and Stop are the one place
+ *   the app is allowed to be slow enough to notice, so the layer fades on
+ *   `deliberate` — the tier written for the mug pouring out on a manual stop,
+ *   finally spent on the nearest thing the mark can actually do.
  * - **It does not centre itself on its own box.** The handle makes that read
  *   off-axis; `app-mark` shifts the mark onto the cup's measured centre, and the
  *   number lives in the stylesheet with the measurement that produced it.
@@ -154,11 +178,7 @@ function Steam() {
  *   shaded photograph cannot flatten to an outline. A theme is answered by the
  *   cascade, never by a branch in a component.
  */
-export function AppMark({
-  width,
-  dimmed = false,
-  steaming = false,
-}: AppMarkProps) {
+export function AppMark({ width, dimmed = false, steam }: AppMarkProps) {
   const mug = (
     <img
       src={mugUrl}
@@ -168,12 +188,12 @@ export function AppMark({
       height={Math.round(width * MARK_ASPECT)}
       data-app-mark
       className={`transition-opacity motion-quick ease-out-soft ${
-        steaming ? "" : "app-mark"
+        steam === undefined ? "app-mark" : ""
       } ${dimmed ? "opacity-40" : "opacity-100"}`}
     />
   );
 
-  if (!steaming) {
+  if (steam === undefined) {
     return mug;
   }
 
@@ -190,7 +210,7 @@ export function AppMark({
   return (
     <span className="app-mark relative inline-flex" data-mark-slot>
       {mug}
-      <Steam />
+      <Steam state={steam} />
     </span>
   );
 }

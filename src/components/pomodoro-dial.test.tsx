@@ -49,6 +49,9 @@ const RING_INNER_DIAMETER = 2 * (106 - 9 / 2);
 const markOf = (container: HTMLElement) =>
   container.querySelector("[data-app-mark]") as HTMLImageElement;
 
+const steamOf = (container: HTMLElement) =>
+  container.querySelector(".mug-steam") as SVGElement;
+
 /** The arc that carries progress, as opposed to the track behind it. */
 const arcOf = (container: HTMLElement) =>
   container.querySelector("circle + circle") as SVGCircleElement;
@@ -140,22 +143,45 @@ describe("the dial", () => {
     // Pleasure, not signal: *running* is the moving digits and the breathing
     // ring. The steam follows the ring — a held cup that went on steaming would
     // be the same disagreement as a ring breathing over a stopped countdown.
-    const steamOf = (container: HTMLElement) =>
-      container.querySelector(".mug-steam");
-
-    expect(steamOf(showDial().container)).toBeNull();
+    expect(steamOf(showDial().container)).toHaveAttribute(
+      "data-steaming",
+      "off",
+    );
     expect(
       steamOf(showDial({ running: true, remaining: 0.5 }).container),
-    ).not.toBeNull();
+    ).toHaveAttribute("data-steaming", "on");
     expect(
-      steamOf(showDial({ running: true, paused: true, remaining: 0.5 })
-        .container),
-    ).toBeNull();
+      steamOf(
+        showDial({ running: true, paused: true, remaining: 0.5 }).container,
+      ),
+    ).toHaveAttribute("data-steaming", "off");
+  });
+
+  it("mounts the steam before Start, so it has something to fade from", () => {
+    // The prototype's recorded bug, in its other form: a panel rebuilt
+    // already-open has no `0fr` to spring from. A steam layer that arrived the
+    // moment Start was pressed would snap on for exactly the same reason, so an
+    // idle dial carries the layer already — faded out, not absent.
+    expect(steamOf(showDial().container)).not.toBeNull();
+  });
+
+  it("fades the steam on the tier written for a manual stop", () => {
+    // `deliberate` is "the one animation allowed to be slow enough to notice,
+    // the Mug pouring out when a block is stopped by hand". The pour-out went
+    // with the drawing; this is its heir, so the tier is spent rather than left
+    // waiting for a mug that cannot drain.
+    expect(stylesheet).toMatch(
+      /\.mug-steam\s*\{[^}]*transition:[^;]*var\(--motion-deliberate\)/,
+    );
+
+    // Hidden costs nothing: the turbulence would otherwise repaint behind a
+    // transparent layer on an idle screen.
+    expect(stylesheet).toMatch(/\.mug-steam\s*\{[^}]*visibility:\s*hidden/);
   });
 
   it("drops the steam with the mug in High-contrast, not on its own", () => {
     // The mug and its steam are siblings, so a rule naming only the image would
-    // leave three plumes rising out of nothing.
+    // leave the plumes rising out of nothing.
     expect(stylesheet).toMatch(
       /\[data-theme="high-contrast"\][^{]*\.mug-steam[^{]*\{[^}]*display:\s*none/,
     );
@@ -173,11 +199,18 @@ describe("the dial", () => {
   it("drives the steam from CSS so a theme can turn it off", () => {
     // SMIL does not read CSS (ADR-0014), so an `<animate>` element here would
     // ignore both `--animate-steam: none` and the OS's reduced-motion setting.
-    const { container } = showDial({ running: true, remaining: 0.5 });
-    const steam = container.querySelector(".mug-steam") as SVGElement;
+    const steam = steamOf(
+      showDial({ running: true, remaining: 0.5 }).container,
+    );
 
-    expect(steam.querySelector("animate, animateTransform, animateMotion")).toBeNull();
-    expect(steam.querySelectorAll(".mug-steam__plume")).toHaveLength(3);
+    expect(
+      steam.querySelector("animate, animateTransform, animateMotion"),
+    ).toBeNull();
+    // A floor rather than a count: the number is a look to tune, but one or two
+    // plumes is the particle read this is built to avoid, whatever else changes.
+    expect(
+      steam.querySelectorAll(".mug-steam__plume").length,
+    ).toBeGreaterThanOrEqual(3);
   });
 
   it("keeps the digits in front of the steam that rises past them", () => {
