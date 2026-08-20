@@ -368,6 +368,8 @@ function ClientRow({
             type="button"
             onClick={onToggle}
             aria-expanded={open}
+            // Not `glyph-label`: a disclosure chevron is not a status glyph, and
+            // at `size-3` it is not the box that utility is tuned against.
             className="flex items-center gap-1.5 truncate text-sm text-ink transition-colors motion-quick hover:text-accent"
           >
             <Icon

@@ -90,7 +90,7 @@ export class RootBoundary extends Component<Props, State> {
             role="alert"
             className="flex max-w-md flex-col gap-3 rounded-lg border border-danger bg-surface-raised p-5"
           >
-            <p className="flex items-center gap-2 text-sm font-medium text-danger">
+            <p className="glyph-label text-sm font-medium text-danger">
               <Icon name="error" className="size-4 shrink-0" />
               {words.title}
             </p>

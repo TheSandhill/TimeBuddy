@@ -168,6 +168,45 @@
 }
 
 /*
+ * A line of text carrying a glyph: a refusal, a banner's sentence, a group's
+ * legend.
+ *
+ * Every one of these was `flex items-center gap-1.5` or `gap-2` written out per
+ * site, and both halves of that were slightly wrong. A 16px glyph centred in a
+ * 20px line box is centred on the *box* — half of which, under the baseline, is
+ * descender room the sentence beside it mostly does not use. So the shape sits
+ * low against the letters and the letters read high, which is what you see in
+ * every one of these lines once you have seen it in one. Eight px of gap then
+ * puts the two further apart than a glyph that is *part of* the line wants.
+ *
+ * Four px, and the glyph one px above the box's middle: the sentence reads a
+ * hair lower against the shape and closer to it. The nudge is on the glyph
+ * because the text has no element of its own to hang it on, and the relation
+ * between the two is all either of them can show.
+ *
+ * `flex-start` rather than `center` with the same result: these lines wrap —
+ * `StatusLine` and the update section's note both do — and the glyph belongs on
+ * the first line rather than beside the middle of a paragraph. That is the
+ * treatment those three had already invented locally (`items-start` plus
+ * `mt-0.5`); this is it, once, with the optical nudge folded in.
+ *
+ * The one px is measured against the icon set's own box — `size-4` beside a
+ * `text-sm` line, which is what every caller here is. A glyph at another size
+ * is a different sum and wants its own treatment rather than this one: the
+ * Clients row's `size-3` chevron says so where it declares itself.
+ */
+@utility glyph-label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing);
+
+  > svg {
+    /* 10px to the line's middle, less the glyph's own 8, less the nudge. */
+    margin-top: 1px;
+  }
+}
+
+/*
  * How a field or a quiet control is grouped without a line drawn round it.
  *
  * A utility rather than `bg-surface-soft` written into the vocabulary, because

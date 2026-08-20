@@ -31,7 +31,7 @@ export function RefusalLine({ message }: { message: string | null }) {
     return null;
   }
   return (
-    <p role="alert" className="flex items-center gap-1.5 text-sm text-danger">
+    <p role="alert" className="glyph-label text-sm text-danger">
       <Icon name="error" className="size-4 shrink-0" />
       {message}
     </p>

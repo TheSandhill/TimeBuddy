@@ -42,10 +42,10 @@ export function StatusLine({
   const { glyph, role, ink } = tones[tone];
 
   return (
-    <p role={role} className={`flex items-start gap-2 text-sm ${ink}`}>
+    <p role={role} className={`glyph-label text-sm ${ink}`}>
       {/* `shrink-0` without exception: these lines wrap, and a glyph squeezed
           thin by a long sentence is the one that stops reading as its shape. */}
-      <Icon name={glyph} className="mt-0.5 size-4 shrink-0" />
+      <Icon name={glyph} className="size-4 shrink-0" />
       {children}
     </p>
   );
