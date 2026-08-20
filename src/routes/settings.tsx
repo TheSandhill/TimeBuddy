@@ -36,8 +36,8 @@ import {
   quietLabelClass,
   radioClass,
 } from "../components/field";
-import { FormError } from "../components/form-error";
 import { Icon, type IconName } from "../components/icon";
+import { RefusalLine } from "../components/refusal-line";
 import { Select } from "../components/select";
 import { StatusLine } from "../components/status-line";
 import { updateSettings } from "../data/commands";
@@ -150,11 +150,7 @@ export function Settings() {
   }
 
   if (shown === null) {
-    return (
-      <p role="alert" className="text-sm text-danger">
-        {t("settings.loadFailed")}
-      </p>
-    );
+    return <RefusalLine message={t("settings.loadFailed")} />;
   }
 
   /** A whole-number field that never lets the row go to `NaN` minutes. */
@@ -370,9 +366,9 @@ export function Settings() {
         <UpdateSection />
       </Group>
 
-      {/* The line every other form in the app says when the command layer
-          refuses it, rather than a sixth hand-rolled copy of it. */}
-      <FormError message={problem} />
+      {/* The one line the app says when something was refused (#88), rather
+          than a hand-rolled copy of it. */}
+      <RefusalLine message={problem} />
 
       {/*
         The one submit on the screen, under all four groups: it posts the row as

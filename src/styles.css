@@ -168,6 +168,67 @@
 }
 
 /*
+ * A line of text carrying a glyph: a refusal, a banner's sentence, a group's
+ * legend.
+ *
+ * Every one of these was `flex items-center gap-1.5` or `gap-2` written out per
+ * site, and both halves of that were slightly wrong. A 16px glyph centred in a
+ * 20px line box is centred on the *box* — half of which, under the baseline, is
+ * descender room the sentence beside it mostly does not use. So the shape sits
+ * low against the letters and the letters read high, which is what you see in
+ * every one of these lines once you have seen it in one. Eight px of gap then
+ * puts the two further apart than a glyph that is *part of* the line wants.
+ *
+ * Four px, and the glyph one px above the box's middle: the sentence reads a
+ * hair lower against the shape and closer to it. The nudge is on the glyph
+ * because the text has no element of its own to hang it on, and the relation
+ * between the two is all either of them can show.
+ *
+ * `flex-start` rather than `center` with the same result: these lines wrap —
+ * `StatusLine` and the update section's note both do — and the glyph belongs on
+ * the first line rather than beside the middle of a paragraph. That is the
+ * treatment those three had already invented locally (`items-start` plus
+ * `mt-0.5`); this is it, once, with the optical nudge folded in.
+ *
+ * The sum has to read the line, not assume one. A flat one px was right beside
+ * `text-sm` and a px *low* on Settings' legends, which are `text-xs`: there the
+ * 16px glyph is the whole 16px line box, so flush is already centred and the
+ * nudge has to go the other way. `1lh` asks the line how tall it is.
+ *
+ * `0.92rem` is the glyph's *ink* rather than its box. The box is the set's
+ * `size-4` — 1rem, what every caller here draws — but a Phosphor glyph does not
+ * reach its own edges: the `error` circle spans 24 to 232 of a 256 grid, so
+ * centring the box leaves the shape reading a hair high. The number is what the
+ * app looked right at rather than a measurement of the artwork, and the trailing
+ * px is the lift on top of it: raise it and every glyph label rises together.
+ *
+ * A glyph at another size is a different sum and wants its own treatment rather
+ * than this one: the Clients row's `size-3` chevron says so where it declares
+ * itself.
+ */
+@utility glyph-label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing);
+
+  /* Roughly the sum a `text-sm` line comes to, for a WebView2 that does not know
+     `lh`: the unit is an enhancement here rather than a dependency, and every
+     caller but the legends is that line. Stated as `@supports` rather than as two
+     declarations, because the minifier drops the first of those — it is entitled
+     to, and it did. */
+  > svg {
+    margin-top: 1px;
+  }
+
+  @supports (margin-top: 1lh) {
+    > svg {
+      /* Half the line, less half the glyph's ink, less the px it is lifted by. */
+      margin-top: calc((1lh - 0.92rem) / 2 - 1px);
+    }
+  }
+}
+
+/*
  * How a field or a quiet control is grouped without a line drawn round it.
  *
  * A utility rather than `bg-surface-soft` written into the vocabulary, because

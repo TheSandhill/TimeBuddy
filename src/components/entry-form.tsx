@@ -4,6 +4,7 @@ import type { Day, Project, TimeEntry, TimeEntryEdit } from "../data/types";
 import { primaryButtonClass } from "./button";
 import { fieldClass, labelClass } from "./field";
 import { Icon } from "./icon";
+import { RefusalLine } from "./refusal-line";
 import { Select } from "./select";
 import {
   durationErrorKey,
@@ -152,11 +153,7 @@ export function EntryForm({
         </label>
       </div>
 
-      {message ? (
-        <p role="alert" className="text-sm text-danger">
-          {message}
-        </p>
-      ) : null}
+      <RefusalLine message={message} />
 
       <div className="flex items-center gap-2">
         <button

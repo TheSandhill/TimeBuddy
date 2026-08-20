@@ -52,7 +52,7 @@ export function UpdateBanner({
         {failed ? (
           <span
             role="alert"
-            className="flex items-center gap-1.5 text-sm text-danger"
+            className="glyph-label text-sm text-danger"
           >
             {/* `error`: the install is a thing the user just pressed. */}
             <Icon name="error" className="size-4 shrink-0" />

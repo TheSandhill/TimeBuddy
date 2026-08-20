@@ -33,7 +33,7 @@ export function BackupBanner({
       role="alert"
       className="flex shrink-0 items-center justify-between gap-4 border-b border-danger bg-surface-raised px-6 py-2"
     >
-      <span className="flex min-w-0 items-center gap-2 text-sm text-danger">
+      <span className="glyph-label min-w-0 text-sm text-danger">
         {/*
           `warning` rather than `error` (ADR-0014): the backup runs unbidden and
           the sentence beside this names the copy that is still good.

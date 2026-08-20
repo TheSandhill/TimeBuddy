@@ -22,7 +22,7 @@ export function BreakBanner({ countdown, onSkip }: BreakBannerProps) {
 
   return (
     <div className="flex items-center justify-between rounded-md bg-surface-raised px-4 py-3">
-      <span className="flex items-center gap-2 text-sm text-ink-muted">
+      <span className="glyph-label text-sm text-ink-muted">
         <Icon name="timer" />
         {t("timer.breakTitle")}
       </span>

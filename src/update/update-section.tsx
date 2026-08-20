@@ -68,8 +68,8 @@ export function UpdateSection() {
         would be teaching her to expect a prompt updates do not show (ADR-0009).
         What is worth saying is the half that happens every time.
       */}
-      <p className="flex items-start gap-2 text-xs text-ink-muted">
-        <Icon name="verified" className="mt-0.5 size-4 shrink-0" />
+      <p className="glyph-label text-xs text-ink-muted">
+        <Icon name="verified" className="size-4 shrink-0" />
         {t("update.verifiedNote")}
       </p>
     </section>

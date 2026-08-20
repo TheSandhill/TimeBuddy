@@ -10,11 +10,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { BreakBanner } from "../components/break-banner";
-import { Icon } from "../components/icon";
 import { DurationPresets } from "../components/duration-presets";
 import { PomodoroDial } from "../components/pomodoro-dial";
 import { ProjectPicker } from "../components/project-picker";
 import { RecoveryPrompt } from "../components/recovery-prompt";
+import { RefusalLine } from "../components/refusal-line";
 import { TodayEntries } from "../components/today-entries";
 import { TransientToast } from "../components/transient";
 import { UndoToast } from "../components/undo-toast";
@@ -96,12 +96,7 @@ export function Timer() {
 
   return (
     <section className="flex flex-col gap-5">
-      {fault !== null ? (
-        <p role="alert" className="flex items-center gap-2 text-sm text-danger">
-          <Icon name="error" />
-          {t(faultMessages[fault])}
-        </p>
-      ) : null}
+      <RefusalLine message={fault !== null ? t(faultMessages[fault]) : null} />
 
       {orphan !== null ? (
         <RecoveryPrompt

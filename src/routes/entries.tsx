@@ -15,6 +15,7 @@ import { DateRangeFilter } from "../components/date-range-filter";
 import { EntryForm, type EntryFormValues } from "../components/entry-form";
 import { EntryList } from "../components/entry-list";
 import { quietLabelClass } from "../components/field";
+import { RefusalLine } from "../components/refusal-line";
 import { TransientToast } from "../components/transient";
 import { UndoToast } from "../components/undo-toast";
 import {
@@ -131,17 +132,11 @@ export function Entries() {
         </div>
       </header>
 
-      {backwards ? (
-        <p role="alert" className="text-sm text-danger">
-          {t("error.rangeEndsBeforeStart")}
-        </p>
-      ) : null}
+      <RefusalLine
+        message={backwards ? t("error.rangeEndsBeforeStart") : null}
+      />
 
-      {deleteError ? (
-        <p role="alert" className="text-sm text-danger">
-          {deleteError}
-        </p>
-      ) : null}
+      <RefusalLine message={deleteError} />
 
       {editing ? (
         <EntryForm

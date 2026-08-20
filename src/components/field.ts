@@ -15,7 +15,7 @@
 export const quietLabelClass = "text-xs font-medium text-ink-muted";
 
 /** The same, carrying a glyph: a group's legend, a set-apart block's heading. */
-export const quietHeadingClass = `flex items-center gap-2 ${quietLabelClass}`;
+export const quietHeadingClass = `glyph-label ${quietLabelClass}`;
 
 /** The same, wrapping the field it names. */
 export const labelClass = `flex flex-col gap-1 ${quietLabelClass}`;

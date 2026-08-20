@@ -20,8 +20,12 @@ export function RestoreNotice({ restoredFrom }: { restoredFrom: Instant }) {
       role="status"
       className="mx-auto mb-6 flex max-w-sm items-start gap-2.5 rounded-lg bg-surface-raised px-4 py-3"
     >
-      {/* The restore was asked for and it happened, so `success` (ADR-0014). */}
-      <Icon name="success" className="mt-0.5 size-4 shrink-0" />
+      {/* The restore was asked for and it happened, so `success` (ADR-0014).
+          Not `glyph-label`: the gap here is a card's, between a glyph and two
+          paragraphs, rather than a label's. Only the nudge is shared — the same
+          one px that utility applies, so the glyph meets the first line the way
+          it does everywhere else. */}
+      <Icon name="success" className="mt-px size-4 shrink-0" />
       <div className="min-w-0">
         <p className="text-sm text-ink">
           {t("restore.doneFrom", {

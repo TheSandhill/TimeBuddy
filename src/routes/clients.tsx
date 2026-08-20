@@ -13,6 +13,7 @@ import {
 } from "../components/field";
 import { Icon } from "../components/icon";
 import { NameForm } from "../components/name-form";
+import { RefusalLine } from "../components/refusal-line";
 import { RowMenu } from "../components/row-menu";
 import { TransientDisclosure } from "../components/transient";
 import {
@@ -210,11 +211,9 @@ export function Clients() {
         {t("clients.showArchived")}
       </label>
 
-      {rowError?.target === "clients" ? (
-        <p role="alert" className="text-sm text-danger">
-          {rowError.message}
-        </p>
-      ) : null}
+      <RefusalLine
+        message={rowError?.target === "clients" ? rowError.message : null}
+      />
 
       <TransientDisclosure>
         {addingClient ? (
@@ -369,6 +368,8 @@ function ClientRow({
             type="button"
             onClick={onToggle}
             aria-expanded={open}
+            // Not `glyph-label`: a disclosure chevron is not a status glyph, and
+            // at `size-3` it is not the box that utility is tuned against.
             className="flex items-center gap-1.5 truncate text-sm text-ink transition-colors motion-quick hover:text-accent"
           >
             <Icon
@@ -410,11 +411,9 @@ function ClientRow({
       <TransientDisclosure>
         {open ? (
           <div className="flex flex-col gap-2 px-4 py-3">
-            {rowError?.target === "projects" ? (
-              <p role="alert" className="text-sm text-danger">
-                {rowError.message}
-              </p>
-            ) : null}
+            <RefusalLine
+              message={rowError?.target === "projects" ? rowError.message : null}
+            />
 
             <TransientDisclosure>
               {addingProject ? (

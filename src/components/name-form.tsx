@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { fieldClass, labelClass } from "./field";
 import { Icon } from "./icon";
+import { RefusalLine } from "./refusal-line";
 
 interface NameFormProps {
   /** Names the form out loud — "Nieuwe klant", "Project hernoemen". */
@@ -51,11 +52,7 @@ export function NameForm({
         />
       </label>
 
-      {error ? (
-        <p role="alert" className="text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
+      <RefusalLine message={error} />
 
       <div className="flex items-center gap-2">
         <button
