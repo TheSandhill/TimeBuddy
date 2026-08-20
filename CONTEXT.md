@@ -513,8 +513,8 @@ bar's left cell and does **not** steam there for this reason; only the dial's do
 
 **No state is ever signalled by motion alone.** This is the rule that makes the rest safe. Reduced
 motion — the operating system's, or High-contrast's own token values — sets the loops to `none` and
-collapses the durations to a millisecond, and *nothing is lost*, because the digits, the Mug's own
-dimness and the word *paused* each say it without moving. The loops go to `none` rather than to a
+collapses the durations to a millisecond, and *nothing is lost*, because the pause glyph, the drained
+digits, the Mug's own greyness and the word *paused* each say it without moving. The loops go to `none` rather than to a
 millisecond: a breath that fast is a flicker, which is worse than stillness. Enforced by a test, the
 way the string catalogues are — a rule about what may not appear in a component is worth exactly what
 it costs to break it.
@@ -559,9 +559,20 @@ The deferral is **over**. What it left behind, and what the mark is now held to:
   knowingly fails.
 - Each slot names **its own width, in one line**, and derives nothing. `AppMark` takes a width and knows
   the asset's aspect; what a mark should measure in a given place is a perceptual value every time.
-- A **held** block is the word *paused* in the pill and the tray tooltip, a flat muted ring, and now
-  **the Mug dimmed in the dial**. Three signals where the mug design once had five — the spare it was
-  owed is the mark, and the mark has paid it.
+- A **held** block is a **large pause glyph projected over the dial**, the digits drained to muted ink
+  under it, a flat muted ring, the Mug greyed out, and the word *paused* in the titlebar's pill and the
+  tray tooltip. The glyph takes the clock's own full ink while the digits give theirs up: the brightest
+  thing in the circle is always whichever of the two is currently the point.
+
+  The word used to sit in the circle between the digits and the mark, and it is what the glyph
+  replaced. It did not simply go: **a glyph cannot speak** — the icon set is `aria-hidden` with no way
+  to pass a label, and ADR-0014 is explicit that a glyph needing to talk is a control missing its
+  `aria-label` rather than a glyph to annotate. So the word survives as a screen-reader-only live
+  region on this screen. It could not be left to the pill, which is `role="timer"` precisely so nothing
+  announces it every second, and therefore never announces the hold either.
+
+  The count of signals has stopped being interesting: there were five in the mug design, two after it
+  was parked, and the worry then was that there was no spare. There is plenty of spare now.
 - The dimming is a **level, not a movement**, which is the one thing the parked coffee-level idea was
   really about: reduced motion sets both loops to `none`, and held has to survive that. A raster cannot
   drain, so the level it carries is its own opacity.

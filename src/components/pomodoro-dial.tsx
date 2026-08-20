@@ -24,6 +24,16 @@ const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
  */
 const MARK_WIDTH = 88;
 
+/**
+ * The held glyph's size, and a knob like the mark's.
+ *
+ * It is allowed to be large — larger than the digits — because unlike the mark
+ * it *is* the message while it is on screen. The ceiling is the ring: a glyph
+ * wider than the circle's inside would read as an overlay on the screen rather
+ * than a state of the dial.
+ */
+const HELD_GLYPH = "size-20";
+
 interface PomodoroDialProps {
   /** `MM:SS` — the block's nominal length when idle, what is left when not. */
   countdown: string;
@@ -122,20 +132,17 @@ export function PomodoroDial({
            * rises past the digits, and painting order alone would put it over
            * them because the mark comes later in the tree. Behind is the only
            * option that keeps the digits the thing this screen is about.
+           *
+           * Held drains them to muted ink rather than hiding them: what is left
+           * on the clock is still the truth, it has just stopped being spent.
            */}
-          <p className="relative z-10 text-dial font-light leading-none tabular-nums tracking-tight text-ink">
+          <p
+            className={`relative z-10 text-dial font-light leading-none tabular-nums tracking-tight transition-colors motion-base ease-out-soft ${
+              paused ? "text-ink-muted" : "text-ink"
+            }`}
+          >
             {countdown}
           </p>
-
-          {/*
-           * Announced rather than merely styled: a countdown that has stopped
-           * moving is the one state of this screen that reads as a broken app.
-           */}
-          {paused ? (
-            <p role="status" className="text-xs font-medium text-accent">
-              {t("timer.paused")}
-            </p>
-          ) : null}
 
           {/*
            * The slot's deferral is over (ADR-0016). Dimming when held is the
@@ -156,7 +163,56 @@ export function PomodoroDial({
             steam={running && !paused ? "on" : "off"}
           />
         </div>
+
+        {/*
+         * Held, projected over the whole dial.
+         *
+         * `z-20` rather than nothing: the digits carry `z-10` for the steam, and
+         * this has to sit over them — it is the one thing on this screen allowed
+         * to.
+         *
+         * Mounted always and toggled, for the same reason the steam layer is:
+         * something that appears from nothing has nothing to animate from, and
+         * both directions are supposed to move. `bounce` because it arrives on an
+         * overshoot, which is the tier's whole definition — and a tier rather
+         * than a number, so reduced motion collapses it without a branch here.
+         *
+         * Nothing is lost when it does collapse. The glyph, the drained digits
+         * and the muted ring are all still there; only the arrival stops moving.
+         *
+         * `text-ink` — the clock's own colour, not the accent. The two trade
+         * places when a block is held: the digits drain to muted and the glyph
+         * takes the full ink, so the brightest thing in the circle is always
+         * whichever one is currently the point.
+         */}
+        <div
+          data-held={paused ? "on" : "off"}
+          aria-hidden="true"
+          className={`pointer-events-none absolute inset-0 z-20 grid place-items-center text-ink transition-[opacity,scale] motion-bounce ease-bounce-soft ${
+            paused ? "scale-100 opacity-100" : "scale-75 opacity-0"
+          }`}
+        >
+          <Icon name="pause" className={HELD_GLYPH} />
+        </div>
       </div>
+
+      {/*
+       * The word the glyph replaced, still said — out loud only.
+       *
+       * A glyph cannot speak: the set is `aria-hidden` with no way to pass a
+       * label, and ADR-0014 is explicit that a glyph needing to talk is a
+       * control missing its `aria-label` rather than a glyph to annotate. This
+       * is not a control, so the state needs its own voice.
+       *
+       * It has to be here and not the titlebar's pill: that pill is
+       * `role="timer"` precisely so a screen reader does *not* announce it every
+       * second, which also means it never announces the hold. This element is
+       * always mounted and only its text changes, because a live region that
+       * appears at the same moment its content does is unreliably announced.
+       */}
+      <p role="status" className="sr-only">
+        {paused ? t("timer.paused") : ""}
+      </p>
 
       <div className="flex w-full items-stretch gap-3">
         <button

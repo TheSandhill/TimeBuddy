@@ -34,7 +34,10 @@ interface AppMarkProps {
    * nothing here derives one.
    */
   width: number;
-  /** Held. Dims the mark — see the note below on why it is a level. */
+  /**
+   * Held. Greys the mark out — dimmed *and* desaturated, so the coffee's warmth
+   * goes with the brightness. See the note below on why it is a level.
+   */
   dimmed?: boolean;
   /**
    * Whether this slot has steam, and whether it is currently rising.
@@ -189,7 +192,7 @@ export function AppMark({ width, dimmed = false, steam }: AppMarkProps) {
       data-app-mark
       className={`transition-opacity motion-quick ease-out-soft ${
         steam === undefined ? "app-mark" : ""
-      } ${dimmed ? "opacity-40" : "opacity-100"}`}
+      } ${dimmed ? "opacity-40 grayscale" : "opacity-100"}`}
     />
   );
 

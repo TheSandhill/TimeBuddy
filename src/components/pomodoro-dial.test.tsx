@@ -52,6 +52,13 @@ const markOf = (container: HTMLElement) =>
 const steamOf = (container: HTMLElement) =>
   container.querySelector(".mug-steam") as SVGElement;
 
+const digitsOf = (container: HTMLElement) =>
+  container.querySelector("p.text-dial") as HTMLElement;
+
+/** The held overlay, which is always mounted and says so by attribute. */
+const heldOf = ({ container }: { container: HTMLElement }) =>
+  container.querySelector("[data-held]") as HTMLElement;
+
 /** The arc that carries progress, as opposed to the track behind it. */
 const arcOf = (container: HTMLElement) =>
   container.querySelector("circle + circle") as SVGCircleElement;
@@ -124,19 +131,63 @@ describe("the dial", () => {
   });
 
   it("goes flat and muted the moment the block is held", () => {
-    // Three signals now (`CONTEXT.md`, Mug): the word says held, the ring stops
-    // breathing rather than merely changing colour, and the Mug dims. The mark
-    // is the signal the spare was owed to.
+    // The ring stops breathing rather than merely changing colour, and the Mug
+    // greys out — dimmed and desaturated, so its warmth goes with it.
     const { container } = showDial({
       running: true,
       paused: true,
       remaining: 0.5,
     });
 
-    expect(screen.getByText("Gepauzeerd")).toBeInTheDocument();
     expect(container.querySelector("svg")).not.toHaveClass("animate-breath");
     expect(arcOf(container)).toHaveClass("stroke-ink-muted");
-    expect(markOf(container)).toHaveClass("opacity-40");
+    expect(markOf(container)).toHaveClass("opacity-40", "grayscale");
+  });
+
+  it("drains the digits rather than hiding them when held", () => {
+    // What is on the clock is still the truth; it has just stopped being spent.
+    // Scoped per render rather than through `screen`, because two dials in one
+    // document would make "25:00" ambiguous.
+    expect(digitsOf(showDial({ running: true }).container)).toHaveClass(
+      "text-ink",
+    );
+    expect(
+      digitsOf(showDial({ running: true, paused: true }).container),
+    ).toHaveClass("text-ink-muted");
+  });
+
+  it("projects the pause glyph over the dial when held, and only then", () => {
+    // Over, not among: it carries `z-20` because the digits already carry z-10
+    // for the steam, and this is the one thing allowed above them.
+    expect(heldOf(showDial())).toHaveAttribute("data-held", "off");
+
+    const held = heldOf(showDial({ running: true, paused: true }));
+    expect(held).toHaveAttribute("data-held", "on");
+    expect(held).toHaveClass("z-20");
+    expect(held.querySelector("svg")).not.toBeNull();
+  });
+
+  it("animates the glyph in and out rather than snapping it on", () => {
+    // Mounted always and toggled, so both directions have something to move
+    // from — the same reason the steam layer is never mounted into its on state.
+    // `bounce` because it arrives on an overshoot, and a tier rather than a
+    // number so reduced motion collapses it with no branch in the component.
+    const held = heldOf(showDial({ running: true, paused: true }));
+
+    expect(held).toHaveClass("motion-bounce", "ease-bounce-soft");
+    expect(heldOf(showDial())).toHaveClass("opacity-0");
+  });
+
+  it("still says the word out loud, since a glyph cannot speak", () => {
+    // ADR-0014: the icon set is `aria-hidden` with no way to pass a label, so
+    // replacing the visible word with a glyph would have left a held block
+    // announcing nothing. The titlebar's pill is `role="timer"` on purpose and
+    // never announces either.
+    showDial({ running: true, paused: true });
+
+    const status = screen.getByText("Gepauzeerd");
+    expect(status).toHaveAttribute("role", "status");
+    expect(status).toHaveClass("sr-only");
   });
 
   it("steams only while a block is actually running", () => {
