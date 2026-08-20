@@ -16,10 +16,15 @@
   --font-sans:
     "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
 
-  /* The countdown's own size, and the only size in the contract: the digits are
-   * the largest thing in the app by a clear margin, which is a decision a theme
-   * is allowed to hold rather than a number a component may write. */
-  --text-dial: 66px;
+  /* The countdown's own size, and the only size in the contract: a decision a
+   * theme is allowed to hold rather than a number a component may write.
+   *
+   * 66px until 2026-08-20, when ADR-0016 put the Mug under the digits and the
+   * owner took them down to 60. They are still the largest *type* in the app by
+   * a clear margin, but they are no longer the largest thing in the dial — the
+   * mark beside them is 88px wide. "Never competes with the digits" survives in
+   * `CONTEXT.md` → Mug as a look to keep rather than a ratio to check. */
+  --text-dial: 60px;
 
   /* Raised, so a squircle has something to round: one at 4px is a rounded
    * corner with extra steps. */
@@ -254,6 +259,48 @@
 }
 
 /*
+ * The Mug is a raster (ADR-0016), so its fidelity cannot vary: it is one shaded
+ * cream object in every theme, and this theme's contract is that nothing is
+ * soft. Recolouring it is not available and outlining a photograph means
+ * nothing, so the fidelity that varies here is **absence**. Nothing is lost —
+ * the mark carries no information the digits and the word *paused* do not.
+ *
+ * Here rather than in the component: a theme is answered by the cascade, which
+ * is what keeps every screen free of a branch per theme (ADR-0004).
+ */
+[data-theme="high-contrast"] [data-app-mark] {
+  display: none;
+}
+
+/*
+ * The Mug, centred on the **cup** rather than on its own bounding box.
+ *
+ * The handle sticks out to the left, so a box-centred mark reads as sitting to
+ * the right of wherever it was put — under the digits most obviously, where
+ * there is a vertical axis to be off. What the eye centres on is the cup, and
+ * the cup's axis can be *estimated*: the coffee is only visible through the mouth
+ * and the mouth is symmetric about that axis, so the centroid of the dark pixels
+ * approximates it. In `src/assets/mug.png` that puts it somewhere around 5-10% of
+ * the width right of the box's centre — the figure moves with where you put the
+ * "dark" threshold, so treat it as a range and not a number.
+ *
+ * **The value below is 6.8%, and it came from the owner's eye, not from that
+ * estimate.** Which is the right way round: the mouth's centre is not the whole
+ * silhouette, the handle still pulls on what the eye reads as middle, and full
+ * correction over-shot and leaned left. The measurement is only there to say
+ * which direction and roughly how far.
+ *
+ * Tune this line, not the component: it is the only place the offset lives.
+ *
+ * A percentage and not a px, because the two slots draw the same asset at 88 and
+ * at 22 and the offset is a property of the artwork rather than of either size.
+ * Re-measure if the asset is ever replaced — a mug with no handle wants 0.
+ */
+@utility app-mark {
+  translate: -6.8% 0;
+}
+
+/*
  * Enhancement, never a dependency: WebView2 is evergreen Chromium, and anywhere
  * the property is missing the radius alone is what was asked for. Only the
  * raised radii — a squircle at 6px is not worth the name.
@@ -273,7 +320,7 @@
 [data-theme="sand"] {
   --font-sans:
     "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
-  --text-dial: 66px;
+  --text-dial: 60px;
 
   --radius-sm: 6px;
   --radius-md: 12px;
@@ -322,7 +369,7 @@
 [data-theme="high-contrast"] {
   --font-sans:
     "Nunito Variable", "Segoe UI Variable Text", system-ui, sans-serif;
-  --text-dial: 66px;
+  --text-dial: 60px;
 
   --radius-sm: 6px;
   --radius-md: 12px;

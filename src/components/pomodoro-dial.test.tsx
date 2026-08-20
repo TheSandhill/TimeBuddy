@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it } from "vitest";
 import { createI18n } from "../i18n/config";
+import { stylesheet, tokenPx } from "../test/stylesheet";
 import { PomodoroDial } from "./pomodoro-dial";
 
 /**
@@ -29,6 +30,25 @@ function showDial(props: Partial<Parameters<typeof PomodoroDial>[0]> = {}) {
   );
 }
 
+/**
+ * The mark is held against the **ring**, not against the digits.
+ *
+ * The ticket's rule was that the mark never grow enough to compete with the
+ * digits, and while it was 44px that was a number a test could assert. At the
+ * owner's tuned 88 it is a judgement only an eye makes. What is left — and what
+ * still breaks the screen if it goes wrong — is containment: the digits and the
+ * mark share the inside of the ring, and neither may push the other out of it.
+ *
+ * The digits' size is read from the token rather than restated, because it has
+ * already been retuned once (66 -> 60) and a copy here would have gone stale
+ * without failing.
+ */
+const digitPx = () => tokenPx("--text-dial");
+const RING_INNER_DIAMETER = 2 * (106 - 9 / 2);
+
+const markOf = (container: HTMLElement) =>
+  container.querySelector("[data-app-mark]") as HTMLImageElement;
+
 /** The arc that carries progress, as opposed to the track behind it. */
 const arcOf = (container: HTMLElement) =>
   container.querySelector("circle + circle") as SVGCircleElement;
@@ -45,14 +65,36 @@ describe("the dial", () => {
     expect(screen.getByText("25:00")).toHaveClass("text-dial");
   });
 
-  it("keeps the centre's mark slot empty rather than filling it", () => {
-    // The Mug is deferred (ADR-0004), and a placeholder glyph would be a second
-    // thing competing with the digits.
+  it("puts the Mug under the digits, inside the ring with them", () => {
+    // The mark is the app's face and the same mug as the app icon (ADR-0016).
+    // Its size is the owner's to tune; what a test can hold it to is that the
+    // digits and the mark still fit in the circle they share.
     const { container } = showDial({ running: true });
 
-    const mark = container.querySelector("[data-dial-mark]");
-    expect(mark).not.toBeNull();
-    expect(mark).toBeEmptyDOMElement();
+    const mark = markOf(container);
+    expect(mark.tagName).toBe("IMG");
+    expect(mark.getAttribute("src")).toMatch(/mug/i);
+
+    const stacked = digitPx() + Number(mark.getAttribute("height"));
+    expect(stacked).toBeLessThan(RING_INNER_DIAMETER);
+  });
+
+  it("says nothing with the mark, so the digits are never read twice", () => {
+    // Decorative, like every glyph in the set (ADR-0014): the countdown and the
+    // word *paused* are what a screen reader gets.
+    const { container } = showDial({ running: true });
+
+    expect(markOf(container)).toHaveAttribute("alt", "");
+    expect(markOf(container)).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("drops the mark in High-contrast rather than recolouring it", () => {
+    // A raster cannot flatten to an outline, and a soft shaded object in the
+    // theme that promises nothing is soft would honour no token at all. The
+    // cascade answers this, not a branch in the component (ADR-0004).
+    expect(stylesheet).toMatch(
+      /\[data-theme="high-contrast"\][^{]*\[data-app-mark\][^{]*\{[^}]*display:\s*none/,
+    );
   });
 
   it("draws no arc at all while nothing is running", () => {
@@ -79,8 +121,9 @@ describe("the dial", () => {
   });
 
   it("goes flat and muted the moment the block is held", () => {
-    // Two signals and no spare (`CONTEXT.md`, Mug): the word says held, and the
-    // ring stops breathing rather than merely changing colour.
+    // Three signals now (`CONTEXT.md`, Mug): the word says held, the ring stops
+    // breathing rather than merely changing colour, and the Mug dims. The mark
+    // is the signal the spare was owed to.
     const { container } = showDial({
       running: true,
       paused: true,
@@ -90,6 +133,19 @@ describe("the dial", () => {
     expect(screen.getByText("Gepauzeerd")).toBeInTheDocument();
     expect(container.querySelector("svg")).not.toHaveClass("animate-breath");
     expect(arcOf(container)).toHaveClass("stroke-ink-muted");
+    expect(markOf(container)).toHaveClass("opacity-40");
+  });
+
+  it("says held with a level and never with a loop", () => {
+    // The reason it is opacity (ADR-0004): reduced motion and High-contrast both
+    // set every loop to `none`, so a state that only moved would vanish. The
+    // running mark states its level rather than leaving it to the cascade, and
+    // it carries no animation at all — the ring is where this screen breathes.
+    const { container } = showDial({ running: true, remaining: 0.5 });
+    const mark = markOf(container);
+
+    expect(mark).toHaveClass("opacity-100");
+    expect(mark.className).not.toMatch(/animate-/);
   });
 
   it("offers the obvious next thing as the big button, Stop beside it", () => {

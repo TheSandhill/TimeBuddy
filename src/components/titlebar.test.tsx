@@ -15,6 +15,9 @@ vi.mock("@tauri-apps/api/window", () => ({
 
 const { Titlebar } = await import("./titlebar");
 
+/** The bar's own height (`h-10`), which is the mark's only ceiling here. */
+const BAR_PX = 40;
+
 const idle: RunningBlock = { block: null, now: "2026-08-05T12:00:00Z" };
 
 /** A block ten minutes into its twenty-five. */
@@ -99,6 +102,26 @@ describe("the custom titlebar", () => {
       screen.getByRole("button", { name: "Minimaliseren" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sluiten" })).toBeInTheDocument();
+  });
+
+  it("puts the Mug beside the wordmark, small enough for a 40px bar", () => {
+    // The left cell was the wordmark alone while the Mug was deferred; ADR-0016
+    // fills it with the same mark the dial carries.
+    const { container } = renderTitlebar();
+
+    const mark = container.querySelector("[data-app-mark]") as HTMLImageElement;
+    expect(mark.getAttribute("src")).toMatch(/mug/i);
+    expect(Number(mark.getAttribute("height"))).toBeLessThan(BAR_PX);
+  });
+
+  it("never dims the Mug in the bar, whatever the block is doing", () => {
+    // Held is the pill's to say here. The bar is on every screen, which makes it
+    // the wrong place to repeat a thing the dial already says three ways.
+    const { container } = renderTitlebar(held);
+
+    expect(container.querySelector("[data-app-mark]")).not.toHaveClass(
+      "opacity-40",
+    );
   });
 
   it("offers no maximize — that trade is the whole point of ADR-0004", () => {

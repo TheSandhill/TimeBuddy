@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { AppMark } from "./app-mark";
 import { heroButtonClass, heroQuietButtonClass } from "./button";
 import { Icon } from "./icon";
 
@@ -7,6 +8,19 @@ const DIAL_SIZE = 236;
 const RING_RADIUS = 106;
 const RING_STROKE = 9;
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+/**
+ * The Mug's drawn width, and **the one line to tune it** — a perceptual value,
+ * set by the owner's eye rather than derived from anything here.
+ *
+ * Worth knowing before it is changed again: `CONTEXT.md` → Mug asks that the
+ * mark never grow enough to compete with the digits, and that rule is what
+ * killed the 190px variant on the prototype branch. At 88 against 60px digits
+ * the mark is no longer strictly under them — it was raised here deliberately,
+ * by eye, and the ceiling that remains is the ring: the digits and the mark
+ * have to go on fitting inside it, which is what the test asserts.
+ */
+const MARK_WIDTH = 88;
 
 interface PomodoroDialProps {
   /** `MM:SS` — the block's nominal length when idle, what is left when not. */
@@ -66,7 +80,7 @@ export function PomodoroDial({
          * One of the app's two loops (ADR-0004), and it stops the moment the
          * block is held: a ring still breathing over a countdown that has
          * stopped moving would be the app disagreeing with itself. Held is the
-         * word plus a flat muted ring, and there is no third signal spare.
+         * word, a flat muted ring, and — since ADR-0016 — a dimmed Mug.
          */}
         <svg
           width={DIAL_SIZE}
@@ -116,12 +130,11 @@ export function PomodoroDial({
           ) : null}
 
           {/*
-           * Reserved, and empty on purpose. Whatever mark ends up representing
-           * TimeBuddy goes here, under the digits, and must never grow enough to
-           * compete with them (ADR-0004: the Mug is deferred, and a placeholder
-           * glyph would be exactly the competition that rule forbids).
+           * The slot's deferral is over (ADR-0016). Dimming when held is the
+           * third signal `CONTEXT.md` → Mug says the mark owes the app — the
+           * spare a held block has not had since the mug was parked.
            */}
-          <span data-dial-mark />
+          <AppMark width={MARK_WIDTH} dimmed={paused} />
         </div>
       </div>
 
