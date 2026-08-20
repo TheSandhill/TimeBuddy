@@ -18,7 +18,7 @@ import { open as chooseDirectory } from "@tauri-apps/plugin-dialog";
 import { useTranslation } from "react-i18next";
 import { primaryButtonClass } from "../components/button";
 import { fieldClass, labelClass, quietLabelClass } from "../components/field";
-import { FormError } from "../components/form-error";
+import { RefusalLine } from "../components/refusal-line";
 import {
   createAccount,
   createClient,
@@ -157,7 +157,7 @@ export function Wizard({
           </label>
           <p className="text-sm text-ink-muted">{t("wizard.recoveryHint")}</p>
 
-          <FormError message={error} />
+          <RefusalLine message={error} />
 
           <button type="submit" className={primaryButtonClass} disabled={busy}>
             {t("wizard.next")}
@@ -186,7 +186,7 @@ export function Wizard({
             {t("wizard.chooseFolder")}
           </button>
 
-          <FormError message={error} />
+          <RefusalLine message={error} />
 
           <button type="submit" className={primaryButtonClass} disabled={busy}>
             {t("wizard.next")}
@@ -221,7 +221,7 @@ export function Wizard({
             />
           </label>
 
-          <FormError message={error} />
+          <RefusalLine message={error} />
 
           <button type="submit" className={primaryButtonClass} disabled={busy}>
             {t("wizard.finish")}

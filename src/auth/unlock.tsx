@@ -21,7 +21,7 @@ import {
   fieldClass,
   labelClass,
 } from "../components/field";
-import { FormError } from "../components/form-error";
+import { RefusalLine } from "../components/refusal-line";
 import { resetAccountPassword, unlockAccount } from "../data/commands";
 import { errorKey } from "../data/error-message";
 
@@ -114,7 +114,7 @@ export function Unlock({ onOpen }: { onOpen: (token: string | null) => void }) {
             />
           </label>
 
-          <FormError message={error} />
+          <RefusalLine message={error} />
 
           <div className="flex items-center gap-3">
             <button
@@ -170,7 +170,7 @@ export function Unlock({ onOpen }: { onOpen: (token: string | null) => void }) {
             {t("unlock.remember")}
           </label>
 
-          <FormError message={error} />
+          <RefusalLine message={error} />
 
           <div className="flex items-center gap-3">
             <button

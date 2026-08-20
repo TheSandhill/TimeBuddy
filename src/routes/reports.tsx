@@ -14,6 +14,7 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { primaryButtonClass, toggleButtonClass } from "../components/button";
 import { DateRangeFilter } from "../components/date-range-filter";
 import { quietLabelClass } from "../components/field";
+import { RefusalLine } from "../components/refusal-line";
 import {
   exportReport,
   reportByClient,
@@ -178,17 +179,11 @@ export function Reports() {
         </div>
       </header>
 
-      {backwards ? (
-        <p role="alert" className="text-sm text-danger">
-          {t("error.rangeEndsBeforeStart")}
-        </p>
-      ) : null}
+      <RefusalLine
+        message={backwards ? t("error.rangeEndsBeforeStart") : null}
+      />
 
-      {exportError ? (
-        <p role="alert" className="text-sm text-danger">
-          {exportError}
-        </p>
-      ) : null}
+      <RefusalLine message={exportError} />
 
       {shown && rows.length === 0 ? (
         <p className="text-sm text-ink-muted">{t("reports.empty")}</p>

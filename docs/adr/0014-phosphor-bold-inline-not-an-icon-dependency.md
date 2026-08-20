@@ -74,9 +74,10 @@ one question — and a question implies somebody asked. That is what separates t
 Worked through the app's failures, this is not a close call. A failed backup runs unbidden on launch and
 its banner *says which copy is still good* (ADR-0007), so the news is a gap in protection, not a loss —
 `warning`. A failed restore's whole message is that the current database was left alone (ADR-0008) —
-`warning`. `form-error` and a failed update install are both things the user just pressed — `error`. The
-crash boundary is `error` despite the app initiating it, because the fallback test decides it: there is
-no older screen still good to fall back to.
+`warning`. The refusal line (`form-error` when this was written, `refusal-line` since #88) and a failed
+update install are both things the user just pressed — `error`. The crash boundary is `error` despite the
+app initiating it, because the fallback test decides it: there is no older screen still good to fall
+back to.
 
 The rule exists because the alternative is deciding per banner, which is how six banners end up with
 four opinions. A new failure asks these two questions and gets its glyph.

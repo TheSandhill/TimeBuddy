@@ -407,6 +407,23 @@ that has to be read.
 no rule per theme. The focus ring is restated locally for the one reason the switch restates it — that
 outline is a compound selector and outranks a bare `:focus-visible`.
 
+### Refusal line
+
+The one line the app says when something the user asked for did not happen — a name the command layer
+rejected, a delete that failed, an export that failed, a date range that ends before it starts, a screen
+that would not load. One red paragraph, `role="alert"` so it is spoken, wearing the icon set's `error`
+under ADR-0014's rule: the user asked, and no fallback is intact.
+
+It is one component (`refusal-line.tsx`) and not one per screen, which is the whole point of the term.
+It was called a **form error** until #88, which found nine places that had pasted its paragraph inline
+rather than importing it — and six of those were not forms at all. The difference between "a form was
+refused" and "a delete was refused" is not one the reader of a red line can see, so the app says its
+refusals one way.
+
+A **banner** is not a refusal line. `backup-banner` and `restore-banner` report a condition the user did
+not ask for and take `warning`; `update-banner` and `root-boundary` alert from a layout of their own.
+The refusal line is the bare line, and a guard fails the build if a second copy of it appears.
+
 ### Motion
 
 How the app moves between one state and the next. Part of the Theme, for the reason above.
