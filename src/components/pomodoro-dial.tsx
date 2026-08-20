@@ -9,6 +9,9 @@ const RING_RADIUS = 106;
 const RING_STROKE = 9;
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
+/** The circle's inside, which is what the held scrim covers and no more. */
+const RING_INNER = 2 * (RING_RADIUS - RING_STROKE / 2);
+
 /**
  * The Mug's drawn width, and **the one line to tune it** — a perceptual value,
  * set by the owner's eye rather than derived from anything here.
@@ -23,6 +26,16 @@ const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
  * to go on fitting inside it, which is what the test asserts.
  */
 const MARK_WIDTH = 88;
+
+/**
+ * The held glyph's size, and a knob like the mark's.
+ *
+ * It is allowed to be large — larger than the digits — because unlike the mark
+ * it *is* the message while it is on screen. The ceiling is the ring: a glyph
+ * wider than the circle's inside would read as an overlay on the screen rather
+ * than a state of the dial.
+ */
+const HELD_GLYPH = "size-20";
 
 interface PomodoroDialProps {
   /** `MM:SS` — the block's nominal length when idle, what is left when not. */
@@ -117,28 +130,124 @@ export function PomodoroDial({
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-          <p className="text-dial font-light leading-none tabular-nums tracking-tight text-ink">
+          {/*
+           * `relative z-10` earns its keep the moment the mark steams: the steam
+           * rises past the digits, and painting order alone would put it over
+           * them because the mark comes later in the tree. Behind is the only
+           * option that keeps the digits the thing this screen is about.
+           *
+           * Held drains them to muted ink rather than hiding them: what is left
+           * on the clock is still the truth, it has just stopped being spent.
+           */}
+          <p
+            className={`relative z-10 text-dial font-light leading-none tabular-nums tracking-tight transition-colors motion-base ease-out-soft ${
+              paused ? "text-ink-muted" : "text-ink"
+            }`}
+          >
             {countdown}
           </p>
-
-          {/*
-           * Announced rather than merely styled: a countdown that has stopped
-           * moving is the one state of this screen that reads as a broken app.
-           */}
-          {paused ? (
-            <p role="status" className="text-xs font-medium text-accent">
-              {t("timer.paused")}
-            </p>
-          ) : null}
 
           {/*
            * The slot's deferral is over (ADR-0016). Dimming when held is the
            * third signal `CONTEXT.md` → Mug says the mark owes the app — the
            * spare a held block has not had since the mug was parked.
+           *
+           * The steam follows the ring rather than the block: a held cup that
+           * went on steaming would be the same disagreement as a ring still
+           * breathing over a stopped countdown. It is pleasure, not signal —
+           * held is already said three ways without it.
+           *
+           * `"off"` rather than dropping the prop, so the layer is mounted
+           * before Start is ever pressed and has something to fade from.
            */}
-          <AppMark width={MARK_WIDTH} dimmed={paused} />
+          <AppMark
+            width={MARK_WIDTH}
+            dimmed={paused}
+            steam={running && !paused ? "on" : "off"}
+          />
+        </div>
+
+        {/*
+         * Held, projected over the whole dial.
+         *
+         * `z-20` rather than nothing: the digits carry `z-10` for the steam, and
+         * this has to sit over them — it is the one thing on this screen allowed
+         * to.
+         *
+         * Two layers: a scrim over the circle's inside, and the glyph above it.
+         *
+         * Mounted always and toggled, for the same reason the steam layer is:
+         * something that appears from nothing has nothing to animate from, and
+         * both directions are supposed to move. The glyph arrives on `bounce`
+         * because it overshoots, which is that tier's whole definition; the scrim
+         * takes plain `base`, since a dimming is a disclosure and not a bounce.
+         * Tiers rather than numbers, so reduced motion collapses both with no
+         * branch here.
+         *
+         * Nothing is lost when it does collapse. The glyph, the drained digits
+         * and the muted ring are all still there; only the arrival stops moving.
+         *
+         * `text-ink-muted` — **the paused ring's own colour**, which is what
+         * makes held one language rather than three: the arc goes
+         * `stroke-ink-muted`, the digits go `text-ink-muted`, and the glyph is
+         * drawn in the same ink. Held is "this screen is in muted ink now".
+         *
+         * The glyph still dominates despite sharing the digits' colour, because
+         * it sits *above* the scrim and they sit under it. Position does the
+         * work that a brighter colour was doing before.
+         */}
+        <div
+          data-held={paused ? "on" : "off"}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-20 grid place-items-center text-ink-muted"
+        >
+          {/*
+           * The scrim: the circle's inside, dimmed. `bg-surface` at an alpha
+           * rather than a black wash, so it dims by pulling everything back
+           * towards whatever the theme's surface already is — darker on Walnut,
+           * paler on Sand, and correct in both without a branch.
+           *
+           * `rounded-full` at exactly the ring's inner diameter, so it stops at
+           * the track and never covers it. The ring still has to be readable
+           * through the hold: it is the one thing here that says *how much is
+           * left*, and that stays true whether or not the block is running.
+           *
+           * It fades and does not scale. Only the glyph scales — a scrim
+           * growing from 75% reads as a bubble swelling out of the middle.
+           */}
+          <div
+            style={{ width: RING_INNER, height: RING_INNER }}
+            className={`absolute rounded-full bg-surface/70 transition-opacity motion-base ease-out-soft ${
+              paused ? "opacity-100" : "opacity-0"
+            }`}
+          />
+
+          <Icon
+            name="pause"
+            className={`relative ${HELD_GLYPH} transition-[opacity,scale] motion-bounce ease-bounce-soft ${
+              paused ? "scale-100 opacity-100" : "scale-75 opacity-0"
+            }`}
+          />
         </div>
       </div>
+
+      {/*
+       * The word the glyph replaced, still said — out loud only.
+       *
+       * A glyph cannot speak: the set is `aria-hidden` with no way to pass a
+       * label, and ADR-0014 is explicit that a glyph needing to talk is a
+       * control missing its `aria-label` rather than a glyph to annotate. This
+       * is not a control, so the state needs its own voice.
+       *
+       * It has to be here and not the titlebar's pill: that pill is
+       * `role="timer"` precisely so a screen reader does *not* announce it every
+       * second, which also means it never announces the hold. This element is
+       * always mounted and only its text changes, because a live region that
+       * appears at the same moment its content does is unreliably announced.
+       */}
+      <p role="status" className="sr-only">
+        {paused ? t("timer.paused") : ""}
+      </p>
 
       <div className="flex w-full items-stretch gap-3">
         <button

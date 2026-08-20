@@ -26,6 +26,11 @@ export const colourTokens = [
   // of. A theme that tuned the accent and dragged the scrollbar with it would
   // be answering a question nobody asked.
   "--color-scroll-thumb",
+  // The Mug's steam. Its own token because it is the only thing in the app whose
+  // tone *relative to the surface* has to flip: vapour is lighter than a dark
+  // room and no more than a faint haze against a bright one. Borrowing the muted
+  // ink, as it first did, came out as black smoke on Sand.
+  "--color-steam",
 ] as const;
 
 /** Raised radii, so `corner-shape: squircle` has something to round. */

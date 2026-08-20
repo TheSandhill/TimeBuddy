@@ -294,8 +294,11 @@ re-decides (ADR-0004). Labels are sentence case; the wall of tracked capitals is
 A Theme may also change an asset's **fidelity and not only its hue**: High-contrast wants an outline
 where Walnut wants something soft, and recolouring a soft thing to yellow would honour the token while
 breaking the promise. That is why a *drawn* asset is a token set rather than a file. The [Mug](#mug)
-is the exception that proves the shape of the rule — it is a raster, so its fidelity cannot vary by
-degree, and High-contrast drops it instead. Varying fidelity includes varying it to nothing.
+is both halves of the rule: its *body* is a raster, so fidelity cannot vary by degree and High-contrast
+drops it instead — varying fidelity includes varying it to nothing — while its *steam* is drawn, and
+varies per theme exactly as the rule intends. Steam is the one thing whose tone has to invert against
+the surface: lighter than a dark room, a faint darker haze against a bright one, which is why it has a
+token of its own and why Sand takes less of it.
 
 Shipped: **Walnut** (dark, default), **Sand** (light), **High-contrast**, plus an opt-in
 "follow system".
@@ -432,9 +435,12 @@ How the app moves between one state and the next. Part of the Theme, for the rea
 Five **durations**, and a sixth is a sign one of these should have been reused: `quick` for hover,
 colour and focus; `base` for disclosure — the accordion, a form opening, the tab indicator; `bounce`
 for anything on an overshoot curve; `page` for a route change; `deliberate` for the one animation
-allowed to be slow enough to notice. That tier was written for the Mug pouring out when a block is
-stopped by hand, which a raster mark cannot do; it is **unspent** until something else earns it, and a
-tier nothing uses is worth keeping only as long as that stays true.
+allowed to be slow enough to notice — the Mug's steam fading in when a block starts and dissipating
+when one is stopped by hand.
+
+That tier was written for the mug *pouring out* on a manual stop. The pour-out went with the drawing
+when the mark became a photograph, and the steam is its heir: the same moment, the same permission to
+be slow, the nearest thing the mark can actually do. Every duration is spent again.
 
 `bounce` is a tier of its own rather than a use of `base` because an overshoot inside 220ms has no
 room for its return leg and reads as a glitch rather than as spring.
@@ -482,22 +488,38 @@ Restating them would give High-contrast and reduced motion a second place to be 
 second place to be forgotten. So there is no reduced-motion branch in any component: the cascade has
 already answered by the time the value is read.
 
-Two **loops** were declared, and only two: the Mug's steam, and the dial ring's breath. They run at
-deliberately different periods — two things breathing in step read as machinery. The breath is slow,
-near four and a half seconds, because a heartbeat cadence means urgency and this is a tool for
-twenty-five uninterrupted minutes.
+Two **loops**, and only two: the Mug's steam, and the dial ring's breath. They run at deliberately
+different periods — two things breathing in step read as machinery. The breath is slow, near four and
+a half seconds, because a heartbeat cadence means urgency and this is a tool for twenty-five
+uninterrupted minutes. The steam is slower still, at five and a bit, because vapour that hurries reads
+as smoke.
 
-The **steam has nothing to rise from**: the Mug arrived as a raster, and animating a wisp over a
-photograph is not the same drawing. `--animate-steam` stays declared by all three themes, unspent
-alongside `deliberate`, for the same reason and with the same expiry — see [Mug](#mug).
+The steam is **five plumes drifting up through a fixed distortion**, so each is a different shape at
+every height and the group never repeats. That is what separates it from a few wisps pulsing in place,
+which is what it looked like first and was rejected as. The distortion does not move, and that is
+deliberate: animating it would need SMIL, and SMIL cannot read the tokens, so a theme turning the loop
+off would be ignored by exactly the part of the drawing that makes it convincing.
+
+It **fades rather than appears**, on `deliberate`, so Start and Stop are not a switch being thrown.
+That needs the layer mounted before Start is ever pressed — something faded in from nothing has
+nothing to fade from, which is the prototype's disclosure bug wearing a different hat.
+
+It is also the **one loop that is removed rather than stilled**. Everything else here is built so that
+stopping the motion costs the pleasure and not the message — a spinner that does not turn is still a
+ring. Steam has no still form: frozen mid-rise it is a grey smudge over the cup, which reads as a
+fault rather than as calm. So reduced motion takes it away entirely, which is safe for the reason
+below — it never carried anything.
 
 **Nothing is on the titlebar.** The countdown pill is on every screen, so an animation there would be
-in the corner of the eye permanently and become the thing the app is remembered for.
+in the corner of the eye permanently and become the thing the app is remembered for. The mark is in the
+bar's left cell and does **not** steam there for this reason; only the dial's does.
 
 **No state is ever signalled by motion alone.** This is the rule that makes the rest safe. Reduced
 motion — the operating system's, or High-contrast's own token values — sets the loops to `none` and
-collapses the durations to a millisecond, and *nothing is lost*, because the digits, the Mug's own
-dimness and the word *paused* each say it without moving. The loops go to `none` rather than to a
+collapses the durations to a millisecond, and *nothing is lost*, because the pause glyph, the drained
+digits and the Mug's own greyness each say it without moving — the word *paused* is still said, but only
+to a screen reader since the glyph replaced it, so it is not what carries this for a sighted person. The
+loops go to `none` rather than to a
 millisecond: a breath that fast is a flicker, which is worse than stillness. Enforced by a test, the
 way the string catalogues are — a rule about what may not appear in a component is worth exactly what
 it costs to break it.
@@ -542,12 +564,38 @@ The deferral is **over**. What it left behind, and what the mark is now held to:
   knowingly fails.
 - Each slot names **its own width, in one line**, and derives nothing. `AppMark` takes a width and knows
   the asset's aspect; what a mark should measure in a given place is a perceptual value every time.
-- A **held** block is the word *paused* in the pill and the tray tooltip, a flat muted ring, and now
-  **the Mug dimmed in the dial**. Three signals where the mug design once had five — the spare it was
-  owed is the mark, and the mark has paid it.
+- A **held** block dims the circle's inside behind a **large pause glyph**, with the digits drained to
+  muted ink under it, a flat muted ring, the Mug greyed out, and the word *paused* in the titlebar's
+  pill and the tray tooltip. The dimming stops at the ring's track rather than covering it: the ring is
+  what says *how much is left*, and that stays true while a block is held. Everything in the circle goes to **muted ink** together — the arc, the digits and
+  the glyph — so held is one language rather than three. The glyph still dominates, because it sits
+  above the dimming and they sit under it: position carries it, not a brighter colour.
+
+  **A held countdown is deliberately hard to read**, and this was decided with the numbers in hand.
+  Drained ink under the dimming puts the digits at about 1.7:1 on Walnut and 1.5:1 on Sand, against the
+  3:1 the app holds large text to everywhere else. Legible alternatives were available and measured —
+  leaving the digits at full ink, lifting them above the scrim, or a scrim at 30% rather than 70% — and
+  the look was chosen over the legibility on purpose. The countdown is still on screen, and the
+  titlebar's pill states it at full contrast on every screen. What a held dial is *for* is saying "not
+  now", and it says that by receding. Do not "fix" this without asking: it is a decision, not an
+  oversight.
+
+  The word used to sit in the circle between the digits and the mark, and it is what the glyph
+  replaced. It did not simply go: **a glyph cannot speak** — the icon set is `aria-hidden` with no way
+  to pass a label, and ADR-0014 is explicit that a glyph needing to talk is a control missing its
+  `aria-label` rather than a glyph to annotate. So the word survives as a screen-reader-only live
+  region on this screen. It could not be left to the pill, which is `role="timer"` precisely so nothing
+  announces it every second, and therefore never announces the hold either.
+
+  The count of signals has stopped being interesting: there were five in the mug design, two after it
+  was parked, and the worry then was that there was no spare. There is plenty of spare now.
 - The dimming is a **level, not a movement**, which is the one thing the parked coffee-level idea was
   really about: reduced motion sets both loops to `none`, and held has to survive that. A raster cannot
   drain, so the level it carries is its own opacity.
+- The mark **steams while a block runs**, in the dial only. The body is still the photograph; the steam
+  is drawn, because it is the one part a photograph cannot do. It follows the ring rather than the
+  block — a held cup that went on steaming would be the same disagreement as a ring breathing over a
+  stopped countdown — and it says nothing on its own, which is what lets reduced motion drop it.
 - **High-contrast shows no mark.** A shaded cream photograph cannot flatten to an outline and means
   nothing recoloured, so the fidelity that varies for this asset is *absence*. Nothing is lost: the
   mark says nothing the digits and the word do not.

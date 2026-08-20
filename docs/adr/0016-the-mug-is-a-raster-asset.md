@@ -1,11 +1,19 @@
 # ADR-0016: The Mug is a raster asset, and the first static file in the bundle
 
+> The title is half the story since the 2026-08-20 steam amendment: the mug's **body** is a raster and
+> the steam over it is drawn. Kept as-is because the body is what the decision was about, and renaming
+> an accepted ADR loses every reference to it.
+
 - **Status**: Accepted
 - **Date**: 2026-08-20
 - **Amends**: ADR-0004, whose fourth token class — the Mug — was deferred, and whose provision that a
   themed asset varies its fidelity is narrowed here to *drawn* assets. Nothing in ADR-0004 is reversed.
 - **Relates to**: ADR-0014, which made inline path data the rule for the **icon set**. That rule is
   untouched: a brand mark is not an icon.
+- **Amended**: 2026-08-20 — the mark **gains drawn steam**, so it is a raster body with an SVG overlay
+  rather than a raster alone. `--animate-steam` stops being unspent and slows from 3.2s to 5.4s. One
+  new rule comes with it: this is the app's first loop that reduced motion **removes** instead of
+  stilling. Amended in place — the body is still the icon's own file and nothing below is reversed.
 
 ## Context
 
@@ -36,7 +44,9 @@ icon source with alpha intact and committed. It is the same mug as the app icon,
 one face, one file lineage, no second drawing to keep in sync.
 
 **Two slots, one component.** `AppMark` is the only thing that draws it — the dial's centre and the
-titlebar's left cell both call it and decide nothing but a width. The reason is the one ADR-0004 gives
+titlebar's left cell both call it. A caller decided nothing but a width when this was written; since
+the steam amendment it also says whether the mark is greyed and whether it steams, and the titlebar
+answers no to both. The reason is the one ADR-0004 gives
 for the control vocabulary living in two files: the copies disagree, and by the time anyone notices
 there are four of them.
 
@@ -86,10 +96,10 @@ That is the debt paid. Three signals, and the mark is the third.
 - **The Mug's nine colour tokens are never written.** ADR-0004's fourth token class does not arrive; it
   is answered by a file instead. A user-authored theme cannot restyle the mark — it can only be shown or
   hidden, which is what High-contrast does.
-- **Two motion tokens are left unspent.** `--animate-steam` has nothing to rise from, and `deliberate`
-  was written for the mug pouring out on a manual stop. Both stay declared by all three themes rather
-  than being deleted, because the cost is three lines and removing a tier is the kind of change that
-  reshapes every duration around it. Recorded in `CONTEXT.md` → Motion so neither reads as an oversight.
+- **No motion token is left unspent.** Both that this ADR stranded — `--animate-steam` and
+  `deliberate` — are spent by the 2026-08-20 steam amendment: the loop on the plumes, the tier on their
+  fade in and out. The mug's nine *colour* tokens are still the ones never written, and they never will
+  be.
 - **Sand needs no second file, and the reason is measurable.** ADR-0004 recorded the cost that killed
   the earlier attempts — "on Sand a cream mug on a cream surface is simply invisible, so it had to
   become a dark object on a light table" — and the shipped raster cannot invert. Measured against
@@ -122,3 +132,111 @@ That is the debt paid. Three signals, and the mark is the third.
   ring, and that is what it holds.
 - Cost: the app carries a 39KB binary that no diff can review. The same trade ADR-0014 took for
   borrowed path data, in a form that is more opaque and less likely to change.
+
+## Amendment, 2026-08-20: the steam is drawn
+
+The mark now steams while a block runs. The body is unchanged; the steam is five soft ellipses in an
+inline SVG over it.
+
+**Why this is not a fourth attempt at drawing the mug.** The rejected attempts were the *cup* — a
+recognisable object with a face, where every proportion is judged against something everyone already
+knows. A plume has no correct shape. It is the one part of this mark that can be authored without
+seeing it render and still be defensible, and the one part a photograph fundamentally cannot do: a
+raster cannot rise.
+
+**Vapour rather than particles.** The naive version — a few wisps pulsing their opacity in place — is
+what the brief explicitly rejected. Three things separate this from it, recorded because each is a
+thing somebody would later "simplify" back out:
+
+- **The plumes drift through a stationary noise field.** `feTurbulence` feeds an `feDisplacementMap` on
+  the parent group, so the distortion is fixed in space while the plumes travel through it. Each plume
+  is a different shape at every height and the group never repeats. Putting the filter on each plume
+  instead gives three identically-distorted shapes, which is the particle look again.
+- **They spread as they rise.** Something that only translates reads as an object moving. Vapour
+  expands and thins, so scale and opacity travel with the position.
+- **They are out of phase.** Staggered by fifths of the loop, with different drifts, widths and
+  stretches, so no frame has them agreeing with each other. Negative delays start each one already
+  mid-rise, so the column is continuous from the first frame rather than building up over a period.
+- **There are enough of them.** Three left countable gaps in the column at this size, and anything you
+  can count reads as particles. Five is the number the owner's eye settled on; the plume count is a look
+  to tune, not a constant with a reason, and the test holds a floor rather than a figure.
+
+**The turbulence is static, and that is a constraint rather than a compromise.** Animating a filter
+primitive means SMIL, and **SMIL does not read CSS** — the exact defect ADR-0014 moved the spinner and
+the pulse ring off. An animated turbulence would have kept billowing through High-contrast's
+`--animate-steam: none` and through `prefers-reduced-motion` alike. Static field, CSS-driven subject,
+one motion code path.
+
+### Reduced motion removes this loop instead of stilling it
+
+Every other loop is built so that stopping it costs the pleasure and not the message: a spinner that
+does not turn is still a ring (ADR-0014), and the running indicator's dot never moves in the first
+place. **Steam has no still form worth having.** Three blurred plumes frozen mid-rise are a grey
+smudge above the cup — it reads as a rendering fault, not as calm.
+
+So `prefers-reduced-motion` sets `display: none` on the steam layer rather than only zeroing its
+animation. That is allowed by ADR-0004's actual rule rather than an exception to it: *running* is the
+moving digits and the breathing ring, the steam never carried it, so nothing is lost by its absence.
+`CONTEXT.md` → Motion records it as the one loop that is removed, because "the loops go to `none`" is
+otherwise a fair description of every other one.
+
+High-contrast drops it too, with the mug — the selector names both, because the two are siblings and a
+rule naming only the image would leave plumes rising out of nothing.
+
+### Consequences of the amendment
+
+- **The titlebar does not steam**, and cannot be made to without contradicting `CONTEXT.md` → Motion:
+  "nothing is on the titlebar", because the bar is on every screen and an animation there would be in
+  the corner of the eye permanently. `AppMark` takes `steaming`, and only the dial passes it.
+- **The steam follows the ring, not the block.** A held cup that went on steaming is the same
+  disagreement as a ring breathing over a stopped countdown.
+- **It fades rather than appears, and that spends `deliberate`.** Start and Stop are the moment that
+  tier was written for — "the one animation allowed to be slow enough to notice, the Mug pouring out
+  when a block is stopped by hand". The pour-out is not available to a photograph; the steam
+  dissipating is, and it is the same beat. Soft in-out both ways rather than the usual quick-in on the
+  way out, because an abrupt departure is the thing being fixed.
+- **The layer is mounted before Start is pressed**, faded out rather than absent. A layer that arrived
+  on Start would snap, for the reason the prototype recorded about disclosures: rebuilt already-open,
+  there is no `0fr` to spring from. `visibility` is transitioned alongside the opacity so the hidden
+  state still costs nothing — otherwise the turbulence repaints behind a transparent layer on an idle
+  Timer screen.
+- **The digits needed a stacking order.** The steam rises past them and the mark comes later in the
+  tree, so painting order alone would put vapour over the countdown. The digits are `relative z-10`.
+- **The optical offset moved from the image to its wrapper** when the mark steams, so the plumes and
+  the cup shift together. Left on the image alone, the steam would rise 6px beside the mouth.
+- Two of the steam's values live in `app-mark.tsx` rather than the stylesheet, because SVG filter
+  primitives take attributes and an attribute cannot read a custom property. They are the two that
+  decide whether this reads as vapour at all, which is unfortunate placement for the most important
+  knobs; the comment says so at both ends.
+- Cost: the turbulence and displacement repaint every frame the plumes move, over a filter region about
+  twice the mark's box. Cheap at 88px on one screen; not a pattern to spread.
+- **The steam takes a theme token, and the mug's body still cannot.** `--color-steam` joins the colour
+  contract, because steam is the one thing whose tone relative to the surface has to invert — lighter
+  than a dark room, a faint darker haze against a bright one. On `--color-ink-muted`, which it borrowed
+  first, Sand got black smoke. Sand also takes a lower `--steam-opacity`: a haze that subtracts light
+  accumulates where one that adds it does not.
+
+  Worth noting what this means for the ADR above. The decision "the Mug is a raster, so its fidelity
+  cannot vary" is intact for the *body* and now plainly false for the mark as a whole. The drawn half
+  varies per theme exactly as ADR-0004's provision always said a drawn asset should, and it is the
+  first thing in the app to do so.
+- **A held block dims the circle.** A scrim covers the ring's inside — `bg-surface` at an alpha, so it
+  pulls everything back towards whatever the theme's surface already is and reads correctly on a dark
+  theme and a light one with no branch. It stops at the track on purpose: the ring is the one thing that
+  says *how much is left*, and that stays true while a block is held. The glyph sits above it, and the
+  two animate on different tiers — `bounce` for the glyph, which overshoots, and `base` for the scrim,
+  because a dimming is a disclosure and a scrim swelling out of the middle reads as a bubble.
+- **No test guards the steam's visibility, and one was tried on paper and rejected.** The obvious move
+  is the `--color-scroll-thumb` precedent — a contrast floor, because "a mark nobody can pick out of the
+  background is the same defect as unreadable body text". It does not transfer. The thumb has only a
+  lower bound; steam has an upper one too, and it is not symmetric between themes: Walnut ships at about
+  10.5:1 and reads as vapour, while Sand's smoke failure was only 4.5:1. A guard would need a floor, a
+  ceiling depending on whether the theme is light or dark, and three thresholds reverse-engineered from
+  the two failures — a test encoding this history rather than a rule. The bracket is recorded in the
+  `styles.css` comment instead, which is what the next person actually needs.
+- **A held countdown is deliberately below the contrast floor.** Drained ink under a 70% scrim is about
+  1.7:1 on Walnut and 1.5:1 on Sand, where the app holds large text to 3:1. Three legible alternatives
+  were measured and the look was chosen over them; see `CONTEXT.md` → Mug. Recorded because an
+  unexplained sub-floor value is indistinguishable from a mistake.
+- Cost: thirteen values, and the look is the sum of them. Nobody can review this by reading the diff —
+  it has to be looked at in the running app, which is the same exposure the mug itself had.

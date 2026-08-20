@@ -50,7 +50,7 @@
   /* Deliberately different periods — two things breathing in step read as
    * machinery. The breath is slow because a heartbeat cadence means urgency,
    * and this is a tool for twenty-five uninterrupted minutes. */
-  --animate-steam: steam 3.2s linear infinite;
+  --animate-steam: steam 5.4s linear infinite;
   --animate-breath: breath 4.5s var(--ease-in-out-soft) infinite;
 
   /* The two activity loops. Both are fast on purpose — a spinner breathing at
@@ -70,6 +70,10 @@
   --color-accent: #c8a87c;
   --color-danger: #c2705a;
   --color-scroll-thumb: #e6dccd;
+
+  /* Vapour over dark walnut: lighter than the room it is in, which is what
+   * steam looks like anywhere you have actually seen it. */
+  --color-steam: #e8dfd0;
 }
 
 /*
@@ -77,15 +81,33 @@
  * for them yet, and so the token-contract test can keep reading @theme as a
  * flat block.
  */
+/*
+ * One plume's life: leaves the rim small and dense, rises while spreading and
+ * thinning, gone before it reaches the digits.
+ *
+ * The old version of this keyframe pulsed a wisp's opacity in place, which is
+ * what "three particles moving upwards" looks like. Steam does not pulse — it
+ * *travels and dissipates*, and the fade has to finish before the top or the
+ * plume visibly vanishes mid-air.
+ *
+ * Asymmetric on purpose: in fast, hold, long tail out. Vapour is dense at the
+ * rim and spends most of its life thinning.
+ */
 @keyframes steam {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: translateY(0) scaleY(1);
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.5, 0.45);
   }
-  50% {
-    opacity: 0.8;
-    transform: translateY(-6%) scaleY(1.06);
+  18% {
+    opacity: var(--steam-opacity);
+  }
+  55% {
+    opacity: calc(var(--steam-opacity) * 0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--steam-drift), calc(var(--steam-rise) * -1))
+      scale(var(--steam-spread), var(--steam-stretch));
   }
 }
 
@@ -268,8 +290,194 @@
  * Here rather than in the component: a theme is answered by the cascade, which
  * is what keeps every screen free of a branch per theme (ADR-0004).
  */
-[data-theme="high-contrast"] [data-app-mark] {
+[data-theme="high-contrast"] :is([data-app-mark], .mug-steam) {
   display: none;
+}
+
+/*
+ * The Mug's steam, and **every knob for it**.
+ *
+ * The brief was "real steam, not three particles moving upwards", and the
+ * difference is not the number of shapes. It is three things:
+ *
+ *   1. **The plumes drift through a fixed noise field.** `feTurbulence` +
+ *      `feDisplacementMap` sit on the parent group, so the distortion is
+ *      stationary in space while the plumes travel through it. Each plume is
+ *      therefore a *different shape at every height* — it billows and tears
+ *      the way vapour does. Displacing each plume with its own moving noise
+ *      would need the turbulence animated, which means SMIL, which ADR-0014
+ *      forbids because SMIL cannot read CSS. Static field, moving subject: the
+ *      motion stays in CSS and the organic part comes free.
+ *   2. **They spread as they rise.** A shape that only translates reads as an
+ *      object moving. Vapour expands and thins, so `scale` and `opacity` go
+ *      with the travel.
+ *   3. **They are out of phase and out of step.** Five plumes on one delay is
+ *      a pulse. Staggered by thirds of the loop, with different drifts and
+ *      widths, there is no moment where the group agrees with itself.
+ *
+ * Tune here — this is the whole surface. Two more knobs live in
+ * `app-mark.tsx`, because SVG filter primitives take attributes and cannot read
+ * a custom property.
+ */
+.mug-steam {
+  /* Where the plume base sits, against the mark's own box. `--steam-x` is the
+   * measured centre of the mug's mouth (57.8% of the asset's width), not the
+   * centre of the image — the handle is why those differ. */
+  --steam-x: 58%;
+
+  /* Where the plume base sits, measured off the asset: the mug's rim is 13.3%
+   * of the image's height from its top, so 86% up from the bottom puts the
+   * plumes leaving the coffee's surface rather than the cup's belly. **This is
+   * the knob to check first** — the steam paints over the mug, so too low and
+   * the plumes sit on the ceramic. */
+  --steam-lift: 86%;
+  --steam-width: 68px;
+  --steam-height: 78px;
+
+  /* How far a plume travels and how much it opens out, in viewBox units. Rise
+   * is bounded by the gap to the digits: it fades behind them, never over. */
+  --steam-rise: 50px;
+  --steam-spread: 2.4;
+  --steam-stretch: 2.8;
+
+  /* Peak opacity of one plume, before five of them overlap. **The strongest
+   * knob**, and the one to pull on for more or less steam before touching
+   * anything else.
+   *
+   * The ceiling is `CONTEXT.md` → Mug: nothing under the digits may compete with
+   * them. Diffuse and behind them, this has more room than a solid shape would,
+   * but that is where the limit comes from if it starts to feel like too much. */
+  --steam-opacity: 0.62;
+
+  position: absolute;
+  bottom: var(--steam-lift);
+  left: var(--steam-x);
+  width: var(--steam-width);
+  height: var(--steam-height);
+  translate: -50% 0;
+  overflow: visible;
+  pointer-events: none;
+
+  /* `currentColor` all the way down, so no artwork names a colour (ADR-0014).
+   * Its own token rather than the muted ink it started on: the ink is dark on
+   * Sand, and five overlapping plumes of dark-on-cream is smoke, not steam. */
+  color: var(--color-steam);
+
+  /*
+   * Off by default, and it **fades** rather than appears.
+   *
+   * `deliberate` is the tier written for this moment and no other: "the one
+   * animation allowed to be slow enough to notice, the Mug pouring out when a
+   * block is stopped by hand". The pour-out went with the drawing, and steam
+   * dissipating when Stop is pressed is its heir — so the tier is spent here
+   * rather than left waiting for a mug that will never drain.
+   *
+   * Soft in-out rather than the usual quick-in on the way out: an abrupt
+   * departure is exactly what this is meant to stop doing. Atmosphere leaves
+   * the way the breath moves, not the way a menu closes.
+   *
+   * `visibility` rides along so the hidden state costs nothing — the plumes'
+   * turbulence would otherwise keep repainting behind a transparent layer on an
+   * idle Timer screen. It flips instantly on the way in and only at the end of
+   * the fade on the way out, which is the whole reason it is transitioned
+   * rather than just set.
+   */
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--motion-deliberate) var(--ease-in-out-soft),
+    visibility var(--motion-deliberate);
+}
+
+/*
+ * Sand needs **less** steam as well as a different tone.
+ *
+ * A haze that is darker than its background is doing something a light one is
+ * not: on Walnut the plumes add light and pile up harmlessly, but on Sand every
+ * overlap subtracts it, and five of them at Walnut's density is a smudge however
+ * warm the colour. Tone alone was not enough here — the density is part of the
+ * same decision, which is why it sits with it rather than in the knobs above.
+ *
+ * **The two Sand knobs, together.** Overlap compounds them: three plumes at 0.45
+ * cover about 83% of the way to `--color-steam`, so a small move here is a large
+ * move on screen. Too dark or too dense reads as smoke; too light or too sparse
+ * and it vanishes into the cream. Both failures have already happened once, and
+ * measured against the surface with three plumes stacked they bracket the answer:
+ *
+ *   #6f6157 @ 0.62  ->  4.5:1  — read as black smoke
+ *   #c9baa8 @ 0.45  ->  1.5:1  — shipped
+ *   #d6cabb @ 0.30  ->  1.2:1  — invisible
+ *
+ * Those numbers are the whole guard. There is no test, and ADR-0016 records why:
+ * Walnut ships at about 10.5:1 and reads as vapour, so any floor-and-ceiling
+ * covering both themes would be constants fitted to the two failures above.
+ */
+[data-theme="sand"] .mug-steam {
+  --steam-opacity: 0.45;
+}
+
+/*
+ * Mounted always, toggled by attribute — never mounted *into* the on state.
+ *
+ * The prototype recorded this as a bug to not repeat in React: a panel rebuilt
+ * already-open has nothing to animate from, so the transition never plays. A
+ * steam layer that arrived the moment Start was pressed would snap on for the
+ * same reason, which is the thing this whole rule exists to prevent.
+ */
+.mug-steam[data-steaming="on"] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mug-steam__plume {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: var(--animate-steam);
+}
+
+/*
+ * **Fifths** of the loop, so the group never breathes in step, plus a drift, a
+ * spread and a stretch each. Negative delays start every plume already mid-rise,
+ * so the column is continuous from the first frame instead of building up over
+ * one full period.
+ *
+ * Fractions of the period rather than durations of their own: retuning
+ * `--animate-steam` should not need these touched, only re-divided.
+ *
+ * Five rather than three. Three left visible gaps in the column at this size —
+ * you could count them, which is the particle read returning by the back door.
+ * Adding a plume means one ellipse in `app-mark.tsx` and one rule here; the
+ * delays want re-spacing to match, and nothing else does.
+ */
+.mug-steam__plume:nth-child(1) {
+  --steam-drift: -9px;
+  animation-delay: 0s;
+}
+
+.mug-steam__plume:nth-child(2) {
+  --steam-drift: 5px;
+  --steam-spread: 1.9;
+  animation-delay: -1.08s;
+}
+
+.mug-steam__plume:nth-child(3) {
+  --steam-drift: 11px;
+  --steam-stretch: 3.2;
+  animation-delay: -2.16s;
+}
+
+.mug-steam__plume:nth-child(4) {
+  --steam-drift: -4px;
+  --steam-spread: 2.8;
+  --steam-stretch: 2.4;
+  animation-delay: -3.24s;
+}
+
+.mug-steam__plume:nth-child(5) {
+  --steam-drift: 2px;
+  --steam-spread: 2.1;
+  --steam-stretch: 3.4;
+  animation-delay: -4.32s;
 }
 
 /*
@@ -340,7 +548,7 @@
   --ease-bounce-soft: cubic-bezier(0.34, 1.36, 0.64, 1);
   --ease-bounce-snap: cubic-bezier(0.22, 1.52, 0.36, 1);
 
-  --animate-steam: steam 3.2s linear infinite;
+  --animate-steam: steam 5.4s linear infinite;
   --animate-breath: breath 4.5s var(--ease-in-out-soft) infinite;
   --animate-spin: spinner-turn 0.75s linear infinite;
   --animate-pulse-ring: pulse-ring 1.2s var(--ease-out-soft) infinite;
@@ -357,6 +565,16 @@
   /* Sand inverts it: the cream Walnut draws the thumb in is this theme's own
      background, so a light theme needs the same mark in reverse. */
   --color-scroll-thumb: #8f7f6a;
+
+  /* Sand inverts it, and this is the token's whole reason for existing. On a
+   * bright surface vapour is not white — white on cream is invisible — it is a
+   * faint warm haze slightly *darker* than what is behind it.
+   *
+   * Third value here, and the two before it bracket the answer: the muted ink
+   * (#6f6157) read as black smoke, and #d6cabb at a third of the density was
+   * invisible. Both hue and density had been moved the same way at once, which
+   * is how you cross a target twice. This sits between them. */
+  --color-steam: #c9baa8;
 }
 
 /*
@@ -409,6 +627,9 @@
   --color-accent: #ffd400;
   --color-danger: #ff6b4a;
   --color-scroll-thumb: #ffffff;
+
+  /* Declared for the contract only: this theme shows no mark, so no steam. */
+  --color-steam: #ffffff;
 }
 
 /*
@@ -770,6 +991,22 @@ select:open .select-caret {
 
     --animate-steam: none;
     --animate-breath: none;
+  }
+
+  /*
+   * The one loop that is **removed rather than stilled**.
+   *
+   * Everything else in the app is built so that stopping the loop costs the
+   * pleasure and not the message — a spinner that does not turn is still a ring
+   * (ADR-0014). Steam has no such still form: frozen, three blurred plumes
+   * caught mid-rise are a grey smudge above the cup, which is worse than
+   * nothing and reads as a rendering fault rather than as calm.
+   *
+   * Safe to remove for the reason ADR-0004 requires: *running* is the moving
+   * digits and the breathing ring, and the steam never carried it.
+   */
+  .mug-steam {
+    display: none;
   }
 }
 

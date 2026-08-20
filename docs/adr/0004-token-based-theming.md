@@ -15,6 +15,9 @@
   fourth token class. Its nine colour tokens are never written; the fidelity provision below is
   narrowed to *drawn* assets and answered for this one by High-contrast dropping the mark. Two motion
   tokens are left unspent by the same change — see the note under *Motion*.
+- **Amended**: 2026-08-20 — the Mug gains drawn steam (ADR-0016 amendment), which spends both tokens the
+  parked mug had left stranded: `--animate-steam`, retuned from 3.2s to 5.4s, and `deliberate`, on the
+  steam's fade in and out. The loops are still two, and every duration is in use again.
 - **Amended**: 2026-08-20 — **`--text-dial` goes 66px to 60px**, to make room under the digits for the
   mark ADR-0016 puts there. The token is unchanged in kind and still the only size in the contract;
   what changed is that the digits are no longer the largest *thing* in the dial, only the largest type.
@@ -40,7 +43,9 @@ reference tokens; **a raw value in a component is a defect** — a hex, a durati
 
 A Theme covers three token classes:
 
-- **Colour** — `--color-surface`, `--color-ink`, `--color-accent`, …
+- **Colour** — `--color-surface`, `--color-ink`, `--color-accent`, … and `--color-steam`, which is the
+  odd one: not a colour anything is drawn *in* so much as the one value that has to flip its relation
+  to the background per theme. See *Themed assets vary fidelity*.
 - **Shape** — `--radius-sm|md|lg|xl`, and squircle corners where the engine has them.
 - **Motion** — five durations, five easings, two looping animations.
 
@@ -63,10 +68,16 @@ Five durations — `quick`, `base`, `bounce`, `page`, `deliberate` — five easi
 Mug's steam and the dial ring's breath. Values and rationale are in `CONTEXT.md`; what this ADR fixes
 is where they live and what may not be written without them.
 
-**`deliberate` and `--animate-steam` are unspent since ADR-0016.** Both were written for a drawn mug —
-the pour-out on a manual stop, and the wisps — and a raster does neither. They stay declared rather
-than deleted: removing a tier reshapes every duration around it, and three lines is the cheaper
-honesty.
+**`deliberate` is spent again.** It was written for the mug pouring out on a manual stop, which a raster
+mark cannot do, and was briefly unspent for that reason. ADR-0016's steam amendment gives it the same
+moment back: the steam fades in on Start and dissipates on Stop, slow enough to notice, which is the
+whole of what that tier was ever for. **All five durations are in use.**
+
+**`--animate-steam` was unspent and now is not.** ADR-0016's 2026-08-20 amendment gives the mark drawn
+steam, and slows the loop from 3.2s to 5.4s — at this scale the original read as a twitch rather than as
+vapour. It is also the app's **one loop that reduced motion removes rather than stills**: steam has no
+still form, and it never carried a state, so `display: none` costs only the pleasure. Every other loop
+still degrades to `none` in place.
 
 Tailwind v4 has `--ease-*` and `--animate-*` theme namespaces but **no duration namespace**, so
 `duration-150` is a bare value that reads nothing. Durations are therefore plain `--motion-*` custom
@@ -85,9 +96,11 @@ which is why the tab indicator stayed behind when the screen underneath it left.
 
 **No state is signalled by motion alone.** This is the constraint that makes motion safe to tokenise:
 because reduced motion — the OS's, or High-contrast's own token values — sets the loops to `none` and
-the durations to a millisecond, any state that only moved would vanish. So the Mug's dimness (a
-level, not a movement), the countdown digits and the word *paused* each carry the state on their own,
-and motion is the pleasure rather than the message. The mug's *coffee* level was the original example
+the durations to a millisecond, any state that only moved would vanish. So the pause glyph, the Mug's
+greyness (a level, not a movement) and the drained digits each carry the state on their own — the word
+*paused* survives too, but screen-reader-only since the glyph replaced it, so it is not what makes this
+safe for a sighted person, and motion is the pleasure rather than the message. The held overlay animates in on
+`bounce`; collapse that to a millisecond and the glyph is simply *there*, which is the whole test. The mug's *coffee* level was the original example
 and is gone with the drawing (ADR-0016); that its replacement is still a level and not a movement is
 the part of it that mattered.
 
@@ -138,9 +151,18 @@ wants something soft, and recolouring a soft thing to yellow would honour the to
 theme's promise that nothing is soft. This is why a themed asset is a token set rather than a file.
 
 Narrowed by ADR-0016 to **drawn** assets, where a token set is what makes varying fidelity possible.
-The Mug is not one — it is a raster — so it answers this the only way left: **High-contrast shows no
-mark at all**. Varying fidelity includes varying it to nothing, and the test the mark had to pass is
-that dropping it loses nothing, which holds because it is decorative.
+The Mug's *body* is not one — it is a raster — so it answers this the only way left: **High-contrast
+shows no mark at all**. Varying fidelity includes varying it to nothing, and the test the mark had to
+pass is that dropping it loses nothing, which holds because it is decorative.
+
+**The Mug's steam is the provision's first real exerciser**, and it needed to be. Steam is the one thing
+in the app whose tone *relative to the surface* has to invert: vapour is lighter than a dark room, and
+against a bright one it is no more than a faint haze slightly darker than what is behind it. Borrowing
+`--color-ink-muted` gave Walnut something plausible and gave Sand five overlapping plumes of dark on
+cream, which reads as black smoke. So `--color-steam` is a token, and Sand additionally takes **less**
+of it: a haze that subtracts light piles up where one that adds it does not, so tone and density are one
+decision rather than two. Fidelity, varying declaratively, on an asset that is drawn — which is exactly
+what this section was written for and waited two ADRs to get.
 
 The provision's other exerciser is the **control fill**, described further up under *One control
 vocabulary*: High-contrast outlines what the other themes fill softly. That one is a treatment rather
