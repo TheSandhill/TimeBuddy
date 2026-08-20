@@ -20,10 +20,10 @@
    * theme is allowed to hold rather than a number a component may write.
    *
    * 66px until 2026-08-20, when ADR-0016 put the Mug under the digits and the
-   * owner took them down to 60. They are still the largest *type* in the app by
-   * a clear margin, but they are no longer the largest thing in the dial — the
-   * mark beside them is 88px wide. "Never competes with the digits" survives in
-   * `CONTEXT.md` → Mug as a look to keep rather than a ratio to check. */
+   * owner took them down to 60. Still the largest *type* in the app by a clear
+   * margin, but no longer the widest thing in the dial — the mark under them is
+   * 88px. `CONTEXT.md` → Mug is what says that is allowed: the digits lead by
+   * weight, not by size. */
   --text-dial: 60px;
 
   /* Raised, so a squircle has something to round: one at 4px is a rounded

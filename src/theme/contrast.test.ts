@@ -1,7 +1,5 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { stylesheet } from "../test/stylesheet";
 import {
   AA_BODY_TEXT,
   AA_NON_TEXT,
@@ -11,8 +9,7 @@ import {
 } from "./contrast";
 import { defaultTheme, themeNames, type ThemeName } from "./tokens";
 
-const srcDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const stylesheet = readFileSync(path.join(srcDir, "styles.css"), "utf8");
+
 
 /**
  * The values a theme actually resolves to.
@@ -110,6 +107,47 @@ describe("every shipped theme is readable", () => {
       ).toBeGreaterThanOrEqual(AA_NON_TEXT);
     }
   });
+
+  /**
+   * The Mug's two tones, measured off `src/assets/mug.png` (ADR-0016): the mean
+   * of its opaque ceramic pixels and of its coffee pixels.
+   *
+   * Restated here rather than decoded in the test — a PNG decoder is not worth
+   * carrying for two numbers — which makes this the third thing that has to be
+   * redone if the asset is replaced, alongside the aspect in `app-mark.tsx` and
+   * the optical offset in `styles.css`.
+   */
+  const markTones = { ceramic: "#ece8e0", coffee: "#493228" };
+
+  it.each(themeNames.filter((theme) => theme !== "high-contrast"))(
+    "%s can actually show the Mug",
+    (theme) => {
+      const tokens = tokensOf(theme);
+
+      // A raster mark cannot be recoloured per theme, so the only thing keeping
+      // it visible is that it carries **both** a light tone and a dark one: on
+      // Walnut the ceramic reads at 12.9:1 and the coffee vanishes at 1.3:1, and
+      // on Sand it is exactly the other way round. ADR-0004 recorded the failure
+      // this is guarding — "on Sand a cream mug on a cream surface is simply
+      // invisible" — which the ceramic alone does fail, at 1.07:1.
+      //
+      // So the assertion is not "the mark contrasts" but "at least one of its
+      // tones does". Swap in a flat single-tone mug and one theme loses it
+      // entirely; that is the change this test exists to fail.
+      //
+      // High-contrast is excluded because it shows no mark at all (ADR-0016).
+      const best = Math.max(
+        ...Object.values(markTones).map((tone) =>
+          contrastRatio(tone, tokens["--color-surface"]),
+        ),
+      );
+
+      expect(
+        best,
+        `no tone of the Mug reaches the non-text bar on "${theme}"`,
+      ).toBeGreaterThanOrEqual(AA_NON_TEXT);
+    },
+  );
 
   it.each(themeNames)(
     "%s keeps the highlighted dropdown option readable",

@@ -525,11 +525,21 @@ ADR-0016.
 
 The deferral is **over**. What it left behind, and what the mark is now held to:
 
-- The **dial's centre** is the digits with the mark under them. "Never grows enough to compete" is the
-  rule that killed the largest prototype variant (a 190px mug with no ring), and it is a judgement made
-  **by eye, not by ratio**: the mark is tuned to 88px and the digits came down from 66px to 60px to give
-  it room, which leaves the mark larger than the rule read literally allows and is the owner's call. What is still asserted is containment — the digits and
-  the mark share the inside of the ring, and neither pushes the other out of it.
+- The **dial's centre** is the digits with the mark under them, and **the digits are what the screen is
+  about**. That is a rule about weight rather than about size: they are the largest *type* in the app,
+  they are the thing that changes every second, and they are the only thing in the circle a screen
+  reader is given. The mark is subordinate because it sits under them, says nothing and never moves —
+  not because it is smaller. It is 88px wide against 60px digits, and is the wider of the two.
+
+  This is the rule that killed the largest prototype variant, a 190px mug with **no ring at all**, and
+  restating it this way is closer to what that variant actually failed: it replaced the dial instead of
+  sitting inside it. What stays checkable is containment — the ring is there, and the digits and the
+  mark share its inside without pushing each other out. Sizes past that are tuned by eye in the running
+  app.
+
+  Earlier wording was that the mark must "never grow enough to compete with the digits". The shipped
+  88px breaks that read literally, so it was reworded rather than left standing as a rule the app
+  knowingly fails.
 - Each slot names **its own width, in one line**, and derives nothing. `AppMark` takes a width and knows
   the asset's aspect; what a mark should measure in a given place is a perceptual value every time.
 - A **held** block is the word *paused* in the pill and the tray tooltip, a flat muted ring, and now

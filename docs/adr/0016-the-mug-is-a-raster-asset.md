@@ -90,26 +90,35 @@ That is the debt paid. Three signals, and the mark is the third.
   was written for the mug pouring out on a manual stop. Both stay declared by all three themes rather
   than being deleted, because the cost is three lines and removing a tier is the kind of change that
   reshapes every duration around it. Recorded in `CONTEXT.md` → Motion so neither reads as an oversight.
-- **Sand is the theme to look at.** ADR-0004 recorded the cost that killed the earlier attempts on it —
-  "on Sand a cream mug on a cream surface is simply invisible, so it had to become a dark object on a
-  light table." Sand's `--color-surface` is `#f5efe6` and the mug's body is within a few points of it.
-  The prototype solved this by inverting `--mug-body`; a raster cannot, and the mark's dark coffee and
-  its shading are all that separate it from the surface there. If that is not enough by eye, the fix is
-  a second file for Sand, not a token.
+- **Sand needs no second file, and the reason is measurable.** ADR-0004 recorded the cost that killed
+  the earlier attempts — "on Sand a cream mug on a cream surface is simply invisible, so it had to
+  become a dark object on a light table" — and the shipped raster cannot invert. Measured against
+  `--color-surface`, its ceramic is indeed invisible on Sand at **1.07:1**. What saves it is that the
+  asset carries *two* tones: the coffee reads there at **10.38:1**, and on Walnut the pair swaps
+  (ceramic 12.90:1, coffee 1.33:1). Its internal contrast is 9.71:1 in both.
+
+  So a one-file mark survives a light theme and a dark one **only if it is not one tone**, which is
+  luck rather than design here and is now a test: `contrast.test.ts` asserts that at least one of the
+  Mug's tones clears the non-text bar in every theme that shows it. A flat single-tone mug fails it.
+  That is also the honest reading of ADR-0004's "one deliberate authoring per theme" cost — the way out
+  of paying it is an asset with its own light and dark, not a tint.
 - The mark's size is **one constant per slot** — `pomodoro-dial.tsx` and `titlebar.tsx` — and both are
   perceptual values. `AppMark` takes a width and derives only the height, from the asset's own aspect.
-- The asset has **two measurements, and they live apart**: its aspect ratio in `app-mark.tsx`, because
+- The asset has **three measurements, and they live apart**: its aspect ratio in `app-mark.tsx`, because
   that is where the `height` attribute is written, and its optical offset in `styles.css`, because that
   is a nudge in the same family as `glyph-label`'s and belongs with the other one. Each points at the
-  other. Both are properties of `mug.png` and both have to be redone together if it is replaced, which
-  is the cost of the split and the reason it is written down here.
+  other, and its two tones in `contrast.test.ts` for the visibility guard. All three are properties of
+  `mug.png` and all three have to be redone together if it is replaced, which is the cost of the split
+  and the reason it is written down here.
 - **`--text-dial` went 66px to 60px** as part of this change, so the digits give the mark room. Recorded
   as an amendment on ADR-0004, since it is that ADR's token: a theme token changing value silently is
   how a contract stops being one.
-- The dial's mark is tuned to **88px against 60px digits**, which is larger than "never competes with
-  the digits" reads literally. That was the owner's call, made by eye on the running app, and it means
-  the rule is no longer assertable as a number: the test holds the mark to fitting inside the ring
-  alongside the digits instead. Worth knowing before the next person reads the rule and the constant
-  together and assumes one of them is a mistake.
+- The dial's mark is **88px against 60px digits** — the wider of the two — tuned by the owner's eye on
+  the running app. `CONTEXT.md` → Mug was reworded for it, from "never grows enough to compete with the
+  digits" to the digits leading by **weight**: largest type, the only thing that moves, the only thing
+  in the circle that speaks. The old wording would have left the app knowingly failing its own rule,
+  and it was the weaker statement anyway — the 190px prototype variant it was written about failed
+  because it had no ring, not because of a ratio. What a test can still hold is containment inside the
+  ring, and that is what it holds.
 - Cost: the app carries a 39KB binary that no diff can review. The same trade ADR-0014 took for
   borrowed path data, in a form that is more opaque and less likely to change.

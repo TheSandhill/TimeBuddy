@@ -13,12 +13,14 @@ const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
  * The Mug's drawn width, and **the one line to tune it** — a perceptual value,
  * set by the owner's eye rather than derived from anything here.
  *
- * Worth knowing before it is changed again: `CONTEXT.md` → Mug asks that the
- * mark never grow enough to compete with the digits, and that rule is what
- * killed the 190px variant on the prototype branch. At 88 against 60px digits
- * the mark is no longer strictly under them — it was raised here deliberately,
- * by eye, and the ceiling that remains is the ring: the digits and the mark
- * have to go on fitting inside it, which is what the test asserts.
+ * Worth knowing before it is changed again: `CONTEXT.md` → Mug makes the digits
+ * dominant by **weight**, not by size — they are the largest type, the thing
+ * that moves, and the only thing in the circle that speaks. So the mark being
+ * the wider of the two at 88 against 60px digits is allowed, and the rule that
+ * killed the 190px prototype variant was really that it had no ring.
+ *
+ * The ceiling that remains is therefore the ring: the digits and the mark have
+ * to go on fitting inside it, which is what the test asserts.
  */
 const MARK_WIDTH = 88;
 

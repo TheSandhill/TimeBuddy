@@ -33,11 +33,11 @@ function showDial(props: Partial<Parameters<typeof PomodoroDial>[0]> = {}) {
 /**
  * The mark is held against the **ring**, not against the digits.
  *
- * The ticket's rule was that the mark never grow enough to compete with the
- * digits, and while it was 44px that was a number a test could assert. At the
- * owner's tuned 88 it is a judgement only an eye makes. What is left — and what
- * still breaks the screen if it goes wrong — is containment: the digits and the
- * mark share the inside of the ring, and neither may push the other out of it.
+ * `CONTEXT.md` → Mug makes the digits dominant by weight rather than by size, so
+ * the mark being the wider of the two is not a violation and there is no ratio
+ * left to assert. What is still checkable — and what actually breaks the screen
+ * if it goes wrong — is containment: the digits and the mark share the inside of
+ * the ring, and neither may push the other out of it.
  *
  * The digits' size is read from the token rather than restated, because it has
  * already been retuned once (66 -> 60) and a copy here would have gone stale
