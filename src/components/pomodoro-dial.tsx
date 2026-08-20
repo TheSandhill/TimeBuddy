@@ -117,7 +117,13 @@ export function PomodoroDial({
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-          <p className="text-dial font-light leading-none tabular-nums tracking-tight text-ink">
+          {/*
+           * `relative z-10` earns its keep the moment the mark steams: the steam
+           * rises past the digits, and painting order alone would put it over
+           * them because the mark comes later in the tree. Behind is the only
+           * option that keeps the digits the thing this screen is about.
+           */}
+          <p className="relative z-10 text-dial font-light leading-none tabular-nums tracking-tight text-ink">
             {countdown}
           </p>
 
@@ -135,8 +141,17 @@ export function PomodoroDial({
            * The slot's deferral is over (ADR-0016). Dimming when held is the
            * third signal `CONTEXT.md` → Mug says the mark owes the app — the
            * spare a held block has not had since the mug was parked.
+           *
+           * The steam follows the ring rather than the block: a held cup that
+           * went on steaming would be the same disagreement as a ring still
+           * breathing over a stopped countdown. It is pleasure, not signal —
+           * held is already said three ways without it.
            */}
-          <AppMark width={MARK_WIDTH} dimmed={paused} />
+          <AppMark
+            width={MARK_WIDTH}
+            dimmed={paused}
+            steaming={running && !paused}
+          />
         </div>
       </div>
 

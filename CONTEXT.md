@@ -482,17 +482,27 @@ Restating them would give High-contrast and reduced motion a second place to be 
 second place to be forgotten. So there is no reduced-motion branch in any component: the cascade has
 already answered by the time the value is read.
 
-Two **loops** were declared, and only two: the Mug's steam, and the dial ring's breath. They run at
-deliberately different periods — two things breathing in step read as machinery. The breath is slow,
-near four and a half seconds, because a heartbeat cadence means urgency and this is a tool for
-twenty-five uninterrupted minutes.
+Two **loops**, and only two: the Mug's steam, and the dial ring's breath. They run at deliberately
+different periods — two things breathing in step read as machinery. The breath is slow, near four and
+a half seconds, because a heartbeat cadence means urgency and this is a tool for twenty-five
+uninterrupted minutes. The steam is slower still, at five and a bit, because vapour that hurries reads
+as smoke.
 
-The **steam has nothing to rise from**: the Mug arrived as a raster, and animating a wisp over a
-photograph is not the same drawing. `--animate-steam` stays declared by all three themes, unspent
-alongside `deliberate`, for the same reason and with the same expiry — see [Mug](#mug).
+The steam is **three plumes drifting up through a fixed distortion**, so each is a different shape at
+every height and the group never repeats. That is what separates it from a few wisps pulsing in place,
+which is what it looked like first and was rejected as. The distortion does not move, and that is
+deliberate: animating it would need SMIL, and SMIL cannot read the tokens, so a theme turning the loop
+off would be ignored by exactly the part of the drawing that makes it convincing.
+
+It is also the **one loop that is removed rather than stilled**. Everything else here is built so that
+stopping the motion costs the pleasure and not the message — a spinner that does not turn is still a
+ring. Steam has no still form: frozen mid-rise it is a grey smudge over the cup, which reads as a
+fault rather than as calm. So reduced motion takes it away entirely, which is safe for the reason
+below — it never carried anything.
 
 **Nothing is on the titlebar.** The countdown pill is on every screen, so an animation there would be
-in the corner of the eye permanently and become the thing the app is remembered for.
+in the corner of the eye permanently and become the thing the app is remembered for. The mark is in the
+bar's left cell and does **not** steam there for this reason; only the dial's does.
 
 **No state is ever signalled by motion alone.** This is the rule that makes the rest safe. Reduced
 motion — the operating system's, or High-contrast's own token values — sets the loops to `none` and
@@ -548,6 +558,10 @@ The deferral is **over**. What it left behind, and what the mark is now held to:
 - The dimming is a **level, not a movement**, which is the one thing the parked coffee-level idea was
   really about: reduced motion sets both loops to `none`, and held has to survive that. A raster cannot
   drain, so the level it carries is its own opacity.
+- The mark **steams while a block runs**, in the dial only. The body is still the photograph; the steam
+  is drawn, because it is the one part a photograph cannot do. It follows the ring rather than the
+  block — a held cup that went on steaming would be the same disagreement as a ring breathing over a
+  stopped countdown — and it says nothing on its own, which is what lets reduced motion drop it.
 - **High-contrast shows no mark.** A shaded cream photograph cannot flatten to an outline and means
   nothing recoloured, so the fidelity that varies for this asset is *absence*. Nothing is lost: the
   mark says nothing the digits and the word do not.

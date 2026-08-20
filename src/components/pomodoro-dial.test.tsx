@@ -136,6 +136,58 @@ describe("the dial", () => {
     expect(markOf(container)).toHaveClass("opacity-40");
   });
 
+  it("steams only while a block is actually running", () => {
+    // Pleasure, not signal: *running* is the moving digits and the breathing
+    // ring. The steam follows the ring — a held cup that went on steaming would
+    // be the same disagreement as a ring breathing over a stopped countdown.
+    const steamOf = (container: HTMLElement) =>
+      container.querySelector(".mug-steam");
+
+    expect(steamOf(showDial().container)).toBeNull();
+    expect(
+      steamOf(showDial({ running: true, remaining: 0.5 }).container),
+    ).not.toBeNull();
+    expect(
+      steamOf(showDial({ running: true, paused: true, remaining: 0.5 })
+        .container),
+    ).toBeNull();
+  });
+
+  it("drops the steam with the mug in High-contrast, not on its own", () => {
+    // The mug and its steam are siblings, so a rule naming only the image would
+    // leave three plumes rising out of nothing.
+    expect(stylesheet).toMatch(
+      /\[data-theme="high-contrast"\][^{]*\.mug-steam[^{]*\{[^}]*display:\s*none/,
+    );
+  });
+
+  it("removes the steam under reduced motion rather than freezing it", () => {
+    // The one loop with no still form worth having: three blurred plumes caught
+    // mid-rise are a smudge above the cup, not calm. Safe to drop for the reason
+    // ADR-0004 demands — the steam never carried *running*.
+    expect(stylesheet).toMatch(
+      /prefers-reduced-motion:\s*reduce[\s\S]*?\.mug-steam\s*\{[^}]*display:\s*none/,
+    );
+  });
+
+  it("drives the steam from CSS so a theme can turn it off", () => {
+    // SMIL does not read CSS (ADR-0014), so an `<animate>` element here would
+    // ignore both `--animate-steam: none` and the OS's reduced-motion setting.
+    const { container } = showDial({ running: true, remaining: 0.5 });
+    const steam = container.querySelector(".mug-steam") as SVGElement;
+
+    expect(steam.querySelector("animate, animateTransform, animateMotion")).toBeNull();
+    expect(steam.querySelectorAll(".mug-steam__plume")).toHaveLength(3);
+  });
+
+  it("keeps the digits in front of the steam that rises past them", () => {
+    // Painting order would put the mark's steam over the digits, because the
+    // mark comes later in the tree. The digits are what this screen is about.
+    showDial({ running: true, remaining: 0.5 });
+
+    expect(screen.getByText("25:00")).toHaveClass("relative", "z-10");
+  });
+
   it("says held with a level and never with a loop", () => {
     // The reason it is opacity (ADR-0004): reduced motion and High-contrast both
     // set every loop to `none`, so a state that only moved would vanish. The
