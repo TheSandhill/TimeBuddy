@@ -1,5 +1,5 @@
 import mugUrl from "../assets/mug.png";
-import { Steam, type SteamState } from "./mug-steam";
+import { MugSteam, type SteamState } from "./mug-steam";
 
 /**
  * The asset's own aspect, so a caller gives a width and never a pair.
@@ -107,7 +107,7 @@ export function AppMark({ width, dimmed = false, steam }: AppMarkProps) {
   return (
     <span className="app-mark relative inline-flex" data-mark-slot>
       {mug}
-      <Steam state={steam} />
+      <MugSteam state={steam} />
     </span>
   );
 }

@@ -18,7 +18,7 @@ const SOFTEN = 1.3;
 export type SteamState = "on" | "off";
 
 /**
- * Steam: five plumes drifting up through a fixed noise field.
+ * MugSteam: five plumes drifting up through a fixed noise field.
  *
  * The shapes are soft radial ellipses — deliberately dull on their own. What
  * makes them read as vapour is that the `feDisplacementMap` is *stationary* while
@@ -45,7 +45,7 @@ export type SteamState = "on" | "off";
  * renders this — the titlebar passes no `steam`, so there is never a second copy
  * in the document to collide with.
  */
-export function Steam({ state }: { state: SteamState }) {
+export function MugSteam({ state }: { state: SteamState }) {
   return (
     <svg
       className="mug-steam"
