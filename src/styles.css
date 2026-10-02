@@ -316,7 +316,7 @@
  *      widths, there is no moment where the group agrees with itself.
  *
  * Tune here — this is the whole surface. Two more knobs live in
- * `app-mark.tsx`, because SVG filter primitives take attributes and cannot read
+ * `mug-steam.tsx`, because SVG filter primitives take attributes and cannot read
  * a custom property.
  */
 .mug-steam {
@@ -446,7 +446,7 @@
  *
  * Five rather than three. Three left visible gaps in the column at this size —
  * you could count them, which is the particle read returning by the back door.
- * Adding a plume means one ellipse in `app-mark.tsx` and one rule here; the
+ * Adding a plume means one ellipse in `mug-steam.tsx` and one rule here; the
  * delays want re-spacing to match, and nothing else does.
  */
 .mug-steam__plume:nth-child(1) {
