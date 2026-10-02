@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { AppMark } from "./app-mark";
+import { SteamingAppMark } from "./app-mark";
 import { heroButtonClass, heroQuietButtonClass } from "./button";
 import { Icon } from "./icon";
 
@@ -157,13 +157,13 @@ export function PomodoroDial({
            * breathing over a stopped countdown. It is pleasure, not signal —
            * held is already said three ways without it.
            *
-           * `"off"` rather than dropping the prop, so the layer is mounted
+           * `SteamingAppMark` rather than `AppMark`, so the layer is mounted
            * before Start is ever pressed and has something to fade from.
            */}
-          <AppMark
+          <SteamingAppMark
             width={MARK_WIDTH}
             dimmed={paused}
-            steam={running && !paused ? "on" : "off"}
+            rising={running && !paused}
           />
         </div>
 

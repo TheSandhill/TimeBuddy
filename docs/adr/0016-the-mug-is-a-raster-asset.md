@@ -14,6 +14,12 @@
   rather than a raster alone. `--animate-steam` stops being unspent and slows from 3.2s to 5.4s. One
   new rule comes with it: this is the app's first loop that reduced motion **removes** instead of
   stilling. Amended in place — the body is still the icon's own file and nothing below is reversed.
+- **Amended**: 2026-10-02 — the steam moves from a **prop to a second component**. `AppMark` is the
+  bare mark and `SteamingAppMark` mounts the layer, because `steam?: "on" | "off"` left *omitted* and
+  `"off"` looking alike at the call site, where one mounts no layer and the other mounts it faded.
+  A caller that meant to steam and dropped the prop lost the fade in silence (#97). The rendered
+  result is unchanged. Amended in place — the two slots are still one image and nothing below is
+  reversed.
 
 ## Context
 
@@ -43,10 +49,12 @@ The Mug is the **PNG**, imported as a static asset. `src/assets/mug.png`, 256x22
 icon source with alpha intact and committed. It is the same mug as the app icon, which is the point:
 one face, one file lineage, no second drawing to keep in sync.
 
-**Two slots, one component.** `AppMark` is the only thing that draws it — the dial's centre and the
-titlebar's left cell both call it. A caller decided nothing but a width when this was written; since
-the steam amendment it also says whether the mark is greyed and whether it steams, and the titlebar
-answers no to both. The reason is the one ADR-0004 gives
+**Two slots, one image.** `AppMark` was the only thing that drew it when this was written — the
+dial's centre and the titlebar's left cell both called it. A caller decided nothing but a width
+then; the steam amendment had it also say whether the mark is greyed and whether it steams, and the
+titlebar answers no to both. Since the seam amendment the second question is asked by **picking the
+component** — `AppMark` or `SteamingAppMark`, two exported names over one private image — rather
+than by a prop. One file either way, and for the reason ADR-0004 gives
 for the control vocabulary living in two files: the copies disagree, and by the time anyone notices
 there are four of them.
 
@@ -187,7 +195,9 @@ rule naming only the image would leave plumes rising out of nothing.
 
 - **The titlebar does not steam**, and cannot be made to without contradicting `CONTEXT.md` → Motion:
   "nothing is on the titlebar", because the bar is on every screen and an animation there would be in
-  the corner of the eye permanently. `AppMark` takes `steaming`, and only the dial passes it.
+  the corner of the eye permanently. The titlebar takes the bare `AppMark`; the steam belongs to
+  `SteamingAppMark`, which only the dial renders. (It was a `steaming` prop on the one component when
+  this was written — the 2026-10-02 amendment says why it stopped being one.)
 - **The steam follows the ring, not the block.** A held cup that went on steaming is the same
   disagreement as a ring breathing over a stopped countdown.
 - **It fades rather than appears, and that spends `deliberate`.** Start and Stop are the moment that
