@@ -14,7 +14,7 @@
 const WISP = 8;
 const SOFTEN = 1.3;
 
-/** Whether the layer is rising or faded out. `AppMark` decides which. */
+/** Whether the layer is rising or faded out. `SteamingAppMark` decides which. */
 export type SteamState = "on" | "off";
 
 /**
@@ -42,8 +42,8 @@ export type SteamState = "on" | "off";
  * form — a disclosure panel rebuilt already-open has no `0fr` to spring from.
  *
  * The gradient and the filter carry instance-free ids because only the dial ever
- * renders this — the titlebar passes no `steam`, so there is never a second copy
- * in the document to collide with.
+ * renders this — the titlebar takes the bare `AppMark`, so there is never a
+ * second copy in the document to collide with.
  */
 export function MugSteam({ state }: { state: SteamState }) {
   return (

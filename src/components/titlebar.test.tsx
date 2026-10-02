@@ -124,6 +124,17 @@ describe("the custom titlebar", () => {
     );
   });
 
+  it("carries no steam layer, because nothing on the bar moves", () => {
+    // `CONTEXT.md` → Motion: the bar is on every screen, so an animation here
+    // would sit in the corner of the eye permanently. The bar takes the bare
+    // `AppMark`; `SteamingAppMark` is the dial's alone (#97).
+    const { container } = renderTitlebar(inFlight);
+
+    expect(container.querySelector(".mug-steam")).toBeNull();
+    // No wrapper to hold the offset here, so the image carries it itself.
+    expect(container.querySelector("[data-app-mark]")).toHaveClass("app-mark");
+  });
+
   it("offers no maximize — that trade is the whole point of ADR-0004", () => {
     renderTitlebar();
 

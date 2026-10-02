@@ -264,6 +264,16 @@ describe("the dial", () => {
     expect(steamOf(showDial().container)).not.toBeNull();
   });
 
+  it("offsets the slot, not the image, so the plumes keep the mouth", () => {
+    // The steam is positioned against its container, so the optical shift onto
+    // the cup's measured centre has to be on the wrapper. Leave it on the image
+    // and only the mug moves — the plumes rise 6px off the mouth, silently.
+    const { container } = showDial();
+
+    expect(container.querySelector("[data-mark-slot]")).toHaveClass("app-mark");
+    expect(markOf(container)).not.toHaveClass("app-mark");
+  });
+
   it("fades the steam on the tier written for a manual stop", () => {
     // `deliberate` is "the one animation allowed to be slow enough to notice,
     // the Mug pouring out when a block is stopped by hand". The pour-out went
