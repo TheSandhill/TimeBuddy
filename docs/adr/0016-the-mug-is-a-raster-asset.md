@@ -204,7 +204,7 @@ rule naming only the image would leave plumes rising out of nothing.
   tree, so painting order alone would put vapour over the countdown. The digits are `relative z-10`.
 - **The optical offset moved from the image to its wrapper** when the mark steams, so the plumes and
   the cup shift together. Left on the image alone, the steam would rise 6px beside the mouth.
-- Two of the steam's values live in `app-mark.tsx` rather than the stylesheet, because SVG filter
+- Two of the steam's values live in `mug-steam.tsx` rather than the stylesheet, because SVG filter
   primitives take attributes and an attribute cannot read a custom property. They are the two that
   decide whether this reads as vapour at all, which is unfortunate placement for the most important
   knobs; the comment says so at both ends.
