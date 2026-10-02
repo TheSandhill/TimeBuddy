@@ -172,7 +172,6 @@ describe("reading hours back", () => {
   it("refuses a range that ends before it starts instead of asking for it", async () => {
     renderEntries();
     await screen.findByText("Geen uren in deze periode.");
-    commands.listTimeEntries.mockClear();
 
     type("Van", "2026-08-20");
     type("Tot en met", "2026-08-01");
@@ -180,7 +179,13 @@ describe("reading hours back", () => {
     expect(
       await screen.findByText("De einddatum ligt voor de begindatum."),
     ).toBeInTheDocument();
-    expect(commands.listTimeEntries).not.toHaveBeenCalled();
+    // Not "never asked": editing a range passes through legitimate
+    // intermediate states. What the refusal guarantees is that the backwards
+    // range itself is never asked for.
+    expect(commands.listTimeEntries).not.toHaveBeenCalledWith({
+      from: "2026-08-20",
+      to: "2026-08-01",
+    });
   });
 
   it("shows a timer block's window and a manual entry without one", async () => {

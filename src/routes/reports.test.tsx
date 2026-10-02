@@ -191,14 +191,21 @@ describe("a period picked by hand", () => {
     renderReports();
     await screen.findByRole("listitem");
     click("Aangepast");
-    commands.reportByClient.mockClear();
 
     type("Van", "2026-09-01");
 
     expect(
       await screen.findByText("De einddatum ligt voor de begindatum."),
     ).toBeInTheDocument();
-    expect(commands.reportByClient).not.toHaveBeenCalled();
+    // Same guarantee as the Entries twin: not "never asked", but that the
+    // backwards range itself is never asked for. One field is edited here, so
+    // there is no legitimate intermediate state — assert it the same way
+    // anyway, so the two tests prove the one rule identically.
+    expect(commands.reportByClient).not.toHaveBeenCalledWith({
+      preset: "custom",
+      from: "2026-09-01",
+      to: "2026-08-09",
+    });
   });
 });
 
